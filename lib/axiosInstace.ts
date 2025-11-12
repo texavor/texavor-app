@@ -1,0 +1,105 @@
+import axios from "axios";
+import { toast } from "sonner";
+
+export const baseURL =
+  process.env.NODE_ENV == "development"
+    ? "http://localhost:3000"
+    : "https://api.easywrite.dev";
+
+// export const baseURL = "https://api.easywrite.dev";
+
+export const axiosInstance = axios.create({
+  baseURL,
+  // timeout: 30000,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json; charset=UTF-8",
+    Accept: "application/json",
+  },
+});
+
+axiosInstance.interceptors.request.use(
+  async (config) => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("auth_token");
+
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+axiosInstance.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    const { response } = error;
+    if (
+      response &&
+      response?.status === 401 &&
+      typeof window !== "undefined" &&
+      window.location.pathname !== "/login"
+    ) {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("access_expires_at");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+    } else {
+      const flattenErrors = (errors: any) => {
+        if (!errors) return null;
+
+        if (
+          Array.isArray(errors) &&
+          errors.every((e) => typeof e === "string")
+        ) {
+          return errors.join("; ");
+        }
+
+        if (typeof errors === "object" && !Array.isArray(errors)) {
+          const messages = Object.keys(errors)
+            .map((key) => {
+              const value = errors[key];
+              if (typeof value === "string") {
+                return `${key.charAt(0).toUpperCase() + key.slice(1)} ${value}`;
+              }
+              if (Array.isArray(value)) {
+                return `${
+                  key.charAt(0).toUpperCase() + key.slice(1)
+                } ${value.join(", ")}`;
+              }
+              return null;
+            })
+            .filter(Boolean)
+            .join("; ");
+          return messages || null;
+        }
+        return null;
+      };
+
+      const data = response?.data;
+      let message = "Error occurred";
+
+      if (data) {
+        const flattened =
+          flattenErrors(data.errors) || flattenErrors(data.status?.errors);
+        if (flattened) {
+          message = flattened;
+        } else if (data.message) {
+          message = data.message;
+        } else if (data.status?.message) {
+          message = data.status.message;
+        }
+      }
+
+      toast.error(message);
+    }
+    return Promise.reject(error);
+  }
+);

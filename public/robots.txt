@@ -1,0 +1,32 @@
+# ===================================================================
+# Rules for all crawlers, including standard search engines
+# ===================================================================
+User-agent: *
+Allow: /
+Disallow: /api/ # Disallow crawling of API routes, if you have any
+
+# ===================================================================
+# Specific rules for AI crawlers
+# By explicitly allowing them, you signal that your content can be 
+# used for their training sets, in accordance with their policies.
+# ===================================================================
+
+# For OpenAI's models (ChatGPT)
+User-agent: GPTBot
+Allow: /
+
+# For Google's AI models (Gemini, etc.)
+User-agent: Google-Extended
+Allow: /
+
+# For other AI crawlers (add more as they become known)
+User-agent: PerplexityBot
+Allow: /
+User-agent: Claude-Web
+Allow: /
+
+
+# ===================================================================
+# Location of the sitemap
+# ===================================================================
+Sitemap: https://www.easywrite.dev/sitemap.xml
