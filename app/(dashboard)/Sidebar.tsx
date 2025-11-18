@@ -46,22 +46,22 @@ const SideBarOption = [
   {
     icon: <Paperclip className="h-4 w-4" />,
     title: "Article",
-    href: "/dashboard/article",
+    href: "/article",
   },
   {
     icon: <Binoculars className="h-4 w-4" />,
     title: "Keyword Research",
-    href: "/dashboard/keyword-research",
+    href: "/keyword-research",
   },
   {
     icon: <Microscope className="h-4 w-4" />,
     title: "Topic Generation",
-    href: "/dashboard/topic-generation",
+    href: "/topic-generation",
   },
   {
     icon: <Calendar className="h-4 w-4" />,
     title: "Article Calendar",
-    href: "/dashboard/article-calendar",
+    href: "/article-calendar",
   },
 ];
 
@@ -69,12 +69,12 @@ const SideBarOptionSettings = [
   {
     icon: <Blocks className="h-4 w-4" />,
     title: "Integration",
-    href: "/dashboard/integration",
+    href: "/integration",
   },
   {
     icon: <Settings className="h-4 w-4" />,
     title: "Settings",
-    href: "/dashboard/settings",
+    href: "/settings",
   },
 ];
 
@@ -82,18 +82,18 @@ const SideBarOptionExternal = [
   {
     icon: <MessageCircleQuestion className="h-4 w-4" />,
     title: "Support",
-    href: "/dashboard/integration",
+    href: "/integration",
   },
   {
     icon: <Newspaper className="h-4 w-4" />,
     title: "Blogs",
-    href: "/dashboard/settings",
+    href: "/settings",
     external: true,
   },
   {
     icon: <TableOfContents className="h-4 w-4" />,
     title: "Docs",
-    href: "/dashboard/settings",
+    href: "/settings",
     external: true,
   },
 ];

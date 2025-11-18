@@ -38,7 +38,11 @@ export default function LoginPage() {
             ele?.status === "pending" || ele?.status === "processing"
         )
       ) {
-        router.push("/onboarding/processing");
+        const blog = res?.data?.data?.blogs?.find(
+          (ele: any) =>
+            ele?.status === "pending" || ele?.status === "processing"
+        );
+        router.push(`/onboarding?blog=${blog?.id}`);
       } else {
         router.push("/dashboard");
       }

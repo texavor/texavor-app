@@ -3,7 +3,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/store/appStore";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { FileText, LogOut, PenSquare, Sparkles } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import axios from "axios";
@@ -42,8 +42,36 @@ const Topbar = () => {
 
       {/* Second Div */}
       <div className="w-5/12 max-h-12 min-h-12">
-        <div className="bg-white rounded-xl p-2 flex items-center justify-between max-h-12  max-h-12 min-h-12">
-          Hello
+        <div className="bg-white rounded-xl p-2 flex items-center justify-around max-h-12 min-h-12">
+          <div className="flex items-center gap-2">
+            <PenSquare className="size-5" />
+            <div className="flex flex-col">
+              <p className="text-xs font-medium text-[#0A2918] font-poppins">
+                Words Written
+              </p>
+              <p className="font-poppins text-sm font-medium font-inter">
+                1,204
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <FileText className="size-5" />
+            <div className="flex flex-col">
+              <p className="text-xs font-medium text-[#0A2918] font-poppins">
+                Documents
+              </p>
+              <p className="font-poppins text-sm font-medium font-inter">5</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Sparkles className="size-5" />
+            <div className="flex flex-col">
+              <p className="text-xs font-medium text-[#0A2918] font-poppins">
+                AI Credits
+              </p>
+              <p className="font-poppins text-sm font-medium font-inter">500</p>
+            </div>
+          </div>
         </div>
       </div>
       <div className="bg-white p-2 rounded-xl w-4/12 h-12 flex flex-col justify-center">
@@ -52,8 +80,8 @@ const Topbar = () => {
             <div className="flex items-center gap-2">
               <Skeleton className="rounded-full h-6 w-6 bg-[#f9f4f0]" />
               <div className="flex flex-col space-y-2">
-                <Skeleton className="w-[140px] h-[14px] rounded-xl bg-[#f9f4f0]" />
-                <Skeleton className="w-[140px] h-[14px] rounded-xl bg-[#f9f4f0]" />
+                <Skeleton className="w-[200px] h-[14px] rounded-xl bg-[#f9f4f0]" />
+                <Skeleton className="w-[220px] h-[14px] rounded-xl bg-[#f9f4f0]" />
               </div>
             </div>
           ) : (
@@ -63,7 +91,7 @@ const Topbar = () => {
                   src={user?.avatar || "/placeholder-user.jpg"}
                   className="h-6 w-6"
                 />
-                <AvatarFallback className="bg-[#f9f4f0] rounded-full p-1 font-medium text-sm max-w-[160px] truncate">
+                <AvatarFallback className="bg-[#f9f4f0] rounded-full p-1 font-medium text-sm max-w-[260px] truncate">
                   {user?.first_name?.slice(0, 2)?.toUpperCase() || "US"}
                 </AvatarFallback>
               </Avatar>

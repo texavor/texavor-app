@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PROTECTED_ROUTES = ["/dashboard", "/settings", "/projects"];
-const AUTH_ROUTES = ["/login", "/register", "/forgot-password", "/onboarding"];
+const PROTECTED_ROUTES = [
+  "/dashboard",
+  "/settings",
+  "/projects",
+  "/onboarding",
+];
+const AUTH_ROUTES = ["/login", "/register", "/forgot-password"];
 
 export function middleware(req: NextRequest) {
   const token = req.cookies.get("_easywrite_session")?.value;

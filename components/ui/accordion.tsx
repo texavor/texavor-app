@@ -31,16 +31,16 @@ const AccordionTrigger = React.forwardRef<
         ref={ref}
         className={cn(
           "flex flex-1 items-center justify-between py-4 font-medium transition-all hover:underline [&[data-state=open]>svg]:rotate-180",
-          className,
+          className
         )}
         {...props}
         onClick={() => setIsExpanded((prev) => !prev)}
       >
         {children}
         {isExpanded ? (
-          <Minus className="h-6 w-6 shrink-0 rounded-full bg-[#104127] text-white p-1 transition-transform duration-200" />
+          <Minus className="ml-10 h-6 w-6 shrink-0 rounded-full bg-[#104127] text-white p-1 transition-transform duration-200" />
         ) : (
-          <Plus className="h-6 w-6 shrink-0 rounded-full bg-[#104127] text-white p-1 transition-transform duration-200" />
+          <Plus className="ml-10 h-6 w-6 shrink-0 rounded-full bg-[#104127] text-white p-1 transition-transform duration-200" />
         )}
       </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>

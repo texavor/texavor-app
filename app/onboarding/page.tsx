@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,9 +10,11 @@ import { useMutation } from "@tanstack/react-query";
 import { Loader2, Plus, X } from "lucide-react";
 import { Toaster, toast } from "sonner";
 import { axiosInstance } from "@/lib/axiosInstace";
+import { useSearchParams } from "next/navigation";
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(1);
   const [processing, setProcessing] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
@@ -44,6 +46,15 @@ export default function OnboardingPage() {
       }
     }, 5000); // poll every 5 seconds
   };
+
+  useEffect(() => {
+    const blogId = searchParams.get("blog");
+    if (blogId) {
+      setJobId(blogId);
+      setProcessing(true);
+      pollStatus(blogId);
+    }
+  }, [searchParams]);
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: {

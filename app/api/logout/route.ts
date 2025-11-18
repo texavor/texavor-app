@@ -3,7 +3,7 @@ import { cookies, headers } from "next/headers";
 
 const backendBaseURL =
   process.env.NODE_ENV === "development"
-    ? "http://localhost:3000" // Assuming this is proxied to the backend
+    ? "http://localhost:3000"
     : "https://api.easywrite.dev";
 
 export async function POST() {
