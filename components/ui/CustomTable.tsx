@@ -28,12 +28,14 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   isLoading?: boolean;
+  onClick: any;
 }
 
 export function CustomTable<TData, TValue>({
   columns,
   data,
   isLoading,
+  onClick,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState({});
@@ -56,7 +58,7 @@ export function CustomTable<TData, TValue>({
       <div className="rounded-xl overflow-hidden border bg-white">
         <div className="relative max-h-[calc(100vh-246px)] overflow-y-auto no-scrollbar">
           <Table>
-            <TableHeader className="sticky top-0 bg-background z-10 bg-white">
+            <TableHeader className="sticky top-0 bg-[#EEDED3] z-10 bg-white">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
@@ -64,7 +66,7 @@ export function CustomTable<TData, TValue>({
                       <TableHead
                         key={header.id}
                         style={{ width: header.column.columnDef.meta?.width }}
-                        className="font-poppins bg-[#D7F2E6] pl-2"
+                        className="font-poppins bg-[#EEDED3] pl-2"
                       >
                         {header.isPlaceholder
                           ? null
@@ -94,6 +96,8 @@ export function CustomTable<TData, TValue>({
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
+                    onClick={() => onClick(row?.original)}
+                    className={onclick ? "cursor-pointer" : ""}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell

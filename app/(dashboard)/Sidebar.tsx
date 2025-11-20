@@ -6,12 +6,11 @@ import {
   ArrowLeftToLine,
   Binoculars,
   Blocks,
-  Calendar,
   LayoutDashboardIcon,
+  ListTree,
   Microscope,
   Paperclip,
   Settings,
-  User,
   ArrowRightToLine,
   MessageCircleQuestion,
   Newspaper,
@@ -30,18 +29,13 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAppStore } from "@/store/appStore";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const SideBarOption = [
   {
     icon: <LayoutDashboardIcon className="h-4 w-4" />,
     title: "Dashboard",
     href: "/dashboard",
-  },
-  {
-    icon: <User className="h-4 w-4" />,
-    title: "Onboarding",
-    href: "/onboarding",
   },
   {
     icon: <Paperclip className="h-4 w-4" />,
@@ -59,9 +53,9 @@ const SideBarOption = [
     href: "/topic-generation",
   },
   {
-    icon: <Calendar className="h-4 w-4" />,
-    title: "Article Calendar",
-    href: "/article-calendar",
+    icon: <ListTree className="h-4 w-4" />,
+    title: "Outline Generator",
+    href: "/outline-generator",
   },
 ];
 
@@ -82,31 +76,77 @@ const SideBarOptionExternal = [
   {
     icon: <MessageCircleQuestion className="h-4 w-4" />,
     title: "Support",
-    href: "/integration",
+    href: "/support",
   },
   {
     icon: <Newspaper className="h-4 w-4" />,
     title: "Blogs",
-    href: "/settings",
+    href: "/blogs",
     external: true,
   },
   {
     icon: <TableOfContents className="h-4 w-4" />,
     title: "Docs",
-    href: "/settings",
+    href: "/docs",
     external: true,
   },
 ];
+
+interface SidebarItemProps {
+  icon: React.ReactNode;
+  title: string;
+  href: string;
+  isSideOpen: boolean;
+  external?: boolean;
+  isActive?: boolean;
+}
+
+const SidebarItem = ({
+  icon,
+  title,
+  href,
+  isSideOpen,
+  external,
+  isActive,
+}: SidebarItemProps) => {
+  return (
+    <Link
+      href={href}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noopener noreferrer" : undefined}
+    >
+      <Tooltip open={isSideOpen ? false : undefined}>
+        <TooltipTrigger asChild>
+          <Button
+            variant={isActive ? "secondary" : "ghost"}
+            className={`flex gap-2 cursor-pointer w-full ${
+              isSideOpen ? "justify-start" : "justify-center"
+            } ${isActive ? "bg-secondary" : ""}`}
+          >
+            {icon}
+            {isSideOpen && <p className="font-poppins font-base">{title}</p>}
+            {external && isSideOpen && (
+              <ExternalLink className="size-3 stroke-2 text-black ml-auto" />
+            )}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="right">
+          <p>{title}</p>
+        </TooltipContent>
+      </Tooltip>
+    </Link>
+  );
+};
 
 const AppSidebar = () => {
   const [isSideOpen, setIsSideOpen] = useState(true);
   const { blogs, mainLoading, clear } = useAppStore();
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleLogout = async () => {
     try {
-      // Single call to our Next.js API route which handles everything
-      const res = await axios.post("/api/logout");
+      await axios.post("/api/logout");
       toast.success("Logout Successfull!");
       router.push("/login");
     } catch (error) {
@@ -186,26 +226,12 @@ const AppSidebar = () => {
       <div className="bg-white p-2 rounded-xl w-full flex-grow overflow-y-auto overflow-x-hidden">
         <div className="space-y-1 flex flex-col pb-2">
           {SideBarOption.map((sidebar) => (
-            <Link href={sidebar.href} key={sidebar.title}>
-              <Tooltip open={isSideOpen ? false : undefined}>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className={`flex gap-2 cursor-pointer w-full ${
-                      isSideOpen ? "justify-start" : "justify-center"
-                    }`}
-                  >
-                    {sidebar.icon}
-                    {isSideOpen && (
-                      <p className="font-poppins font-base">{sidebar.title}</p>
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p>{sidebar.title}</p>
-                </TooltipContent>
-              </Tooltip>
-            </Link>
+            <SidebarItem
+              key={sidebar.title}
+              {...sidebar}
+              isSideOpen={isSideOpen}
+              isActive={pathname === sidebar.href}
+            />
           ))}
         </div>
 
@@ -213,66 +239,45 @@ const AppSidebar = () => {
 
         <div className="space-y-1 flex flex-col pt-2">
           {SideBarOptionSettings.map((sidebar) => (
-            <Link href={sidebar.href} key={sidebar.title}>
-              <Tooltip open={isSideOpen ? false : undefined}>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className={`flex gap-2 cursor-pointer w-full ${
-                      isSideOpen ? "justify-start" : "justify-center"
-                    }`}
-                  >
-                    {sidebar.icon}
-                    {isSideOpen && (
-                      <p className="font-poppins font-base">{sidebar.title}</p>
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p>{sidebar.title}</p>
-                </TooltipContent>
-              </Tooltip>
-            </Link>
+            <SidebarItem
+              key={sidebar.title}
+              {...sidebar}
+              isSideOpen={isSideOpen}
+              isActive={pathname === sidebar.href}
+            />
           ))}
         </div>
         <div className="border-b-[1px] px-2" />
 
         <div className="space-y-1 flex flex-col pt-2">
           {SideBarOptionExternal?.map((sidebar) => (
-            <Link href={sidebar.href} key={sidebar.title}>
-              <Tooltip open={isSideOpen ? false : undefined}>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className={`flex gap-2 cursor-pointer w-full ${
-                      isSideOpen ? "justify-start" : "justify-center"
-                    }`}
-                  >
-                    {sidebar.icon}
-                    {isSideOpen && (
-                      <p className="font-poppins font-base">{sidebar.title}</p>
-                    )}
-                    {sidebar?.external && isSideOpen && (
-                      <ExternalLink className="size-3 stroke-2 text-black" />
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p>{sidebar.title}</p>
-                </TooltipContent>
-              </Tooltip>
-            </Link>
+            <SidebarItem
+              key={sidebar.title}
+              {...sidebar}
+              isSideOpen={isSideOpen}
+              isActive={pathname === sidebar.href}
+            />
           ))}
         </div>
       </div>
-      <Button
-        variant="ghost"
-        className="bg-red-200 p-2 rounded-xl w-full hover:bg-red-200"
-        onClick={handleLogout}
-      >
-        <p className="font-poppins text-normal">Logout</p>
-        <LogOutIcon className="size-4" />
-      </Button>
+
+      <Tooltip open={isSideOpen ? false : undefined}>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            className={`bg-red-200 p-2 rounded-xl w-full hover:bg-red-200 flex gap-2 ${
+              isSideOpen ? "justify-start" : "justify-center"
+            }`}
+            onClick={handleLogout}
+          >
+            <LogOutIcon className="size-4" />
+            {isSideOpen && <p className="font-poppins text-normal">Logout</p>}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="right">
+          <p>Logout</p>
+        </TooltipContent>
+      </Tooltip>
     </div>
   );
 };

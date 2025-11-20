@@ -20,7 +20,7 @@ export const ScoreMeter = ({ value }: { value: number }) => {
 
 export const Gauge = ({
   value,
-  max = 10,
+  max = 100,
   label,
 }: {
   value: number;
@@ -29,12 +29,15 @@ export const Gauge = ({
 }) => {
   const radius = 45;
   const semiCircleCircumference = Math.PI * radius;
-  const strokeDashoffset = semiCircleCircumference * (1 - value / max);
+  // Clamp value between 0 and max to avoid negative dash offsets
+  const clampedValue = Math.min(Math.max(value, 0), max);
+  const strokeDashoffset = semiCircleCircumference * (1 - clampedValue / max);
 
-  let colorClass = "text-green-500";
-  if (value / max >= 0.7) {
-    colorClass = "text-red-500";
-  } else if (value / max >= 0.4) {
+  let colorClass = "text-red-500";
+  const ratio = clampedValue / max;
+  if (ratio >= 0.7) {
+    colorClass = "text-green-500";
+  } else if (ratio >= 0.4) {
     colorClass = "text-yellow-500";
   }
 
