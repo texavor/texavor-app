@@ -160,6 +160,7 @@ const Page = () => {
             onClick={(row: any) => {
               if (row?.source !== "fetched") router.push(`/article/${row?.id}`);
             }}
+            className=""
           />
           {data?.pagination && (
             <CustomPagination

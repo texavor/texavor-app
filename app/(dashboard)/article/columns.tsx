@@ -1,5 +1,7 @@
 "use client";
 
+import { getStatusColor } from "@/lib/constants";
+
 import { Column, ColumnDef } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -111,32 +113,21 @@ export const columns: ColumnDef<Article>[] = [
     ),
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
+      const statusColor = getStatusColor(status);
+
       return (
-        <div className="flex flex-wrap gap-2">
-          <Badge
-            variant="secondary"
-            className="capitalize"
-            style={{
-              backgroundColor:
-                status === "draft"
-                  ? "#FFE8A3"
-                  : status === "review"
-                  ? "#BEE7EF"
-                  : status === "scheduled"
-                  ? "#E5D5FF"
-                  : "#C9F3D3",
-              color:
-                status === "draft"
-                  ? "#C58A00"
-                  : status === "review"
-                  ? "#0F6C7A"
-                  : status === "scheduled"
-                  ? "#6A32B9"
-                  : "#1E7A33",
-            }}
-          >
-            {status}
-          </Badge>
+        <div
+          className="capitalize px-3 py-1 rounded-full text-xs font-medium w-fit flex items-center gap-2"
+          style={{
+            backgroundColor: statusColor.bg,
+            color: statusColor.text,
+          }}
+        >
+          <div
+            className="w-1.5 h-1.5 rounded-full"
+            style={{ backgroundColor: statusColor.text }}
+          />
+          {status}
         </div>
       );
     },

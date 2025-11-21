@@ -29,6 +29,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   isLoading?: boolean;
   onClick: any;
+  className: string;
 }
 
 export function CustomTable<TData, TValue>({
@@ -36,6 +37,7 @@ export function CustomTable<TData, TValue>({
   data,
   isLoading,
   onClick,
+  className,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState({});
@@ -56,7 +58,9 @@ export function CustomTable<TData, TValue>({
   return (
     <div className="w-full">
       <div className="rounded-xl overflow-hidden border bg-white">
-        <div className="relative max-h-[calc(100vh-246px)] overflow-y-auto no-scrollbar">
+        <div
+          className={`relative max-h-[calc(100vh-246px)] overflow-y-auto no-scrollbar ${className}`}
+        >
           <Table>
             <TableHeader className="sticky top-0 bg-[#EEDED3] z-10 bg-white">
               {table.getHeaderGroups().map((headerGroup) => (

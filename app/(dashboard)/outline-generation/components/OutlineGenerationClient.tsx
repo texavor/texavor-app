@@ -1,0 +1,238 @@
+"use client";
+
+import React, { useState } from "react";
+import { OutlineForm } from "./OutlineForm";
+import { OutlineEditor } from "./OutlineEditor";
+import { SavedOutlinesList } from "./SavedOutlinesList";
+import { RecentSearches } from "./RecentSearches";
+import { useOutlineApi, OutlineData } from "../hooks/useOutlineApi";
+import { CustomTabs } from "@/components/ui/custom-tabs";
+import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+
+import { Plus, List, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+type ViewMode = "generate" | "saved" | "editor";
+
+const OutlineGenerationClient = () => {
+  const [view, setView] = useState<ViewMode>("generate");
+  const [currentOutline, setCurrentOutline] = useState<OutlineData | null>(
+    null
+  );
+  const [editorKey, setEditorKey] = useState(0);
+  const searchParams = useSearchParams();
+  const outlineId = searchParams.get("id");
+
+  const {
+    generateOutline,
+    recentSearches,
+    savedOutlines,
+    saveOutline,
+    updateOutline,
+    deleteOutline,
+  } = useOutlineApi();
+
+  // Load outline from URL ID
+  useEffect(() => {
+    if (outlineId && savedOutlines.data) {
+      const found = savedOutlines.data.find((o) => o.id === outlineId);
+      if (found) {
+        setCurrentOutline(found);
+        setEditorKey((prev) => prev + 1);
+        setView("editor");
+      }
+    }
+  }, [outlineId, savedOutlines.data]);
+
+  const handleGenerate = (data: { topic: string }) => {
+    generateOutline.mutate(
+      { topic: data.topic },
+      {
+        onSuccess: (data) => {
+          setCurrentOutline(data);
+          setEditorKey((prev) => prev + 1);
+          setView("editor");
+        },
+      }
+    );
+  };
+
+  const handleSave = (data: OutlineData) => {
+    if (data.id) {
+      updateOutline.mutate(
+        { id: data.id, outline: data },
+        {
+          onSuccess: (updated) => {
+            setCurrentOutline(updated);
+          },
+        }
+      );
+    } else {
+      saveOutline.mutate(data, {
+        onSuccess: (saved) => {
+          setCurrentOutline(saved);
+        },
+      });
+    }
+  };
+
+  const handleSelectSaved = (outline: OutlineData) => {
+    setCurrentOutline(outline);
+    setEditorKey((prev) => prev + 1);
+    setView("editor");
+  };
+
+  return (
+    <div className="space-y-6 w-full h-full">
+      {/* Top Section: Form and Recent Searches */}
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="w-full lg:w-2/3">
+          <OutlineForm
+            onSubmit={handleGenerate}
+            isPending={generateOutline.isPending}
+          />
+        </div>
+        <div className="w-full lg:w-1/3">
+          <RecentSearches
+            searches={recentSearches.data || []}
+            onSelect={(topic) => handleGenerate({ topic })}
+          />
+        </div>
+      </div>
+
+      {/* Bottom Section: Editor and Metrics */}
+      {currentOutline && (
+        <div className="flex flex-col lg:flex-row gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Left: Editor */}
+          <div className="w-full lg:w-2/3">
+            <OutlineEditor
+              key={editorKey}
+              initialData={currentOutline}
+              onSave={handleSave}
+              onChange={(updatedOutline) => setCurrentOutline(updatedOutline)}
+              isSaving={saveOutline.isPending || updateOutline.isPending}
+            />
+          </div>
+
+          {/* Right: Metrics & Navigation */}
+          <div className="w-full lg:w-1/3">
+            <div className="sticky top-4 space-y-4">
+              {/* Metrics */}
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
+                <h3 className="font-poppins text-lg font-semibold text-gray-900">
+                  Outline Metrics
+                </h3>
+
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <span className="text-xs text-gray-500 font-medium block uppercase tracking-wider mb-1">
+                      Est. Word Count
+                    </span>
+                    <span className="text-2xl font-bold text-[#104127]">
+                      {currentOutline.estimated_word_count?.toLocaleString() ||
+                        "0"}
+                    </span>
+                    <span className="text-sm text-gray-500 ml-1">words</span>
+                  </div>
+
+                  {currentOutline.target_keywords &&
+                    currentOutline.target_keywords.length > 0 && (
+                      <div>
+                        <span className="text-xs text-gray-500 font-medium block uppercase tracking-wider mb-2">
+                          Target Keywords
+                        </span>
+                        <div className="flex flex-wrap gap-2">
+                          {currentOutline.target_keywords.map(
+                            (keyword, idx) => (
+                              <span
+                                key={idx}
+                                className="bg-green-50 text-green-700 px-2 py-1 rounded-md text-xs font-medium border border-green-100"
+                              >
+                                {keyword}
+                              </span>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                  {currentOutline.tone && (
+                    <div className="bg-gray-50 p-3 rounded-lg flex justify-between items-center">
+                      <span className="text-xs text-gray-500 font-medium uppercase tracking-wider">
+                        Tone
+                      </span>
+                      <span className="text-sm font-semibold text-gray-900">
+                        {currentOutline.tone}
+                      </span>
+                    </div>
+                  )}
+
+                  {currentOutline.target_audience && (
+                    <div className="bg-gray-50 p-3 rounded-lg flex justify-between items-center">
+                      <span className="text-xs text-gray-500 font-medium uppercase tracking-wider">
+                        Audience
+                      </span>
+                      <span className="text-sm font-semibold text-gray-900">
+                        {currentOutline.target_audience}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Table of Contents Navigation */}
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
+                <h3 className="font-poppins text-lg font-semibold text-gray-900">
+                  Outline Structure
+                </h3>
+                <div className="space-y-1 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                  <button
+                    onClick={() => {
+                      document
+                        .getElementById("outline-intro")
+                        ?.scrollIntoView({ behavior: "smooth" });
+                    }}
+                    className="w-full text-left p-2 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-2"
+                  >
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                    Introduction
+                  </button>
+
+                  {currentOutline.sections.map((section, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        document
+                          .getElementById(`outline-section-${idx}`)
+                          ?.scrollIntoView({ behavior: "smooth" });
+                      }}
+                      className="w-full text-left p-2 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-2 pl-4"
+                    >
+                      <span className="text-gray-400 text-xs">{idx + 1}.</span>
+                      <span className="truncate">{section.heading}</span>
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={() => {
+                      document
+                        .getElementById("outline-conclusion")
+                        ?.scrollIntoView({ behavior: "smooth" });
+                    }}
+                    className="w-full text-left p-2 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-2"
+                  >
+                    <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                    Conclusion
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default OutlineGenerationClient;

@@ -13,51 +13,48 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ARTICLE_STATUS_COLORS } from "@/lib/constants";
 
-const data = [
-  { time: "18:00", consultations: 30, checkups: 45, followups: 20 },
-  { time: "18:30", consultations: 45, checkups: 35, followups: 25 },
-  { time: "19:00", consultations: 25, checkups: 55, followups: 15 },
-  { time: "19:30", consultations: 50, checkups: 40, followups: 30 },
-  { time: "20:00", consultations: 35, checkups: 60, followups: 20 },
-];
+interface ActivityData {
+  date: string;
+  published: number;
+  drafts: number;
+  scheduled: number;
+}
 
-export const ActivityChart = () => {
+interface ActivityChartProps {
+  data?: ActivityData[];
+}
+
+export const ActivityChart = ({ data = [] }: ActivityChartProps) => {
   return (
-    <Card className="border-none shadow-sm h-full">
+    <Card className="border-none shadow-none h-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg font-semibold font-poppins text-gray-900">
           Activity
         </CardTitle>
-        <div className="flex gap-1 bg-gray-50 p-1 rounded-lg">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 px-3 text-xs font-medium bg-white shadow-sm text-gray-900"
-          >
-            1D
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 px-3 text-xs font-medium text-gray-500 hover:text-gray-900"
-          >
-            1W
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 px-3 text-xs font-medium text-gray-500 hover:text-gray-900"
-          >
-            1M
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 px-3 text-xs font-medium text-gray-500 hover:text-gray-900"
-          >
-            1Y
-          </Button>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: ARTICLE_STATUS_COLORS.published.chart }}
+            />
+            <span className="text-xs text-gray-500 font-medium">Published</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: ARTICLE_STATUS_COLORS.draft.chart }}
+            />
+            <span className="text-xs text-gray-500 font-medium">Drafts</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: ARTICLE_STATUS_COLORS.scheduled.chart }}
+            />
+            <span className="text-xs text-gray-500 font-medium">Scheduled</span>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -67,13 +64,14 @@ export const ActivityChart = () => {
               data={data}
               margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
             >
+              {/* ... existing grid and axes ... */}
               <CartesianGrid
                 strokeDasharray="3 3"
                 vertical={false}
                 stroke="#E5E7EB"
               />
               <XAxis
-                dataKey="time"
+                dataKey="date"
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: "#9CA3AF", fontSize: 12 }}
@@ -94,35 +92,29 @@ export const ActivityChart = () => {
                     "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
                 }}
               />
-              <Legend
-                verticalAlign="bottom"
-                height={36}
-                iconType="circle"
-                wrapperStyle={{ paddingTop: "20px" }}
-              />
               <Line
                 type="monotone"
-                dataKey="consultations"
+                dataKey="published"
                 name="Published"
-                stroke="#6366F1"
+                stroke={ARTICLE_STATUS_COLORS.published.chart}
                 strokeWidth={3}
                 dot={false}
                 activeDot={{ r: 6, strokeWidth: 0 }}
               />
               <Line
                 type="monotone"
-                dataKey="checkups"
+                dataKey="drafts"
                 name="Drafts"
-                stroke="#60A5FA"
+                stroke={ARTICLE_STATUS_COLORS.draft.chart}
                 strokeWidth={3}
                 dot={false}
                 activeDot={{ r: 6, strokeWidth: 0 }}
               />
               <Line
                 type="monotone"
-                dataKey="followups"
+                dataKey="scheduled"
                 name="Scheduled"
-                stroke="#F472B6"
+                stroke={ARTICLE_STATUS_COLORS.scheduled.chart}
                 strokeWidth={3}
                 dot={false}
                 activeDot={{ r: 6, strokeWidth: 0 }}

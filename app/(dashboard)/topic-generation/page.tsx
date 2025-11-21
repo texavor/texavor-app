@@ -26,7 +26,7 @@ const Page = () => {
     queryKey: ["recentSearches", blogs?.id],
     queryFn: async () => {
       const res = await axiosInstance.get(
-        `/api/v1/blogs/${blogs?.id}/recent_searches`
+        `/api/v1/blogs/${blogs?.id}/recent_searches?type=topic_generation`
       );
       return res?.data?.data || [];
     },

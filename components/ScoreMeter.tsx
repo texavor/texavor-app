@@ -1,6 +1,12 @@
 import React from "react";
 
-export const ScoreMeter = ({ value }: { value: number }) => {
+export const ScoreMeter = ({
+  value,
+  inverse = false,
+}: {
+  value: number;
+  inverse?: boolean;
+}) => {
   const valueOn10 = Math.round(value * 10);
   const segments = Array.from({ length: 10 }, (_, i) => i < valueOn10);
   return (
@@ -8,9 +14,10 @@ export const ScoreMeter = ({ value }: { value: number }) => {
       {segments.map((isFilled, index) => {
         let color = "bg-gray-200";
         if (isFilled) {
-          if (valueOn10 <= 3) color = "bg-red-500"; // Low
+          if (valueOn10 <= 3)
+            color = inverse ? "bg-green-500" : "bg-red-500"; // Low
           else if (valueOn10 <= 7) color = "bg-yellow-500"; // Medium
-          else color = "bg-green-500"; // High
+          else color = inverse ? "bg-red-500" : "bg-green-500"; // High
         }
         return <div key={index} className={`h-2 w-full rounded-sm ${color}`} />;
       })}
@@ -22,10 +29,12 @@ export const Gauge = ({
   value,
   max = 100,
   label,
+  inverse = false,
 }: {
   value: number;
   max?: number;
   label: string;
+  inverse?: boolean;
 }) => {
   const radius = 45;
   const semiCircleCircumference = Math.PI * radius;
@@ -35,10 +44,21 @@ export const Gauge = ({
 
   let colorClass = "text-red-500";
   const ratio = clampedValue / max;
-  if (ratio >= 0.7) {
-    colorClass = "text-green-500";
-  } else if (ratio >= 0.4) {
-    colorClass = "text-yellow-500";
+
+  if (inverse) {
+    if (ratio <= 0.3) {
+      colorClass = "text-green-500";
+    } else if (ratio <= 0.7) {
+      colorClass = "text-yellow-500";
+    } else {
+      colorClass = "text-red-500";
+    }
+  } else {
+    if (ratio >= 0.7) {
+      colorClass = "text-green-500";
+    } else if (ratio >= 0.4) {
+      colorClass = "text-yellow-500";
+    }
   }
 
   return (

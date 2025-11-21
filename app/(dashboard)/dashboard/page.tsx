@@ -10,86 +10,83 @@ import { StatsCard } from "./components/StatsCard";
 import { ActivityChart } from "./components/ActivityChart";
 import { StatusDonutChart } from "./components/StatusDonutChart";
 import { SeoAnalyzerCard } from "./components/SeoAnalyzerCard";
+import { useRouter } from "next/navigation";
+import { getStatusColor } from "@/lib/constants";
+import { DashboardSkeleton } from "./components/DashboardSkeleton";
 
-interface Article {
-  id: string;
-  title: string;
-  status: string;
-  created_at: string;
-}
-
-interface Pagination {
-  count: number;
+interface DashboardData {
+  highlights: {
+    total_articles: { value: number; trend: number; trend_direction: string };
+    published: { value: number; trend: number; trend_direction: string };
+    drafts: { value: number; trend: number; trend_direction: string };
+    topic_ideas: { value: number; trend: number; trend_direction: string };
+  };
+  overview: {
+    activity_chart: {
+      date: string;
+      published: number;
+      drafts: number;
+      scheduled: number;
+    }[];
+    recent_activity: {
+      id: string;
+      title: string;
+      description: string;
+      status: string;
+      time_ago: string;
+    }[];
+  };
+  analytics: {
+    seo_score_distribution: { good: number; average: number; poor: number };
+    article_status_distribution: {
+      published: number;
+      drafts: number;
+      scheduled: number;
+      trend: number;
+    };
+  };
 }
 
 const DashboardPage = () => {
-  const { blogs, user } = useAppStore();
+  const { blogs } = useAppStore();
+  const router = useRouter();
 
-  // Fetch Articles (for count and recent list)
-  const { data: articlesData, isLoading: isLoadingArticles } = useQuery<{
-    articles: Article[];
-    pagination: Pagination;
-  }>({
-    queryKey: ["dashboard-articles", blogs?.id],
+  const { data: dashboardData, isLoading } = useQuery<DashboardData>({
+    queryKey: ["dashboard", blogs?.id],
     queryFn: async () => {
       const res = await axiosInstance.get(
-        `/api/v1/blogs/${blogs?.id}/articles`,
-        {
-          params: {
-            per_page: 10,
-            page: 1,
-          },
-        }
+        `/api/v1/blogs/${blogs?.id}/dashboard`
       );
-      return res?.data || { articles: [], pagination: { count: 0 } };
+      return res?.data?.data || {};
     },
     enabled: !!blogs?.id,
   });
 
-  // Fetch Recent Searches (for Topic Ideas count)
-  const { data: recentSearches = [], isLoading: isLoadingSearches } = useQuery<
-    any[]
-  >({
-    queryKey: ["recentSearches", blogs?.id],
-    queryFn: async () => {
-      const res = await axiosInstance.get(
-        `/api/v1/blogs/${blogs?.id}/recent_searches`
-      );
-      return res?.data?.data || [];
-    },
-    enabled: !!blogs?.id,
-  });
+  if (isLoading || !dashboardData) {
+    return <DashboardSkeleton />;
+  }
 
-  // Calculate Stats
-  const totalArticles = articlesData?.pagination?.count || 0;
-  const publishedCount =
-    articlesData?.articles?.filter((a) => a.status === "published").length || 0; // Note: This is only from the first page, ideally backend provides stats
-  const draftCount =
-    articlesData?.articles?.filter((a) => a.status === "draft").length || 0;
-  const topicIdeasCount = recentSearches.length;
+  const highlights = dashboardData?.highlights;
+  const overview = dashboardData?.overview;
+  const analytics = dashboardData?.analytics;
 
   return (
-    <div className="container mx-auto p-6 space-y-8 bg-[#FAFAFA] h-full">
+    <div className="mx-auto space-y-8 h-full">
       {/* Highlights Section */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold font-poppins text-gray-900">
-            Blog Highlights
-          </h2>
-        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatsCard
             title="Total Articles"
-            count={totalArticles}
-            trend={12.8}
+            count={highlights?.total_articles?.value || 0}
+            trend={highlights?.total_articles?.trend || 0}
             icon={<FileText className="w-full h-full" />}
             iconBgColor="bg-blue-100"
             iconColor="text-blue-600"
           />
           <StatsCard
             title="Published"
-            count={publishedCount} // Placeholder logic
-            trend={9.6}
+            count={highlights?.published?.value || 0}
+            trend={highlights?.published?.trend || 0}
             icon={<CheckCircle2 className="w-full h-full" />}
             iconBgColor="bg-green-100"
             iconColor="text-green-600"
@@ -97,8 +94,8 @@ const DashboardPage = () => {
           />
           <StatsCard
             title="Drafts"
-            count={draftCount} // Placeholder logic
-            trend={14.3}
+            count={highlights?.drafts?.value || 0}
+            trend={highlights?.drafts?.trend || 0}
             icon={<FileEdit className="w-full h-full" />}
             iconBgColor="bg-purple-100"
             iconColor="text-purple-600"
@@ -106,8 +103,8 @@ const DashboardPage = () => {
           />
           <StatsCard
             title="Topic Ideas"
-            count={topicIdeasCount}
-            trend={4.8}
+            count={highlights?.topic_ideas?.value || 0}
+            trend={highlights?.topic_ideas?.trend || 0}
             icon={<Lightbulb className="w-full h-full" />}
             iconBgColor="bg-orange-100"
             iconColor="text-orange-600"
@@ -117,39 +114,20 @@ const DashboardPage = () => {
       </div>
 
       {/* Overview Section */}
-      <div className="space-y-4">
-        <h2 className="text-lg font-bold font-poppins text-gray-900">
+      <div className="space-y-4 pb-4">
+        <h2 className="text-lg font-bold font-poppins text-[#0A2918]">
           Overview
         </h2>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column: Activity Chart & Recent Activity */}
           <div className="lg:col-span-2 space-y-6">
             <div className="h-[400px]">
-              <ActivityChart />
+              <ActivityChart data={overview?.activity_chart} />
             </div>
-            {/* Recent Activity List (Mocked for visual match) */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            {/* Recent Activity List */}
+            <div className="bg-white rounded-xl p-6 shadow-none border-none">
               <div className="space-y-6">
-                {[
-                  {
-                    title: "New Article Published",
-                    desc: "The Future of AI in Writing",
-                    status: "Active",
-                    load: "Just now",
-                  },
-                  {
-                    title: "Topic Generation",
-                    desc: "Generated 10 ideas for 'Healthy Eating'",
-                    status: "Completed",
-                    load: "2h ago",
-                  },
-                  {
-                    title: "SEO Analysis",
-                    desc: "Optimized '10 Tips for React'",
-                    status: "Active",
-                    load: "5h ago",
-                  },
-                ].map((item, i) => (
+                {overview?.recent_activity?.map((item, i) => (
                   <div
                     key={i}
                     className="flex items-start justify-between group"
@@ -161,22 +139,36 @@ const DashboardPage = () => {
                           {item.title}
                         </h4>
                         <p className="text-xs text-gray-500 mt-0.5">
-                          {item.desc}
+                          {item?.description}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2 px-2 py-1 bg-green-50 rounded text-xs font-medium text-green-700">
-                        <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                        {item.status}
+                      <div
+                        className="flex items-center gap-2 px-2 py-1 rounded text-xs font-medium"
+                        style={{
+                          backgroundColor: getStatusColor(item?.status).bg,
+                          color: getStatusColor(item?.status).text,
+                        }}
+                      >
+                        <div
+                          className="w-1.5 h-1.5 rounded-full"
+                          style={{
+                            backgroundColor: getStatusColor(item?.status).text,
+                          }}
+                        />
+                        {item?.status}
                       </div>
                       <span className="text-xs text-gray-500 font-medium w-16 text-right">
-                        {item.load}
+                        {item?.time_ago}
                       </span>
                       <Button
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6 text-gray-400"
+                        onClick={() => {
+                          router.push(`/dashboard/article/${item?.id}`);
+                        }}
                       >
                         <FileEdit className="w-3 h-3" />
                       </Button>
@@ -189,8 +181,8 @@ const DashboardPage = () => {
 
           {/* Right Column: Side Charts */}
           <div className="space-y-6">
-            <SeoAnalyzerCard />
-            <StatusDonutChart />
+            <SeoAnalyzerCard data={analytics?.seo_score_distribution} />
+            <StatusDonutChart data={analytics?.article_status_distribution} />
           </div>
         </div>
       </div>

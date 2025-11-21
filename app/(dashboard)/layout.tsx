@@ -18,9 +18,11 @@ export default function DashboardLayout({
       <AuthChecker />
       <div className={`flex h-screen w-full ${zenMode ? "p-4" : "pr-4"}`}>
         {!zenMode && <AppSidebar />}
-        <div className="w-full flex flex-col h-full overflow-hidden">
+        <div className="w-full flex flex-col h-full overflow-hidden ">
           {!zenMode && <Topbar />}
-          <main className="flex-1 overflow-y-auto">{children}</main>
+          <main className="flex-1 overflow-y-auto no-scrollbar">
+            {children}
+          </main>
         </div>
       </div>
     </SidebarProvider>

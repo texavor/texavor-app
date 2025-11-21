@@ -55,7 +55,7 @@ const SideBarOption = [
   {
     icon: <ListTree className="h-4 w-4" />,
     title: "Outline Generator",
-    href: "/outline-generator",
+    href: "/outline-generation",
   },
 ];
 

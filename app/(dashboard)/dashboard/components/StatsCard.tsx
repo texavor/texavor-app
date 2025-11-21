@@ -23,9 +23,9 @@ export const StatsCard = ({
   subTitle,
 }: StatsCardProps) => {
   return (
-    <Card className="border-none shadow-sm hover:shadow-md transition-shadow">
-      <CardContent className="p-6 flex items-start justify-between">
-        <div className="flex gap-4">
+    <Card className="border-none shadow-none p-2">
+      <CardContent className="flex items-start justify-between p-0">
+        <div className="flex gap-4 items-center">
           <div
             className={cn(
               "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
@@ -35,17 +35,17 @@ export const StatsCard = ({
             <div className={cn("w-6 h-6", iconColor)}>{icon}</div>
           </div>
           <div className="space-y-1">
-            <p className="text-sm font-medium text-gray-500 font-inter">
+            <p className="text-sm font-medium text-[#7A7A7A] font-poppins">
               {title}
             </p>
             <div className="flex items-baseline gap-2">
-              <h3 className="text-2xl font-bold text-gray-900 font-poppins">
+              <h3 className="text-2xl font-semibold text-[#0A2918] font-poppins">
                 {count}
               </h3>
               {trend !== undefined && (
                 <div
                   className={cn(
-                    "flex items-center text-xs font-medium",
+                    "flex items-center text-xs font-medium font-inter",
                     trend > 0
                       ? "text-green-600"
                       : trend < 0
@@ -64,9 +64,6 @@ export const StatsCard = ({
                 </div>
               )}
             </div>
-            {subTitle && (
-              <p className="text-xs text-gray-400 font-inter">{subTitle}</p>
-            )}
           </div>
         </div>
       </CardContent>
