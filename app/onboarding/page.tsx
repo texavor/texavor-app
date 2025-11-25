@@ -12,11 +12,16 @@ import { Toaster, toast } from "sonner";
 import { axiosInstance } from "@/lib/axiosInstace";
 import { useSearchParams } from "next/navigation";
 
+import { Platform, useOnboardingApi } from "./hooks/useOnboardingApi";
+import { PlatformCard } from "@/components/integrations/PlatformCard";
+import ConnectIntegrationSheet from "@/components/integrations/ConnectIntegrationSheet";
+
 export default function OnboardingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep] = useState(1);
   const [processing, setProcessing] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
 
   // Step 1 fields
@@ -29,6 +34,13 @@ export default function OnboardingPage() {
   const [targetAudience, setTargetAudience] = useState("");
   const [toneOfVoice, setToneOfVoice] = useState("");
   const [competitors, setCompetitors] = useState([""]);
+
+  // Step 3 fields
+  const { getPlatforms, importArticles, connectPlatform } = useOnboardingApi();
+  const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(
+    null
+  );
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   // Polling function to check processing status
   const pollStatus = async (id: string) => {
@@ -67,11 +79,11 @@ export default function OnboardingPage() {
       competitors: string[];
     }) => axiosInstance.post("/api/v1/blogs", data),
     onSuccess: (res) => {
-      const { id, status } = res.data;
+      const { id } = res.data;
       if (id) {
         setJobId(id);
-        setProcessing(true);
-        pollStatus(id);
+        // Instead of polling immediately, go to Step 3
+        setStep(3);
       } else {
         toast.error("Invalid response from server.");
       }
@@ -110,6 +122,38 @@ export default function OnboardingPage() {
     });
   };
 
+  const handlePlatformSelect = (platform: Platform) => {
+    setSelectedPlatform(platform);
+    setIsSheetOpen(true);
+  };
+
+  const handleIntegrationSuccess = async (integrationId: string | number) => {
+    setImporting(true);
+    try {
+      await importArticles.mutateAsync(integrationId.toString());
+      toast.success("Import started! We are syncing your articles.");
+
+      // Now we can start polling for the blog status (which might include import status)
+      // or just redirect to dashboard as per original flow, but maybe show a different message.
+      // For now, I'll revert to the original polling logic to finish onboarding.
+      if (jobId) {
+        setProcessing(true); // Show the processing screen
+        pollStatus(jobId);
+      }
+    } catch (error) {
+      console.error("Import error:", error);
+      toast.error("Failed to start import.");
+      setImporting(false);
+    }
+  };
+
+  const handleSkipIntegration = () => {
+    if (jobId) {
+      setProcessing(true);
+      pollStatus(jobId);
+    }
+  };
+
   // --- Processing Loader Screen ---
   if (processing) {
     const faviconUrl =
@@ -137,7 +181,9 @@ export default function OnboardingPage() {
         {/* Text feedback */}
         <div>
           <p className="text-lg text-[#104127] font-poppins">
-            Processing your data...
+            {importing
+              ? "Importing your articles..."
+              : "Processing your data..."}
           </p>
           <p className="text-sm text-gray-500 font-inter">
             We’re analyzing <span className="font-medium">{websiteUrl}</span>
@@ -151,7 +197,11 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="mx-auto grid w-[450px] gap-6 p-10">
+    <div
+      className={`mx-auto grid ${
+        step === 3 ? "w-[900px]" : "w-[450px]"
+      } gap-6 p-10 transition-all duration-500`}
+    >
       <Toaster richColors />
       <div className="grid gap-2">
         <h1 className="text-3xl font-bold text-[#0A2918] font-poppins">
@@ -160,181 +210,223 @@ export default function OnboardingPage() {
         <p className="text-balance text-[#7A7A7A] font-inter">
           {step === 1
             ? "Tell us about your website."
-            : "Help us understand your brand and market."}
+            : step === 2
+            ? "Help us understand your brand and market."
+            : "Where do you write? Connect a platform to import content."}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {step === 1 && (
-          <div className="grid gap-4">
-            <div className="space-y-2">
-              <Label
-                htmlFor="name"
-                className="font-inter text-[#7A7A7A] font-medium"
-              >
-                Name
-              </Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Your name or company name"
-                required
-                className="bg-white text-black font-inter"
-              />
+      {step === 3 ? (
+        <div className="space-y-6">
+          {getPlatforms.isLoading ? (
+            <div className="flex justify-center py-10">
+              <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
             </div>
-            <div className="space-y-2">
-              <Label
-                htmlFor="websiteUrl"
-                className="font-inter text-[#7A7A7A] font-medium"
-              >
-                Website URL
-              </Label>
-              <Input
-                id="websiteUrl"
-                type="url"
-                value={websiteUrl}
-                onChange={(e) => setWebsiteUrl(e.target.value)}
-                placeholder="https://example.com"
-                required
-                className="bg-white text-black font-inter"
-              />
+          ) : (
+            <div className="grid grid-cols-3 gap-4">
+              {getPlatforms.data?.map((platform) => (
+                <PlatformCard
+                  key={platform.id}
+                  platform={platform}
+                  onConnect={handlePlatformSelect}
+                />
+              ))}
             </div>
-            <div className="space-y-2">
-              <Label
-                htmlFor="sitemapUrl"
-                className="font-inter text-[#7A7A7A] font-medium"
-              >
-                Sitemap URL
-              </Label>
-              <Input
-                id="sitemapUrl"
-                type="url"
-                value={sitemapUrl}
-                onChange={(e) => setSitemapUrl(e.target.value)}
-                placeholder="https://example.com/sitemap.xml"
-                className="bg-white text-black font-inter"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label
-                htmlFor="productDescription"
-                className="font-inter text-[#7A7A7A] font-medium"
-              >
-                Product Description
-              </Label>
-              <Textarea
-                id="productDescription"
-                value={productDescription}
-                onChange={(e) => setProductDescription(e.target.value)}
-                placeholder="Describe your product in a few sentences."
-                className="w-full p-2 border rounded-md bg-white text-black font-inter"
-                rows={4}
-                required
-              />
-            </div>
+          )}
+
+          <div className="flex justify-end">
             <Button
-              onClick={() => setStep(2)}
-              className="w-full bg-[#104127] text-white hover:bg-[#104127] font-poppins"
+              variant="ghost"
+              onClick={handleSkipIntegration}
+              className="text-gray-500"
             >
-              Next
+              Skip for now
             </Button>
           </div>
-        )}
 
-        {step === 2 && (
-          <div className="grid gap-4">
-            <div className="space-y-2">
-              <Label
-                htmlFor="targetAudience"
-                className="font-inter text-[#7A7A7A] font-medium"
+          <ConnectIntegrationSheet
+            open={isSheetOpen}
+            onOpenChange={setIsSheetOpen}
+            platform={selectedPlatform}
+            onSuccess={handleIntegrationSuccess}
+            connectMutation={connectPlatform}
+          />
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {step === 1 && (
+            <div className="grid gap-4">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="name"
+                  className="font-inter text-[#7A7A7A] font-medium"
+                >
+                  Name
+                </Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your name or company name"
+                  required
+                  className="bg-white text-black font-inter px-3"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label
+                  htmlFor="websiteUrl"
+                  className="font-inter text-[#7A7A7A] font-medium"
+                >
+                  Website URL
+                </Label>
+                <Input
+                  id="websiteUrl"
+                  type="url"
+                  value={websiteUrl}
+                  onChange={(e) => setWebsiteUrl(e.target.value)}
+                  placeholder="https://example.com"
+                  required
+                  className="bg-white text-black font-inter px-3"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label
+                  htmlFor="sitemapUrl"
+                  className="font-inter text-[#7A7A7A] font-medium"
+                >
+                  Sitemap URL
+                </Label>
+                <Input
+                  id="sitemapUrl"
+                  type="url"
+                  value={sitemapUrl}
+                  onChange={(e) => setSitemapUrl(e.target.value)}
+                  placeholder="https://example.com/sitemap.xml"
+                  className="bg-white text-black font-inter px-3"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label
+                  htmlFor="productDescription"
+                  className="font-inter text-[#7A7A7A] font-medium"
+                >
+                  Product Description
+                </Label>
+                <Textarea
+                  id="productDescription"
+                  value={productDescription}
+                  onChange={(e) => setProductDescription(e.target.value)}
+                  placeholder="Describe your product in a few sentences."
+                  className="w-full p-3 border rounded-md bg-white text-black font-inter"
+                  rows={4}
+                  required
+                />
+              </div>
+              <Button
+                onClick={() => setStep(2)}
+                className="w-full bg-[#104127] text-white hover:bg-[#104127] font-poppins"
               >
-                Target Audience
-              </Label>
-              <Textarea
-                id="targetAudience"
-                value={targetAudience}
-                onChange={(e) => setTargetAudience(e.target.value)}
-                placeholder="Who are you trying to reach?"
-                className="w-full p-2 border rounded-md bg-white text-black font-inter"
-                rows={4}
-                required
-              />
+                Next
+              </Button>
             </div>
-            <div className="space-y-2">
-              <Label
-                htmlFor="toneOfVoice"
-                className="font-inter text-[#7A7A7A] font-medium"
-              >
-                Tone of Voice
-              </Label>
-              <Input
-                id="toneOfVoice"
-                value={toneOfVoice}
-                onChange={(e) => setToneOfVoice(e.target.value)}
-                placeholder="e.g., Formal, Casual, Humorous"
-                required
-                className="bg-white text-black font-inter"
-              />
-            </div>
-            <div className="space-y-4">
-              <Label className="font-inter text-[#7A7A7A] font-medium">
-                Competitors
-              </Label>
-              {competitors.map((competitor, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <Input
-                    type="url"
-                    value={competitor}
-                    onChange={(e) =>
-                      handleCompetitorChange(index, e.target.value)
-                    }
-                    placeholder="https://competitor.com"
-                    className="bg-white text-black font-inter"
-                  />
-                  {competitors.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="hover:bg-transparent"
-                      onClick={() => handleRemoveCompetitor(index)}
-                    >
-                      <X className="h-4 w-4 text-black" />
-                    </Button>
+          )}
+
+          {step === 2 && (
+            <div className="grid gap-4">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="targetAudience"
+                  className="font-inter text-[#7A7A7A] font-medium"
+                >
+                  Target Audience
+                </Label>
+                <Textarea
+                  id="targetAudience"
+                  value={targetAudience}
+                  onChange={(e) => setTargetAudience(e.target.value)}
+                  placeholder="Who are you trying to reach?"
+                  className="w-full p-3 border rounded-md bg-white text-black font-inter"
+                  rows={4}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label
+                  htmlFor="toneOfVoice"
+                  className="font-inter text-[#7A7A7A] font-medium"
+                >
+                  Tone of Voice
+                </Label>
+                <Input
+                  id="toneOfVoice"
+                  value={toneOfVoice}
+                  onChange={(e) => setToneOfVoice(e.target.value)}
+                  placeholder="e.g., Formal, Casual, Humorous"
+                  required
+                  className="bg-white text-black font-inter px-3"
+                />
+              </div>
+              <div className="space-y-4">
+                <Label className="font-inter text-[#7A7A7A] font-medium">
+                  Competitors
+                </Label>
+                {competitors.map((competitor, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <Input
+                      type="url"
+                      value={competitor}
+                      onChange={(e) =>
+                        handleCompetitorChange(index, e.target.value)
+                      }
+                      placeholder="https://competitor.com"
+                      className="bg-white text-black font-inter px-3"
+                    />
+                    {competitors.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="hover:bg-transparent"
+                        onClick={() => handleRemoveCompetitor(index)}
+                      >
+                        <X className="h-4 w-4 text-black" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddCompetitor}
+                  className="bg-white text-black font-inter hover:bg-white"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Competitor
+                </Button>
+              </div>
+              <div className="flex gap-4 justify-between w-full">
+                <Button
+                  onClick={() => setStep(1)}
+                  className="w-[50%] bg-white text-black hover:bg-white"
+                >
+                  Back
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isPending}
+                  className="w-[50%] bg-[#104127] text-white hover:bg-[#104127]"
+                >
+                  {isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                </div>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddCompetitor}
-                className="bg-white text-black font-inter hover:bg-white"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Competitor
-              </Button>
+                  Submit
+                </Button>
+              </div>
             </div>
-            <div className="flex gap-4 justify-between w-full">
-              <Button
-                onClick={() => setStep(1)}
-                className="w-[50%] bg-white text-black hover:bg-white"
-              >
-                Back
-              </Button>
-              <Button
-                type="submit"
-                disabled={isPending}
-                className="w-[50%] bg-[#104127] text-white hover:bg-[#104127]"
-              >
-                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Submit
-              </Button>
-            </div>
-          </div>
-        )}
-      </form>
+          )}
+        </form>
+      )}
     </div>
   );
 }

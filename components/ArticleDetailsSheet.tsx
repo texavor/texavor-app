@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  useIntegrationsApi,
+  Platform,
+} from "@/app/(dashboard)/integration/hooks/useIntegrationsApi";
+import { Checkbox } from "./ui/checkbox";
 import React, { useState, useEffect } from "react";
 import {
   Sheet,
@@ -44,6 +49,7 @@ interface ArticleDetails {
   tags: string[];
   categories: string[];
   key_phrases: string[];
+  cross_post_platforms: string[];
 }
 
 interface ArticleDetailsSheetProps {
@@ -64,19 +70,34 @@ export default function ArticleDetailsSheet({
   const [formData, setFormData] = useState<ArticleDetails>(articleData);
   const [publishMode, setPublishMode] = useState<PublishMode>("publish");
   const [authorDropdownOpen, setAuthorDropdownOpen] = useState(false);
+  const { getIntegrations } = useIntegrationsApi();
+  const connectedIntegrations =
+    getIntegrations.data?.filter((p) => p.is_connected) || [];
 
   // Sync formData when articleData changes
   useEffect(() => {
-    setFormData(articleData);
+    let initialCrossPostPlatforms = articleData.cross_post_platforms;
+
+    // If no cross-post settings are saved for the article, default to all connected integrations.
+    if (initialCrossPostPlatforms == null) {
+      // Using == to catch null and undefined
+      initialCrossPostPlatforms = connectedIntegrations.map((p) => p.id);
+    }
+
+    setFormData({
+      ...articleData,
+      cross_post_platforms: initialCrossPostPlatforms,
+    });
+
     if (articleData.scheduled_at) {
       setPublishMode("schedule");
     } else {
       setPublishMode("publish");
     }
-  }, [articleData]);
+  }, [articleData, getIntegrations.data]); // Add getIntegrations.data dependency
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -84,9 +105,28 @@ export default function ArticleDetailsSheet({
 
   const handleDateChange = (
     field: "scheduled_at" | "published_at",
-    value: string
+    value: string,
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value || null }));
+  };
+
+  const handleCrossPostChange = (platformId: string) => {
+    setFormData((prev) => {
+      const currentlySelected = prev.cross_post_platforms || [];
+      if (currentlySelected.includes(platformId)) {
+        return {
+          ...prev,
+          cross_post_platforms: currentlySelected.filter(
+            (id) => id !== platformId,
+          ),
+        };
+      } else {
+        return {
+          ...prev,
+          cross_post_platforms: [...currentlySelected, platformId],
+        };
+      }
+    });
   };
 
   const handleSave = (action: "save_draft" | "publish_or_schedule") => {
@@ -308,6 +348,35 @@ export default function ArticleDetailsSheet({
                       handleDateChange("scheduled_at", e.target.value)
                     }
                   />
+                </div>
+              )}
+              {connectedIntegrations.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-foreground/80">Cross-Post To</Label>
+                  <div className="space-y-2 rounded-md border p-2">
+                    {connectedIntegrations.map((platform) => (
+                      <div
+                        key={platform.id}
+                        className="flex items-center space-x-2"
+                      >
+                        <Checkbox
+                          id={`crosspost-${platform.id}`}
+                          checked={formData.cross_post_platforms.includes(
+                            platform.id,
+                          )}
+                          onCheckedChange={() =>
+                            handleCrossPostChange(platform.id)
+                          }
+                        />
+                        <Label
+                          htmlFor={`crosspost-${platform.id}`}
+                          className="font-normal cursor-pointer"
+                        >
+                          {platform.name}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

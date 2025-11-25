@@ -49,7 +49,7 @@ export default function CreateArticlePage({ params }: any) {
     enabled: !!existingId && !!blogs?.id,
   });
 
-  const { data: fetchedInsights, isLoading:isLoadingInsights } = useQuery({
+  const { data: fetchedInsights, isLoading: isLoadingInsights } = useQuery({
     queryKey: ["articleInsight", blogs],
     queryFn: async () => {
       const res = await axiosInstance.get(
@@ -77,7 +77,7 @@ export default function CreateArticlePage({ params }: any) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (payload: { title: string; content: string }) => {
+    mutationFn: async (payload: any) => {
       return axiosInstance.patch(
         `/api/v1/blogs/${blogs.id}/articles/${articleId?.id}`,
         payload,
@@ -150,7 +150,7 @@ export default function CreateArticlePage({ params }: any) {
                 <Maximize className="h-5 w-5" />
               )}
             </Button>
-            
+
             {/* Article Details Trigger */}
             <Button
               onClick={() => setIsDetailsSheetOpen(true)}
@@ -190,30 +190,31 @@ export default function CreateArticlePage({ params }: any) {
           </div>
         )}
       </div>
-      
+
       <ArticleDetailsSheet
         open={isDetailsSheetOpen}
         onOpenChange={setIsDetailsSheetOpen}
         articleData={{
-            ...articleId,
-            title,
-            content,
-            // Default values for missing fields to avoid crashes if backend data is partial
-            slug: (articleId as any)?.slug || "",
-            canonical_url: (articleId as any)?.canonical_url || "",
-            seo_title: (articleId as any)?.seo_title || "",
-            seo_description: (articleId as any)?.seo_description || "",
-            seo_keywords: (articleId as any)?.seo_keywords || "",
-            scheduled_at: (articleId as any)?.scheduled_at || null,
-            published_at: (articleId as any)?.published_at || null,
-            author_id: (articleId as any)?.author_id || null,
-            tags: (articleId as any)?.tags || [],
-            categories: (articleId as any)?.categories || [],
-            key_phrases: (articleId as any)?.key_phrases || [],
+          ...articleId,
+          title,
+          content,
+          // Default values for missing fields to avoid crashes if backend data is partial
+          slug: (articleId as any)?.slug || "",
+          canonical_url: (articleId as any)?.canonical_url || "",
+          seo_title: (articleId as any)?.seo_title || "",
+          seo_description: (articleId as any)?.seo_description || "",
+          seo_keywords: (articleId as any)?.seo_keywords || "",
+          scheduled_at: (articleId as any)?.scheduled_at || null,
+          published_at: (articleId as any)?.published_at || null,
+          author_id: (articleId as any)?.author_id || null,
+          tags: (articleId as any)?.tags || [],
+          categories: (articleId as any)?.categories || [],
+          key_phrases: (articleId as any)?.key_phrases || [],
+          cross_post_platforms: (articleId as any)?.cross_post_platforms || [],
         }}
         onSave={(data) => {
-            updateMutation.mutate(data);
-            setIsDetailsSheetOpen(false);
+          updateMutation.mutate(data);
+          setIsDetailsSheetOpen(false);
         }}
       />
     </div>
