@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAppStore } from "@/store/appStore";
 import { Button } from "@/components/ui/button";
 import { FileText, LogOut, PenSquare, Sparkles } from "lucide-react";
@@ -9,9 +9,29 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import axios from "axios";
 import { toast } from "sonner";
 
+// Page title mapping based on routes
+const PAGE_TITLES: Record<string, string> = {
+  "/dashboard": "Dashboard",
+  "/article": "Article",
+  "/keyword-research": "Keyword Research",
+  "/topic-generation": "Topic Generation",
+  "/outline-generation": "Outline Generator",
+  "/integration": "Integration",
+  "/settings": "Settings",
+  "/support": "Support",
+  "/blogs": "Blogs",
+  "/docs": "Docs",
+};
+
 const Topbar = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const { clear, user, mainLoading } = useAppStore();
+
+  // Get dynamic page title based on current pathname
+  const getPageTitle = () => {
+    return PAGE_TITLES[pathname] || "Dashboard";
+  };
 
   const handleLogout = async () => {
     try {
@@ -36,7 +56,7 @@ const Topbar = () => {
       {/* First Div */}
       <div className="w-3/12">
         <div className="bg-white w-full rounded-xl p-2 h-12 flex justify-center flex-col">
-          <p className="font-poppins font-medium">Dashboard</p>
+          <p className="font-poppins font-medium">{getPageTitle()}</p>
         </div>
       </div>
 

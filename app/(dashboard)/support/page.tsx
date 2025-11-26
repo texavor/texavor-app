@@ -13,12 +13,16 @@ const Page = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Support Tickets</h1>
+      <div className="flex justify-end items-center mb-6">
         <Button onClick={() => setOpen(true)}>Create New Ticket</Button>
       </div>
-
-      <CustomTable columns={columns} data={data || []} isLoading={isLoading} />
+      {/* @ts-ignore */}
+      <CustomTable
+        className=""
+        columns={columns as any}
+        data={data || []}
+        isLoading={isLoading}
+      />
       <CreateTicketDialog open={open} onOpenChange={setOpen} />
     </div>
   );

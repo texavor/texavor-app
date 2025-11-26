@@ -20,6 +20,7 @@ export interface OutlineData {
   tone?: string;
   target_audience?: string;
   created_at?: string;
+  topic: string;
 }
 
 export interface GenerateOutlineRequest {

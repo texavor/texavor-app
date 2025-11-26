@@ -14,7 +14,14 @@ import {
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Lock } from "lucide-react";
+import {
+  Loader2,
+  Lock,
+  Plus,
+  Trash2,
+  AlertCircle,
+  ExternalLink,
+} from "lucide-react";
 import { toast } from "sonner";
 
 const MAPPABLE_FIELDS = [
@@ -72,16 +79,130 @@ export default function ConnectIntegrationSheet({
 }: ConnectIntegrationSheetProps) {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [mappingData, setMappingData] = useState<Record<string, string>>({});
+  const [customHeaders, setCustomHeaders] = useState<
+    { key: string; value: string }[]
+  >([]);
 
-  // Reset form when platform changes
-  // Reset form when platform changes
+  // Reset form when platform changes and load existing settings if connected
   useEffect(() => {
-    setFormData({});
-    setMappingData({});
+    if (!platform) {
+      setFormData({});
+      setMappingData({});
+      setCustomHeaders([]);
+      return;
+    }
+
+    // If platform is connected, pre-populate with existing settings
+    if (platform.is_connected && platform.settings) {
+      const newFormData: Record<string, string> = {};
+      const MASKED_VALUE = "*********************"; // 10 asterisks for masked credentials
+
+      switch (platform.id) {
+        case "medium":
+          // Mask token (sensitive), show user_id (non-sensitive)
+          newFormData.token = MASKED_VALUE;
+          if (platform.settings.user_id) {
+            newFormData.user_id = platform.settings.user_id;
+          }
+          break;
+
+        case "devto":
+          // Mask API key (sensitive)
+          newFormData.api_key = MASKED_VALUE;
+          break;
+
+        case "hashnode":
+          // Mask token (sensitive), show publication_id (non-sensitive)
+          newFormData.token = MASKED_VALUE;
+          if (platform.settings.publication_id) {
+            newFormData.publication_id = platform.settings.publication_id;
+          }
+          break;
+
+        case "wordpress":
+          // Show site_url and username, mask password (sensitive)
+          if (platform.settings.site_url) {
+            newFormData.site_url = platform.settings.site_url;
+          }
+          if (platform.settings.username) {
+            newFormData.username = platform.settings.username;
+          }
+          newFormData.password = MASKED_VALUE;
+          break;
+
+        case "webflow":
+          // Mask token (sensitive), show site_id and collection_id (non-sensitive)
+          newFormData.token = MASKED_VALUE;
+          if (platform.settings.site_id) {
+            newFormData.site_id = platform.settings.site_id;
+          }
+          if (platform.settings.collection_id) {
+            newFormData.collection_id = platform.settings.collection_id;
+          }
+          break;
+
+        case "shopify":
+          // Mask access_token (sensitive), show shop_domain, blog_id, blog_handle (non-sensitive)
+          console.log("Shopify settings:", platform.settings);
+          newFormData.access_token = MASKED_VALUE;
+          // Use domain or myshopify_domain from settings
+          const shopDomain =
+            platform.settings.domain ||
+            platform.settings.myshopify_domain ||
+            platform.settings.shop_domain;
+          console.log("Shop domain found:", shopDomain);
+          if (shopDomain) {
+            newFormData.shop_domain = shopDomain;
+          }
+          if (platform.settings.blog_id) {
+            newFormData.blog_id = platform.settings.blog_id;
+          }
+          if (platform.settings.blog_handle) {
+            newFormData.blog_handle = platform.settings.blog_handle;
+          }
+          break;
+
+        case "custom_webhook":
+          // Show all webhook settings (non-sensitive)
+          if (platform.settings.webhook_url) {
+            newFormData.webhook_url = platform.settings.webhook_url;
+          }
+          if (platform.settings.label) {
+            newFormData.label = platform.settings.label;
+          }
+
+          // Load custom headers
+          if (platform.settings.headers) {
+            const headers = Object.entries(platform.settings.headers).map(
+              ([key, value]) => ({ key, value: value as string })
+            );
+            setCustomHeaders(headers);
+          }
+
+          // Load field mapping
+          if (platform.settings.field_mapping) {
+            const mapping: Record<string, string> = {};
+            Object.entries(platform.settings.field_mapping).forEach(
+              ([key, value]) => {
+                mapping[value as string] = key;
+              }
+            );
+            setMappingData(mapping);
+          }
+          break;
+      }
+
+      setFormData(newFormData);
+    } else {
+      // Reset for new connections
+      setFormData({});
+      setMappingData({});
+      setCustomHeaders([]);
+    }
   }, [platform]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -89,6 +210,39 @@ export default function ConnectIntegrationSheet({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!platform) return;
+
+    // Special handling for Shopify OAuth
+    if (platform.id === "shopify") {
+      if (!formData.shop_domain) {
+        toast.error("Please enter your shop domain");
+        return;
+      }
+
+      try {
+        // Normalize shop domain
+        let shop = formData.shop_domain.trim().toLowerCase();
+        // Remove https:// or http:// if present
+        shop = shop.replace(/^https?:\/\//, "");
+        // Remove trailing slash
+        shop = shop.replace(/\/$/, "");
+        // Add .myshopify.com if not present
+        if (!shop.includes(".myshopify.com")) {
+          shop = `${shop}.myshopify.com`;
+        }
+
+        const backendUrl =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+        const installUrl = `${backendUrl}/api/v1/shopify/oauth/install?shop=${shop}`;
+
+        // Redirect to backend OAuth endpoint
+        window.location.href = installUrl;
+        return;
+      } catch (error) {
+        console.error("Shopify connection error:", error);
+        toast.error("Failed to initiate Shopify connection");
+        return;
+      }
+    }
 
     try {
       // Construct payload based on platform requirements
@@ -122,22 +276,24 @@ export default function ConnectIntegrationSheet({
           payload.settings.collection_id = formData.collection_id;
           break;
         case "shopify":
+          // Should not reach here due to early return, but kept for safety
           payload.credentials.access_token = formData.access_token;
           payload.settings.shop_domain = formData.shop_domain;
-          payload.settings.blog_id = formData.blog_id;
-          if (formData.blog_handle)
-            payload.settings.blog_handle = formData.blog_handle;
           break;
         case "custom_webhook":
           payload.settings.webhook_url = formData.webhook_url;
           payload.settings.label = formData.label;
 
-          if (formData.headers) {
-            try {
-              payload.settings.headers = JSON.parse(formData.headers);
-            } catch (e) {
-              toast.error("Invalid JSON format for Headers");
-              return;
+          if (customHeaders.length > 0) {
+            const headers: Record<string, string> = {};
+            customHeaders.forEach(({ key, value }) => {
+              if (key.trim()) {
+                headers[key.trim()] = value;
+              }
+            });
+
+            if (Object.keys(headers).length > 0) {
+              payload.settings.headers = headers;
             }
           }
 
@@ -171,7 +327,7 @@ export default function ConnectIntegrationSheet({
       }
     } catch (error) {
       console.error("Connection error:", error);
-      toast.error("An error occurred while connecting.");
+      // toast.error("An error occurred while connecting.");
     }
   };
 
@@ -322,6 +478,26 @@ export default function ConnectIntegrationSheet({
                 className="font-inter"
               />
             </div>
+
+            {/* WordPress Requirements Warning */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex gap-2 items-start">
+              <AlertCircle className="w-4 h-4 text-amber-700 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs text-amber-900 font-inter font-semibold mb-1">
+                  WordPress Requirements
+                </p>
+                <p className="text-xs text-amber-800 font-inter leading-relaxed">
+                  Application Passwords are only available on{" "}
+                  <span className="font-semibold">self-hosted WordPress</span>{" "}
+                  (WordPress.org) or{" "}
+                  <span className="font-semibold">
+                    WordPress.com Business plan
+                  </span>{" "}
+                  and above. Free, Personal, and Premium plans do not support
+                  Application Passwords.
+                </p>
+              </div>
+            </div>
           </>
         );
       case "webflow":
@@ -382,23 +558,6 @@ export default function ConnectIntegrationSheet({
           <>
             <div className="space-y-1.5">
               <Label
-                htmlFor="access_token"
-                className="text-foreground/80 font-inter"
-              >
-                Admin API Access Token
-              </Label>
-              <Input
-                id="access_token"
-                name="access_token"
-                value={formData.access_token || ""}
-                onChange={handleChange}
-                required
-                placeholder="Your Shopify Admin API Token"
-                className="font-inter"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label
                 htmlFor="shop_domain"
                 className="text-foreground/80 font-inter"
               >
@@ -413,39 +572,20 @@ export default function ConnectIntegrationSheet({
                 placeholder="your-store.myshopify.com"
                 className="font-inter"
               />
+              <p className="text-[11px] text-muted-foreground">
+                Enter your Shopify store domain (e.g., yourstore.myshopify.com)
+              </p>
             </div>
-            <div className="space-y-1.5">
-              <Label
-                htmlFor="blog_id"
-                className="text-foreground/80 font-inter"
-              >
-                Blog ID
-              </Label>
-              <Input
-                id="blog_id"
-                name="blog_id"
-                value={formData.blog_id || ""}
-                onChange={handleChange}
-                required
-                placeholder="123456789"
-                className="font-inter"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label
-                htmlFor="blog_handle"
-                className="text-foreground/80 font-inter"
-              >
-                Blog Handle (Optional)
-              </Label>
-              <Input
-                id="blog_handle"
-                name="blog_handle"
-                value={formData.blog_handle || ""}
-                onChange={handleChange}
-                placeholder="news"
-                className="font-inter"
-              />
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 flex gap-2 items-start">
+              <ExternalLink className="w-4 h-4 text-blue-700 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs text-blue-800 font-inter font-semibold mb-1">
+                  Redirects to Shopify
+                </p>
+                <p className="text-xs text-blue-700 font-inter">
+                  You'll be redirected to Shopify to authorize the connection.
+                </p>
+              </div>
             </div>
           </>
         );
@@ -492,26 +632,85 @@ export default function ConnectIntegrationSheet({
 
             <Separator className="my-4" />
 
-            <div className="space-y-1.5">
-              <Label
-                htmlFor="headers"
-                className="text-foreground/80 font-inter"
-              >
-                Custom Headers (JSON)
-              </Label>
-              <Textarea
-                id="headers"
-                name="headers"
-                value={formData.headers || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, headers: e.target.value })
-                }
-                placeholder='{"Authorization": "Bearer token123"}'
-                className="min-h-[80px] font-inter font-mono text-xs resize-none focus-visible:ring-[0px]"
-              />
-              <p className="text-[11px] text-muted-foreground">
-                JSON object with custom headers for authentication
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-foreground/80 font-inter">
+                  Custom Headers
+                </Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCustomHeaders([...customHeaders, { key: "", value: "" }])
+                  }
+                  className="h-7 text-xs gap-1"
+                >
+                  <Plus className="w-3 h-3" />
+                  Add Header
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground mb-2">
+                Add custom headers for authentication or other purposes.
               </p>
+
+              {customHeaders.length > 0 ? (
+                <div className="grid gap-2 border rounded-lg p-4 bg-gray-50/50">
+                  {customHeaders.map((header, index) => (
+                    <div
+                      key={index}
+                      className="grid grid-cols-12 gap-2 items-center"
+                    >
+                      <div className="col-span-5">
+                        <Input
+                          value={header.key}
+                          onChange={(e) => {
+                            const newHeaders = [...customHeaders];
+                            newHeaders[index].key = e.target.value;
+                            setCustomHeaders(newHeaders);
+                          }}
+                          placeholder="Key (e.g. Authorization)"
+                          className="h-8 text-xs font-inter font-mono bg-white"
+                        />
+                      </div>
+                      <div className="col-span-6">
+                        <Input
+                          value={header.value}
+                          onChange={(e) => {
+                            const newHeaders = [...customHeaders];
+                            newHeaders[index].value = e.target.value;
+                            setCustomHeaders(newHeaders);
+                          }}
+                          placeholder="Value"
+                          className="h-8 text-xs font-inter font-mono bg-white"
+                        />
+                      </div>
+                      <div className="col-span-1 flex justify-end">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            const newHeaders = customHeaders.filter(
+                              (_, i) => i !== index
+                            );
+                            setCustomHeaders(newHeaders);
+                          }}
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center p-4 border border-dashed rounded-lg bg-gray-50/50">
+                  <p className="text-xs text-muted-foreground">
+                    No custom headers added.
+                  </p>
+                </div>
+              )}
             </div>
             <div className="space-y-3">
               <Label className="text-foreground/80 font-inter">
@@ -587,6 +786,57 @@ export default function ConnectIntegrationSheet({
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8 no-scrollbar">
+          {/* Connected Account Information */}
+          {platform?.is_connected && platform?.settings && (
+            <section className="space-y-4">
+              <h3 className="text-sm font-poppins font-medium text-[#0A2918] uppercase tracking-wider">
+                Connected Account
+              </h3>
+              <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-4">
+                <div className="flex items-start gap-4">
+                  <Avatar className="w-12 h-12 border-2 border-emerald-200 shadow-sm">
+                    <AvatarImage src={platform.settings.profile_image} />
+                    <AvatarFallback className="bg-emerald-100 text-emerald-700 font-semibold">
+                      {platform.settings.site_short_name
+                        ?.substring(0, 2)
+                        .toUpperCase() ||
+                        platform.settings.name?.substring(0, 2).toUpperCase() ||
+                        platform.settings.username
+                          ?.substring(0, 2)
+                          .toUpperCase() ||
+                        platform.name.substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 space-y-1">
+                    {platform.settings.name && (
+                      <p className="font-semibold text-emerald-900 font-poppins">
+                        {platform?.settings?.site_name ||
+                          platform?.settings?.name}
+                      </p>
+                    )}
+
+                    {platform?.id !== "custom_webhook" && (
+                      <p className="text-sm text-emerald-700 font-inter">
+                        @
+                        {platform?.id === "shopify"
+                          ? platform?.settings?.domain ||
+                            platform?.settings?.myshopify_domain
+                          : platform?.settings?.site_short_name ||
+                            platform?.settings?.username}
+                      </p>
+                    )}
+
+                    {platform?.settings?.label && !platform?.settings?.name && (
+                      <p className="font-semibold text-emerald-900 font-poppins">
+                        {platform.settings.label}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
           <form id="connect-form" onSubmit={handleSubmit} className="space-y-6">
             <section className="space-y-4">
               <h3 className="text-sm font-poppins font-medium text-[#0A2918] uppercase tracking-wider">
@@ -595,18 +845,20 @@ export default function ConnectIntegrationSheet({
               <div className="space-y-4">
                 {renderFields()}
 
-                <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 flex gap-2 items-start">
-                  <Lock className="w-4 h-4 text-blue-700 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-xs text-blue-800 font-inter font-semibold mb-1">
-                      Security Assurance
-                    </p>
-                    <p className="text-xs text-blue-700 font-inter">
-                      Your credentials and keys are stored with caution and are
-                      fully encrypted.
-                    </p>
+                {platform?.id !== "shopify" && (
+                  <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 flex gap-2 items-start">
+                    <Lock className="w-4 h-4 text-blue-700 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs text-blue-800 font-inter font-semibold mb-1">
+                        Security Assurance
+                      </p>
+                      <p className="text-xs text-blue-700 font-inter">
+                        Your credentials and keys are stored with caution and
+                        are fully encrypted.
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </section>
           </form>
@@ -623,6 +875,11 @@ export default function ConnectIntegrationSheet({
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Connecting...
+              </>
+            ) : platform?.id === "shopify" ? (
+              <>
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Connect Shopify Store
               </>
             ) : (
               "Connect Integration"

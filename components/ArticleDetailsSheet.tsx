@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  useIntegrationsApi,
-  Platform,
-} from "@/app/(dashboard)/integration/hooks/useIntegrationsApi";
+import { useIntegrationsApi } from "@/app/(dashboard)/integrations/hooks/useIntegrationsApi";
 import { Checkbox } from "./ui/checkbox";
 import React, { useState, useEffect } from "react";
 import {
@@ -97,7 +94,7 @@ export default function ArticleDetailsSheet({
   }, [articleData, getIntegrations.data]); // Add getIntegrations.data dependency
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -105,7 +102,7 @@ export default function ArticleDetailsSheet({
 
   const handleDateChange = (
     field: "scheduled_at" | "published_at",
-    value: string,
+    value: string
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value || null }));
   };
@@ -117,7 +114,7 @@ export default function ArticleDetailsSheet({
         return {
           ...prev,
           cross_post_platforms: currentlySelected.filter(
-            (id) => id !== platformId,
+            (id) => id !== platformId
           ),
         };
       } else {
@@ -362,7 +359,7 @@ export default function ArticleDetailsSheet({
                         <Checkbox
                           id={`crosspost-${platform.id}`}
                           checked={formData.cross_post_platforms.includes(
-                            platform.id,
+                            platform.id
                           )}
                           onCheckedChange={() =>
                             handleCrossPostChange(platform.id)

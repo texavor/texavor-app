@@ -29,6 +29,7 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({
 }) => {
   // Helper to render icon based on platform.icon string
   const renderIcon = () => {
+    console.log(platform.logo_url);
     if (platform.logo_url) {
       return (
         <img
@@ -80,6 +81,14 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({
             <h3 className="font-semibold text-lg leading-none font-poppins">
               {displayName}
             </h3>
+            {platform.type === "oauth" && (
+              <Badge
+                variant="secondary"
+                className="text-[10px] h-5 px-1.5 font-inter bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 border"
+              >
+                OAuth
+              </Badge>
+            )}
             {isConnected && (
               <Badge
                 variant="outline"

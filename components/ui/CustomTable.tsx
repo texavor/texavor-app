@@ -37,7 +37,7 @@ export function CustomTable<TData, TValue>({
   data,
   isLoading,
   onClick,
-  className,
+  className = "",
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState({});

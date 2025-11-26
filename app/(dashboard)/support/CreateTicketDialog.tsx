@@ -12,13 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import CustomDropdown from "@/components/ui/CustomDropdown";
+import { ChevronDown } from "lucide-react";
 
 import { useCreateSupportTicket } from "./hooks/useSupportApi";
 import { toast } from "sonner";
@@ -28,6 +23,19 @@ interface CreateTicketDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const PRIORITY_OPTIONS = [
+  { id: "low", name: "Low" },
+  { id: "medium", name: "Medium" },
+  { id: "high", name: "High" },
+  { id: "critical", name: "Critical" },
+];
+
+const CATEGORY_OPTIONS = [
+  { id: "Technical", name: "Technical" },
+  { id: "Billing", name: "Billing" },
+  { id: "General", name: "General" },
+];
+
 export const CreateTicketDialog: React.FC<CreateTicketDialogProps> = ({
   open,
   onOpenChange,
@@ -36,6 +44,8 @@ export const CreateTicketDialog: React.FC<CreateTicketDialogProps> = ({
   const [message, setMessage] = React.useState("");
   const [priority, setPriority] = React.useState("");
   const [category, setCategory] = React.useState("");
+  const [priorityOpen, setPriorityOpen] = React.useState(false);
+  const [categoryOpen, setCategoryOpen] = React.useState(false);
 
   const { mutate: createTicket, isPending } = useCreateSupportTicket();
 
@@ -49,73 +59,121 @@ export const CreateTicketDialog: React.FC<CreateTicketDialogProps> = ({
       {
         onSuccess: () => {
           onOpenChange(false);
+          // Reset form
+          setSubject("");
+          setMessage("");
+          setPriority("");
+          setCategory("");
         },
-      },
+      }
     );
   };
 
+  const selectedPriority = PRIORITY_OPTIONS.find((opt) => opt.id === priority);
+  const selectedCategory = CATEGORY_OPTIONS.find((opt) => opt.id === category);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Create New Support Ticket</DialogTitle>
+      <DialogContent className="sm:max-w-[500px] bg-white">
+        <DialogHeader className="border-b pb-4 -mx-6 px-6">
+          <DialogTitle className="text-xl">
+            Create New Support Ticket
+          </DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="subject" className="text-right">
-              Subject
+        <div className="space-y-5 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="subject" className="text-sm font-medium">
+              Subject <span className="text-red-500">*</span>
             </Label>
             <Input
               id="subject"
-              className="col-span-3"
+              placeholder="Brief description of your issue"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="message" className="text-right">
-              Message
+
+          <div className="space-y-2">
+            <Label htmlFor="message" className="text-sm font-medium">
+              Message <span className="text-red-500">*</span>
             </Label>
             <Textarea
               id="message"
-              className="col-span-3"
+              placeholder="Provide detailed information about your issue"
+              className="min-h-[120px] resize-none"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="priority" className="text-right">
-              Priority
-            </Label>
-            <Select onValueChange={setPriority} value={priority}>
-              <SelectTrigger className="col-span-3">
-                <SelectValue placeholder="Select priority" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="critical">Critical</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="category" className="text-right">
-              Category
-            </Label>
-            <Select onValueChange={setCategory} value={category}>
-              <SelectTrigger className="col-span-3">
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Technical">Technical</SelectItem>
-                <SelectItem value="Billing">Billing</SelectItem>
-                <SelectItem value="General">General</SelectItem>
-              </SelectContent>
-            </Select>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="priority" className="text-sm font-medium">
+                Priority
+              </Label>
+              <CustomDropdown
+                open={priorityOpen}
+                onOpenChange={setPriorityOpen}
+                options={PRIORITY_OPTIONS}
+                value={priority}
+                onSelect={(option: any) => {
+                  setPriority(option.id);
+                  setPriorityOpen(false);
+                }}
+                trigger={
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between font-normal"
+                    type="button"
+                  >
+                    <span className={!priority ? "text-muted-foreground" : ""}>
+                      {selectedPriority?.name || "Select priority"}
+                    </span>
+                    <ChevronDown className="h-4 w-4 opacity-50" />
+                  </Button>
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="category" className="text-sm font-medium">
+                Category
+              </Label>
+              <CustomDropdown
+                open={categoryOpen}
+                onOpenChange={setCategoryOpen}
+                options={CATEGORY_OPTIONS}
+                value={category}
+                onSelect={(option: any) => {
+                  setCategory(option.id);
+                  setCategoryOpen(false);
+                }}
+                trigger={
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between font-normal"
+                    type="button"
+                  >
+                    <span className={!category ? "text-muted-foreground" : ""}>
+                      {selectedCategory?.name || "Select category"}
+                    </span>
+                    <ChevronDown className="h-4 w-4 opacity-50" />
+                  </Button>
+                }
+              />
+            </div>
           </div>
         </div>
+
         <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+            type="button"
+          >
+            Cancel
+          </Button>
           <Button type="submit" onClick={handleSubmit} disabled={isPending}>
             {isPending ? "Creating..." : "Create Ticket"}
           </Button>

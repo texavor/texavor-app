@@ -62,8 +62,8 @@ const SideBarOption = [
 const SideBarOptionSettings = [
   {
     icon: <Blocks className="h-4 w-4" />,
-    title: "Integration",
-    href: "/integration",
+    title: "Integrations",
+    href: "/integrations",
   },
   {
     icon: <Settings className="h-4 w-4" />,
@@ -237,7 +237,7 @@ const AppSidebar = () => {
 
         <div className="border-b-[1px] px-2" />
 
-        <div className="space-y-1 flex flex-col pt-2">
+        <div className="space-y-1 flex flex-col py-2">
           {SideBarOptionSettings.map((sidebar) => (
             <SidebarItem
               key={sidebar.title}

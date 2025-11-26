@@ -18,7 +18,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "EasyWrite",
+  title: "Texavor",
   description:
     "The AI content strategist for developers. Generate high-impact article ideas optimized for Google, AI Chatbots, and E-E-A-T. Built for technical content that gets discovered.",
   verification: {

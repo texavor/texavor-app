@@ -27,15 +27,16 @@ const SavedOutlinesPage = () => {
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <CustomTable
-          columns={columns}
+          columns={columns as any}
           data={savedOutlines.data || []}
           isLoading={savedOutlines.isLoading}
-          onClick={(row) => {
+          onClick={(row: any) => {
             router.push(`/outline-generation?id=${row.id}`);
           }}
-          meta={{
-            onDelete: handleDelete,
-          }}
+          className=""
+          // meta={{
+          //   onDelete: handleDelete,
+          // }}
         />
       </div>
     </div>

@@ -54,11 +54,11 @@ export const useIntegrationsApi = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["integrations", blogs?.id] });
-      toast.success("Integration connected successfully!");
+      // toast.success("Integration connected successfully!");
     },
     onError: (error) => {
       console.error("Error connecting integration:", error);
-      toast.error("Failed to connect integration.");
+      // toast.error("Failed to connect integration.");
     },
   });
 

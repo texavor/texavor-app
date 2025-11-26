@@ -83,7 +83,7 @@ export default function IntegrationsPage() {
   const allPlatforms = getIntegrations.data || [];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-4">
       {/* Available Integrations Section */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold font-poppins text-[#0A2918]">

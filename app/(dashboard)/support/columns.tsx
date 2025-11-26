@@ -2,6 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { ViewTicketDialog } from "./ViewTicketDialog";
 
 export type Ticket = {
   id: string;
@@ -21,6 +23,14 @@ export type Ticket = {
   priority: "low" | "medium" | "high" | "critical";
   category: string;
   status: "open" | "in_progress" | "closed";
+};
+
+const capitalize = (str: string) => {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+const formatStatus = (status: string) => {
+  return status.split("_").map(capitalize).join(" ");
 };
 
 export const columns: ColumnDef<Ticket>[] = [
@@ -50,7 +60,7 @@ export const columns: ColumnDef<Ticket>[] = [
         critical: "destructive",
       }[priority];
 
-      return <Badge variant={variant as any}>{priority}</Badge>;
+      return <Badge variant={variant as any}>{capitalize(priority)}</Badge>;
     },
   },
   {
@@ -64,37 +74,47 @@ export const columns: ColumnDef<Ticket>[] = [
       const status = row.getValue("status") as string;
       const variant = {
         open: "default",
-        "in_progress": "secondary",
+        in_progress: "secondary",
         closed: "outline",
       }[status];
 
-      return <Badge variant={variant as any}>{status}</Badge>;
+      return <Badge variant={variant as any}>{formatStatus(status)}</Badge>;
     },
   },
   {
     id: "actions",
     cell: ({ row }) => {
       const ticket = row.original;
+      const [viewOpen, setViewOpen] = useState(false);
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(ticket.id)}
-            >
-              Copy ticket ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View ticket</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => navigator.clipboard.writeText(ticket.id)}
+              >
+                Copy ticket ID
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setViewOpen(true)}>
+                View ticket
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <ViewTicketDialog
+            open={viewOpen}
+            onOpenChange={setViewOpen}
+            ticket={ticket}
+          />
+        </>
       );
     },
   },
