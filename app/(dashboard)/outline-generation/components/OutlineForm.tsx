@@ -27,15 +27,11 @@ export const OutlineForm: React.FC<OutlineFormProps> = ({
   });
 
   return (
-    <div className="bg-white rounded-xl p-6 space-y-4 shadow-sm border border-gray-100">
-      <div className="space-y-1">
-        <h2 className="font-poppins text-lg font-semibold text-gray-900">
-          Generate Outline
-        </h2>
-        <p className="font-inter text-sm text-gray-500">
-          Enter a topic to generate a comprehensive article outline.
-        </p>
-      </div>
+    <div className="bg-white rounded-xl p-4 space-y-2">
+      <p className="font-poppins text-black font-medium">Generate Outline</p>
+      <p className="font-inter text-[#7A7A7A] text-sm font-normal">
+        Enter a topic to generate a comprehensive article outline.
+      </p>
 
       <form
         onSubmit={(e) => {
@@ -43,33 +39,31 @@ export const OutlineForm: React.FC<OutlineFormProps> = ({
           e.stopPropagation();
           form.handleSubmit();
         }}
-        className="space-y-4"
+        className="space-y-2"
       >
-        <div className="space-y-2">
-          <form.Field
-            name="topic"
-            children={(field) => (
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="Enter a topic (e.g., The Future of AI in Content Creation)"
-                  required
-                  className="pl-10 bg-white border-gray-200 focus:border-green-500 focus:ring-green-500"
-                />
-              </div>
-            )}
-          />
-        </div>
+        <form.Field
+          name="topic"
+          children={(field) => (
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                id={field.name}
+                name={field.name}
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(e) => field.handleChange(e.target.value)}
+                placeholder="Enter a topic (e.g., The Future of AI in Content Creation)"
+                required
+                className="pl-10 bg-white text-black font-inter"
+              />
+            </div>
+          )}
+        />
 
         <Button
           type="submit"
           disabled={isPending}
-          className="w-full bg-[#104127] text-white hover:bg-[#0d3320] font-medium py-2.5"
+          className="w-full sm:w-[50%] bg-[#104127] text-white hover:bg-[#104127]"
         >
           {isPending ? (
             <>

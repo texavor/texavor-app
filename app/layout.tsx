@@ -3,6 +3,7 @@ import { Poppins, Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import ReactQueryProvider from "./ReactQueryProvider";
+import { UpgradePromptProvider } from "@/components/UpgradePromptProvider";
 import Script from "next/script";
 
 const poppins = Poppins({
@@ -18,12 +19,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Texavor",
-  description:
-    "The AI content strategist for developers. Generate high-impact article ideas optimized for Google, AI Chatbots, and E-E-A-T. Built for technical content that gets discovered.",
-  verification: {
-    google: "WHjrUK7V1Y8n5aQ0gmeOk06LmzeSsadLBul9X_sQgTU",
-  },
+  title: "EasyWrite",
+  description: "AI-powered content creation platform",
 };
 
 export default function RootLayout({
@@ -35,8 +32,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${poppins.variable} ${inter.variable} antialiased`}>
         <ReactQueryProvider>
-          {children}
-          <Toaster />
+          <UpgradePromptProvider>
+            {children}
+            <Toaster />
+          </UpgradePromptProvider>
         </ReactQueryProvider>
       </body>
       <Script

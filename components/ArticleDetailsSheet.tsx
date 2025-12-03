@@ -1,6 +1,8 @@
 "use client";
 
 import { useIntegrationsApi } from "@/app/(dashboard)/integrations/hooks/useIntegrationsApi";
+import { usePublicationsApi } from "@/app/(dashboard)/article/hooks/usePublicationsApi";
+import { fetchAuthors, Author } from "@/lib/api/authors";
 import { Checkbox } from "./ui/checkbox";
 import React, { useState, useEffect } from "react";
 import {
@@ -20,6 +22,9 @@ import CustomDropdown from "@/components/ui/CustomDropdown";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import PublicationStatusList from "@/components/PublicationStatusList";
+import IntegrationSettingsDialog from "@/components/IntegrationSettingsDialog";
+import { useAppStore } from "@/store/appStore";
 import {
   Globe,
   Calendar,
@@ -30,9 +35,12 @@ import {
   Clock,
   CheckCircle2,
   ChevronDown,
+  RefreshCw,
+  Settings2,
 } from "lucide-react";
 
 interface ArticleDetails {
+  id?: string;
   title: string;
   content: string;
   slug: string;
@@ -42,11 +50,12 @@ interface ArticleDetails {
   seo_keywords: string;
   scheduled_at: string | null;
   published_at: string | null;
-  author_id: number | null;
+  author_id: string | null;
   tags: string[];
   categories: string[];
   key_phrases: string[];
   cross_post_platforms: string[];
+  platform_settings?: Record<string, any>; // Per-platform override settings
 }
 
 interface ArticleDetailsSheetProps {
@@ -67,17 +76,40 @@ export default function ArticleDetailsSheet({
   const [formData, setFormData] = useState<ArticleDetails>(articleData);
   const [publishMode, setPublishMode] = useState<PublishMode>("publish");
   const [authorDropdownOpen, setAuthorDropdownOpen] = useState(false);
+  const { blogs } = useAppStore();
   const { getIntegrations } = useIntegrationsApi();
   const connectedIntegrations =
     getIntegrations.data?.filter((p) => p.is_connected) || [];
+
+  // Publication tracking
+  const {
+    publications,
+    isLoading: isLoadingPublications,
+    retryPublication,
+    refetch: refetchPublications,
+  } = usePublicationsApi(blogs?.id || "", articleData?.id || "");
+
+  const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const [selectedIntegration, setSelectedIntegration] = useState<any>(null);
+  const [platformSettings, setPlatformSettings] = useState<Record<string, any>>(
+    {}
+  );
+  const [authors, setAuthors] = useState<Author[]>([]);
+
+  // Fetch authors
+  useEffect(() => {
+    if (blogs?.id) {
+      fetchAuthors(blogs.id).then(setAuthors).catch(console.error);
+    }
+  }, [blogs?.id]);
 
   // Sync formData when articleData changes
   useEffect(() => {
     let initialCrossPostPlatforms = articleData.cross_post_platforms;
 
-    // If no cross-post settings are saved for the article, default to all connected integrations.
-    if (initialCrossPostPlatforms == null) {
-      // Using == to catch null and undefined
+    // Always default to all connected integrations if not explicitly set
+    if (!initialCrossPostPlatforms || initialCrossPostPlatforms.length === 0) {
       initialCrossPostPlatforms = connectedIntegrations.map((p) => p.id);
     }
 
@@ -85,6 +117,11 @@ export default function ArticleDetailsSheet({
       ...articleData,
       cross_post_platforms: initialCrossPostPlatforms,
     });
+
+    // Initialize platform settings from articleData
+    if (articleData.platform_settings) {
+      setPlatformSettings(articleData.platform_settings);
+    }
 
     if (articleData.scheduled_at) {
       setPublishMode("schedule");
@@ -127,7 +164,7 @@ export default function ArticleDetailsSheet({
   };
 
   const handleSave = (action: "save_draft" | "publish_or_schedule") => {
-    const finalData = { ...formData };
+    const finalData = { ...formData, platform_settings: platformSettings };
 
     if (action === "publish_or_schedule") {
       if (publishMode === "publish") {
@@ -142,6 +179,31 @@ export default function ArticleDetailsSheet({
     }
 
     onSave(finalData);
+  };
+
+  const handleRetryPublication = (publicationId: string) => {
+    setRetryingId(publicationId);
+    retryPublication(publicationId, {
+      onSettled: () => setRetryingId(null),
+    });
+  };
+
+  const handlePlatformSettingsClick = (integration: any) => {
+    setSelectedIntegration(integration);
+    setSettingsDialogOpen(true);
+  };
+
+  const handleSavePlatformSettings = (settings: Record<string, any>) => {
+    if (selectedIntegration) {
+      setPlatformSettings((prev) => ({
+        ...prev,
+        [selectedIntegration.id]: {
+          ...(prev[selectedIntegration.id] || {}),
+          ...settings,
+        },
+      }));
+    }
+    setSettingsDialogOpen(false);
   };
 
   // Mock options for dropdowns
@@ -200,31 +262,36 @@ export default function ArticleDetailsSheet({
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="author_id" className="text-foreground/80">
-                  Author
-                </Label>
-                <CustomDropdown
-                  open={authorDropdownOpen}
-                  onOpenChange={setAuthorDropdownOpen}
-                  trigger={
-                    <Button
-                      variant="outline"
-                      className="w-full justify-between font-normal text-left"
-                    >
-                      {authorOptions.find((a) => a.id === formData.author_id)
-                        ?.name || "Select Author"}
-                      <ChevronDown className="h-4 w-4 opacity-50" />
-                    </Button>
-                  }
-                  options={authorOptions}
-                  value={formData.author_id}
-                  onSelect={(option: any) => {
-                    setFormData((prev) => ({ ...prev, author_id: option.id }));
-                    setAuthorDropdownOpen(false);
-                  }}
-                />
-              </div>
+              {true && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="author_id" className="text-foreground/80">
+                    Author
+                  </Label>
+                  <CustomDropdown
+                    open={authorDropdownOpen}
+                    onOpenChange={setAuthorDropdownOpen}
+                    trigger={
+                      <Button
+                        variant="outline"
+                        className="w-full justify-between font-normal text-left"
+                      >
+                        {authors.find((a) => a.id === formData.author_id)
+                          ?.name || "Select Author"}
+                        <ChevronDown className="h-4 w-4 opacity-50" />
+                      </Button>
+                    }
+                    options={authors}
+                    value={formData.author_id}
+                    onSelect={(option: any) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        author_id: option.id,
+                      }));
+                      setAuthorDropdownOpen(false);
+                    }}
+                  />
+                </div>
+              )}
             </div>
           </section>
 
@@ -350,38 +417,82 @@ export default function ArticleDetailsSheet({
               {connectedIntegrations.length > 0 && (
                 <div className="space-y-2">
                   <Label className="text-foreground/80">Cross-Post To</Label>
-                  <div className="space-y-2 rounded-md border p-2">
+                  <div className="space-y-2 rounded-md border p-3">
                     {connectedIntegrations.map((platform) => (
                       <div
                         key={platform.id}
-                        className="flex items-center space-x-2"
+                        className="flex items-center justify-between gap-2"
                       >
-                        <Checkbox
-                          id={`crosspost-${platform.id}`}
-                          checked={formData.cross_post_platforms.includes(
-                            platform.id
-                          )}
-                          onCheckedChange={() =>
-                            handleCrossPostChange(platform.id)
-                          }
-                        />
-                        <Label
-                          htmlFor={`crosspost-${platform.id}`}
-                          className="font-normal cursor-pointer"
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`crosspost-${platform.id}`}
+                            checked={formData.cross_post_platforms.includes(
+                              platform.id
+                            )}
+                            onCheckedChange={() =>
+                              handleCrossPostChange(platform.id)
+                            }
+                          />
+                          <Label
+                            htmlFor={`crosspost-${platform.id}`}
+                            className="font-normal cursor-pointer"
+                          >
+                            {platform.name}
+                          </Label>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handlePlatformSettingsClick(platform)}
+                          className="h-7 px-2"
+                          title="Configure platform settings"
                         >
-                          {platform.name}
-                        </Label>
+                          <Settings2 className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                     ))}
                   </div>
+                  <p className="text-xs text-gray-500">
+                    Click <Settings2 className="h-3 w-3 inline" /> to customize
+                    settings per platform
+                  </p>
                 </div>
               )}
             </div>
           </section>
+
+          <Separator />
+
+          {/* Publication Status Section */}
+          {articleData?.id && (
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-poppins font-medium text-[#0A2918] uppercase tracking-wider">
+                  Publication Status
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => refetchPublications()}
+                  className="h-7 px-2"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+
+              <PublicationStatusList
+                publications={publications}
+                isLoading={isLoadingPublications}
+                onRetry={handleRetryPublication}
+                onRefresh={refetchPublications}
+                retryingId={retryingId || undefined}
+              />
+            </section>
+          )}
         </div>
 
         {/* Footer */}
-        <SheetFooter className="p-6 border-t sm:justify-between bg-white">
+        <SheetFooter className="p-6 border-t sm:justify-between bg-white gap-2">
           <Button
             onClick={() => handleSave("publish_or_schedule")}
             className="min-w-[120px]"
@@ -390,6 +501,17 @@ export default function ArticleDetailsSheet({
           </Button>
         </SheetFooter>
       </SheetContent>
+
+      {/* Platform Settings Dialog */}
+      {selectedIntegration && (
+        <IntegrationSettingsDialog
+          open={settingsDialogOpen}
+          onOpenChange={setSettingsDialogOpen}
+          integration={selectedIntegration}
+          onSave={handleSavePlatformSettings}
+          mode="article"
+        />
+      )}
     </Sheet>
   );
 }

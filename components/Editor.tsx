@@ -14,9 +14,11 @@ import Link from "@tiptap/extension-link";
 const Editor = ({
   value,
   onChange,
+  title,
 }: {
   value: string;
   onChange: (value: string) => void;
+  title: string;
 }) => {
   const { zenMode } = useAppStore();
   const editor = useEditor({
@@ -82,7 +84,7 @@ const Editor = ({
 
   return (
     <div className="rounded-xl bg-white font-inter border ">
-      <Toolbar editor={editor} />
+      <Toolbar editor={editor} title={title} />
       <div
         className={`p-4 overflow-y-auto no-scrollbar ${
           zenMode ? "h-[calc(100vh-220px)]" : "h-[calc(100vh-290px)]"

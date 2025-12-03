@@ -53,13 +53,16 @@ const CustomDropdown = ({
                     : "bg-white hover:bg-transparent"
                 }`}
               >
-                {option?.icon && (
-                  <img
-                    src={option?.icon || "/placeholder.svg"}
-                    alt={option?.name}
-                    className="w-4 h-4"
-                  />
-                )}
+                {option?.icon &&
+                  (typeof option.icon === "string" ? (
+                    <img
+                      src={option.icon}
+                      alt={option.name}
+                      className="w-4 h-4"
+                    />
+                  ) : (
+                    option.icon
+                  ))}
                 <span
                   className={`font-ttHoves text-sm leading-5 ${
                     isSelected ? "text-[#104127]" : "text-[#09090B]"

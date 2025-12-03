@@ -22,7 +22,7 @@ import { format } from "date-fns";
 import { Pencil } from "lucide-react";
 
 export default function ProfilePage() {
-  const { data: profile, isLoading } = useGetProfile();
+  const { data: profile, isLoading }: any = useGetProfile();
   const updateProfile = useUpdateProfile();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 

@@ -41,6 +41,23 @@ axiosInstance.interceptors.response.use(
   },
   (error) => {
     const { response } = error;
+
+    // Handle limit enforcement (403 with upgrade_required flag)
+    if (response?.status === 403 && response?.data?.upgrade_required === true) {
+      // Import dynamically to avoid circular dependencies
+      import("@/lib/upgradePromptState").then(({ triggerUpgradePrompt }) => {
+        triggerUpgradePrompt({
+          error: response.data.error || "Limit exceeded",
+          message: response.data.message || "You've reached your plan limit",
+          current_usage: response.data.current_usage || 0,
+          limit: response.data.limit || 0,
+          suggested_tier: response.data.suggested_tier || "professional",
+          upgrade_required: true,
+        });
+      });
+      return Promise.reject(error);
+    }
+
     if (
       response &&
       response?.status === 401 &&

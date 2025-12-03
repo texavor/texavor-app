@@ -305,8 +305,8 @@ export default function BlogSettingsPage() {
               </div>
 
               <div className="space-y-3">
-                {formData.competitors.map((competitor, index) => {
-                  const faviconUrl = getFaviconUrl(competitor);
+                {formData.competitors.map((competitor: any, index) => {
+                  const faviconUrl = getFaviconUrl(competitor?.website_url);
                   return (
                     <div key={index} className="flex gap-2 items-center">
                       <div className="h-10 w-10 flex-shrink-0 rounded-md border bg-white flex items-center justify-center overflow-hidden">
@@ -331,7 +331,7 @@ export default function BlogSettingsPage() {
                         />
                       </div>
                       <Input
-                        value={competitor}
+                        value={competitor?.website_url}
                         onChange={(e) =>
                           updateCompetitor(index, e.target.value)
                         }

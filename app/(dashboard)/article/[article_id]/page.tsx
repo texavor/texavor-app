@@ -37,14 +37,16 @@ export default function CreateArticlePage({ params }: any) {
     queryKey: ["article", blogs],
     queryFn: async () => {
       const res = await axiosInstance.get(
-        `/api/v1/blogs/${blogs.id}/articles/${existingId}`,
+        `/api/v1/blogs/${blogs.id}/articles/${existingId}`
       );
-      if (!res?.data) return;
+      if (!res?.data) return null;
 
       setTitle(res?.data.title || "");
       setContent(res?.data.content || "");
       setArticleId(res?.data);
       isInitialLoadDone.current = true;
+
+      return res.data; // Return the data
     },
     enabled: !!existingId && !!blogs?.id,
   });
@@ -53,11 +55,13 @@ export default function CreateArticlePage({ params }: any) {
     queryKey: ["articleInsight", blogs],
     queryFn: async () => {
       const res = await axiosInstance.get(
-        `/api/v1/blogs/${blogs.id}/articles/${existingId}/article_analyses`,
+        `/api/v1/blogs/${blogs.id}/articles/${existingId}/article_analyses`
       );
-      if (!res?.data) return;
+      if (!res?.data) return null;
 
       setInsights(res?.data);
+
+      return res.data; // Return the data
     },
     enabled: !!existingId && !!blogs?.id,
   });
@@ -66,7 +70,7 @@ export default function CreateArticlePage({ params }: any) {
     mutationFn: async (payload: { title: string; content: string }) => {
       const res = await axiosInstance.post(
         `/api/v1/blogs/${blogs.id}/articles`,
-        { title: payload?.title, content: payload?.content, source: "texavor" },
+        { title: payload?.title, content: payload?.content, source: "texavor" }
       );
       return res.data;
     },
@@ -80,7 +84,7 @@ export default function CreateArticlePage({ params }: any) {
     mutationFn: async (payload: any) => {
       return axiosInstance.patch(
         `/api/v1/blogs/${blogs.id}/articles/${articleId?.id}`,
-        payload,
+        payload
       );
     },
   });
@@ -117,7 +121,7 @@ export default function CreateArticlePage({ params }: any) {
 
     try {
       const res = await axiosInstance?.post(
-        `/api/v1/blogs/${blogs.id}/articles/${articleId?.id}/article_analyses`,
+        `/api/v1/blogs/${blogs.id}/articles/${articleId?.id}/article_analyses`
       );
       setInsights(res?.data);
     } catch (error) {
@@ -132,7 +136,9 @@ export default function CreateArticlePage({ params }: any) {
       <div className="flex justify-between gap-2">
         {/* LEFT — Editor */}
         <div
-          className={`${showMetrics && !zenMode ? "w-8/12" : "w-full"} space-y-4 transition-all duration-300`}
+          className={`${
+            showMetrics && !zenMode ? "w-8/12" : "w-full"
+          } space-y-4 transition-all duration-300`}
         >
           <div className="bg-white rounded-xl p-4 relative">
             <Button
@@ -172,13 +178,15 @@ export default function CreateArticlePage({ params }: any) {
             />
           </div>
 
-          <Editor value={content} onChange={setContent} />
+          <Editor value={content} onChange={setContent} title={title} />
         </div>
 
         {/* RIGHT — Insights Panel */}
         {!zenMode && (
           <div
-            className={`${showMetrics ? "w-4/12" : "w-12"} transition-all duration-300`}
+            className={`${
+              showMetrics ? "w-4/12" : "w-12"
+            } transition-all duration-300`}
           >
             <InsightsPanel
               showMetrics={showMetrics}

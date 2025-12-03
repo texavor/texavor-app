@@ -6,8 +6,6 @@ export interface UserProfile {
   first_name: string;
   last_name: string;
   created_at: string;
-  subscription_tier: "free" | "pro" | "enterprise";
-  subscription_status: "active" | "inactive" | "trial";
 }
 
 export interface EmailNotifications {
@@ -37,6 +35,8 @@ export interface Blog {
   target_audience?: string;
   tone_of_voice?: string;
   competitors?: string[];
+  thumbnail_height?: number;
+  thumbnail_width?: number;
   created_at: string;
   updated_at: string;
 }
@@ -56,37 +56,85 @@ export interface NewApiKey extends ApiKey {
   message: string;
 }
 
-export interface CurrentMonthUsage {
-  articles_created: number;
-  keyword_searches: number;
-  topic_generations: number;
-  outline_generations: number;
-  api_calls: number;
-}
-
-export interface AllTimeUsage {
-  total_articles: number;
-  total_words: number;
-  total_outlines: number;
-}
-
 export interface Usage {
-  current_month: CurrentMonthUsage;
-  all_time: AllTimeUsage;
+  current_month: {
+    articles_created: number;
+    articles_limit: number;
+    outlines_created: number;
+    outlines_limit: number;
+    topics_generated: number;
+    topics_limit: number;
+    keyword_queries: number;
+    keyword_limit: number;
+    integrations_used: number;
+    integrations_limit: number;
+  };
+  all_time: {
+    total_articles: number;
+    total_words: number;
+    total_outlines: number;
+  };
+  subscription: {
+    tier: "trial" | "starter" | "professional" | "business";
+    status: "active" | "inactive" | "trial";
+  };
 }
 
-export interface SubscriptionUsage {
-  articles_created: number;
-  articles_limit: number;
-  api_calls_this_month: number;
-  api_calls_limit: number;
+export interface SubscriptionDetails {
+  stripe_customer_id: string;
+  current_period_start: string;
+  current_period_end: string;
+  days_until_renewal: number;
+  cancel_at_period_end: boolean;
+}
+
+export interface SubscriptionLimits {
+  articles: number;
+  outlines: number;
+  topics: number;
+  keyword_queries: number;
+  integrations: number;
+  authors: number;
+  competitors: number;
+}
+
+export interface SubscriptionUsageData {
+  articles: number;
+  outlines: number;
+  topics: number;
+  keyword_queries: number;
+  integrations: number;
+  authors: number;
+  competitors: number;
+}
+
+export interface SubscriptionUsagePercentages {
+  articles: number;
+  outlines: number;
+  topics: number;
+  keyword_queries: number;
+  integrations: number;
+  authors: number;
+  competitors: number;
 }
 
 export interface Subscription {
-  tier: "free" | "pro" | "enterprise";
+  tier: "trial" | "starter" | "professional" | "business";
   status: "active" | "inactive" | "trial";
-  trial_ends_at: string | null;
-  usage: SubscriptionUsage;
+  subscription_details: SubscriptionDetails | null;
+  limits: SubscriptionLimits;
+  usage: SubscriptionUsageData;
+  usage_percentages: SubscriptionUsagePercentages;
+  suggested_upgrade_tier?: string;
+}
+
+export interface UpgradePromptData {
+  error: string;
+  message: string;
+  current_usage: number;
+  limit: number;
+  suggested_tier: string;
+  upgrade_required: boolean;
 }
 
 export interface SettingCategory {

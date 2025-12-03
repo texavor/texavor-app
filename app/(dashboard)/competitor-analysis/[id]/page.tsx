@@ -1,0 +1,364 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useAppStore } from "@/store/appStore";
+import { competitorApi, Competitor, Analysis } from "@/lib/api/competitors";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  ArrowLeft,
+  ExternalLink,
+  RefreshCw,
+  BarChart,
+  CheckCircle2,
+  FileText,
+  Globe,
+} from "lucide-react";
+import Link from "next/link";
+import { toast } from "sonner";
+import CompetitorAnalysisDetail from "../components/CompetitorAnalysisDetail";
+import AnalysisStatusBadge from "../components/AnalysisStatusBadge";
+import AnalysisErrorAlert from "../components/AnalysisErrorAlert";
+import CustomDropdown from "@/components/ui/CustomDropdown";
+import { CompetitorDetailSkeleton } from "../components/CompetitorDetailSkeleton";
+
+export default function CompetitorDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const { blogs } = useAppStore();
+  const competitorId = params.id as string;
+
+  const [competitor, setCompetitor] = useState<Competitor | null>(null);
+  const [analyses, setAnalyses] = useState<Analysis[]>([]);
+  const [selectedAnalysisId, setSelectedAnalysisId] = useState<string | null>(
+    null
+  );
+  const [loading, setLoading] = useState(true);
+  const [analyzing, setAnalyzing] = useState(false);
+
+  useEffect(() => {
+    if (blogs?.id && competitorId) {
+      loadData();
+    }
+  }, [blogs?.id, competitorId]);
+
+  const loadData = async (silent = false) => {
+    try {
+      if (!silent) setLoading(true);
+      const data = await competitorApi.getAnalyses(blogs.id, competitorId);
+      setCompetitor(data.competitor);
+      setAnalyses(data.analyses);
+
+      if (data.analyses.length > 0 && !selectedAnalysisId) {
+        setSelectedAnalysisId(data.analyses[0].id);
+      }
+    } catch (error) {
+      console.error("Failed to load competitor data:", error);
+      toast.error("Failed to load competitor data");
+      router.push("/competitor-analysis");
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  };
+
+  const handleAnalyze = async () => {
+    if (!competitor) return;
+    try {
+      setAnalyzing(true);
+      const data = await competitorApi.analyze(blogs.id, competitor.id);
+      toast.success("Analysis started successfully!");
+
+      // Select the new analysis if available
+      if (data.analysis?.id) {
+        setSelectedAnalysisId(data.analysis.id);
+        // Manually set loading to true to show skeleton immediately
+        setLoadingAnalysis(true);
+      }
+    } catch (error) {
+      console.error("Failed to start analysis:", error);
+      toast.error("Failed to start analysis. Please try again.");
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  const [fullAnalysis, setFullAnalysis] = useState<Analysis | null>(null);
+  const [loadingAnalysis, setLoadingAnalysis] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  // Polling logic
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    let isPolling = true;
+
+    const poll = async () => {
+      if (!selectedAnalysisId || !blogs?.id || !competitorId) return;
+
+      try {
+        // Don't set loading state during polling to avoid UI flicker
+        const data = await competitorApi.getAnalysisDetails(
+          blogs.id,
+          competitorId,
+          selectedAnalysisId
+        );
+
+        if (!isPolling) return;
+
+        setFullAnalysis(data.analysis);
+
+        const status = getAnalysisStatus(data.analysis);
+        const currentAnalysisInList =
+          analyses.find((a) => a.id === selectedAnalysisId) || null;
+        const currentStatus = getAnalysisStatus(currentAnalysisInList);
+
+        if (status === "pending" || status === "analyzing") {
+          // Schedule next poll
+          timeoutId = setTimeout(poll, 2000);
+        } else if (status === "completed" || status === "failed") {
+          // Analysis finished, update the local state to reflect the change
+          // This avoids an extra API call to getAnalyses
+          setAnalyses((prev) =>
+            prev.map((a) => (a.id === data.analysis.id ? data.analysis : a))
+          );
+          setLoadingAnalysis(false);
+        }
+      } catch (error) {
+        console.error("Polling error:", error);
+        // Retry on error? Or stop? Let's retry a few times or just continue.
+        // For now, continue polling after a delay if it's a transient error
+        timeoutId = setTimeout(poll, 5000);
+      }
+    };
+
+    // Initial fetch
+    if (selectedAnalysisId) {
+      setLoadingAnalysis(true);
+      poll().finally(() => {
+        // Only turn off loading if we are not polling anymore (completed)
+        // OR if we want to show the "Analyzing" state in the UI while polling.
+        // If we keep loadingAnalysis=true, the Skeleton shows.
+        // We probably want to show the Skeleton only for the FIRST fetch.
+        // Subsequent polls should show the "Analyzing" UI (if any) or just the stale data?
+        // Actually, if status is "analyzing", we probably want to show the partial data or a specific UI.
+        // But if we use Skeleton, the user can't see "Analyzing" badge.
+        // So let's turn off loadingAnalysis after the first successful fetch.
+        if (isPolling) setLoadingAnalysis(false);
+      });
+    }
+
+    return () => {
+      isPolling = false;
+      clearTimeout(timeoutId);
+    };
+  }, [selectedAnalysisId, blogs?.id, competitorId]);
+
+  // Removed separate fetchAnalysisDetails and previous useEffects to avoid conflicts
+
+  // Helper function to determine status from analysis
+  const getAnalysisStatus = (
+    analysis: Analysis | null
+  ): "pending" | "analyzing" | "completed" | "failed" | null => {
+    if (!analysis) return null;
+
+    if (analysis.analysis_status) {
+      return analysis.analysis_status;
+    }
+
+    if (analysis.content_analysis?.status === "error") {
+      return "failed";
+    }
+
+    if (analysis.content_analysis || analysis.seo_analysis) {
+      return "completed";
+    }
+
+    return "pending";
+  };
+
+  // Helper function to get error message
+  const getErrorMessage = (analysis: Analysis | null): string | null => {
+    if (!analysis) return null;
+
+    if (analysis.error_message) {
+      return analysis.error_message;
+    }
+
+    if (
+      analysis.content_analysis?.status === "error" &&
+      analysis.content_analysis?.message
+    ) {
+      return analysis.content_analysis.message;
+    }
+
+    return null;
+  };
+
+  if (loading || !competitor) {
+    return <CompetitorDetailSkeleton />;
+  }
+
+  return (
+    <div className="space-y-6 pb-4">
+      {/* Back Navigation */}
+      <Link
+        href="/competitor-analysis"
+        className="inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors group"
+      >
+        <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
+        Back to Competitors
+      </Link>
+
+      {/* Profile Card */}
+      <div className="bg-white rounded-[32px] p-2 shadow-sm border border-gray-100">
+        <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start md:items-center">
+          {/* Favicon Image */}
+          <div className="shrink-0">
+            <div className="w-24 h-24 md:w-32 md:h-32 rounded-3xl bg-gray-50 border border-gray-100 p-4 flex items-center justify-center overflow-hidden">
+              <img
+                src={`https://www.google.com/s2/favicons?domain=${competitor.website_url}&sz=128`}
+                alt={`${competitor.name} icon`}
+                className="w-full h-full object-contain"
+              />
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 space-y-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                  {competitor.name}
+                </h1>
+                <CheckCircle2 className="w-6 h-6 text-green-500 fill-green-50" />
+                {getAnalysisStatus(fullAnalysis) && (
+                  <div className="ml-2">
+                    <AnalysisStatusBadge
+                      status={getAnalysisStatus(fullAnalysis)!}
+                    />
+                  </div>
+                )}
+              </div>
+              <p className="text-gray-500 text-base max-w-xl">
+                {competitor.description || "No description available."}
+              </p>
+            </div>
+
+            {/* Stats Row */}
+            <div className="flex items-center gap-6 md:gap-8 pt-2">
+              <div className="flex items-center gap-2 text-gray-600">
+                <FileText className="w-5 h-5 text-gray-400" />
+                <span className="font-semibold text-gray-900">
+                  {analyses.length}
+                </span>
+                <span className="text-sm text-gray-500">Analyses</span>
+              </div>
+              <div className="flex items-center gap-2 text-gray-600">
+                <Globe className="w-5 h-5 text-gray-400" />
+                <a
+                  href={competitor.website_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-medium hover:text-primary transition-colors"
+                >
+                  Visit Website
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col gap-3 shrink-0 w-full md:w-auto">
+            <Button
+              onClick={handleAnalyze}
+              disabled={analyzing}
+              size="lg"
+              className="rounded-full px-8 shadow-sm hover:shadow-md transition-all"
+            >
+              <RefreshCw
+                className={`mr-2 h-4 w-4 ${analyzing ? "animate-spin" : ""}`}
+              />
+              Run Analysis
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Error Alert */}
+      {getAnalysisStatus(fullAnalysis) === "failed" &&
+        getErrorMessage(fullAnalysis) && (
+          <AnalysisErrorAlert errorMessage={getErrorMessage(fullAnalysis)!} />
+        )}
+
+      {/* Analysis History Selector */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-xl border bg-card">
+        <span className="text-sm font-medium text-muted-foreground">
+          Analysis History:
+        </span>
+        <CustomDropdown
+          open={dropdownOpen}
+          onOpenChange={setDropdownOpen}
+          trigger={
+            <Button
+              variant="outline"
+              className="w-full sm:w-[320px] justify-between"
+            >
+              {selectedAnalysisId
+                ? analyses.find((a) => a.id === selectedAnalysisId)
+                  ? `${new Date(
+                      analyses.find(
+                        (a) => a.id === selectedAnalysisId
+                      )!.created_at
+                    ).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })} • Score: ${
+                      analyses
+                        .find((a) => a.id === selectedAnalysisId)!
+                        .overall_score?.toFixed(1) || "N/A"
+                    }`
+                  : "Select analysis date"
+                : "Select analysis date"}
+            </Button>
+          }
+          options={analyses.map((analysis) => ({
+            id: analysis.id,
+            name: `${new Date(analysis.created_at).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })} • Score: ${analysis.overall_score?.toFixed(1) || "N/A"}`,
+          }))}
+          onSelect={(option: { id: string; name: string }) => {
+            setSelectedAnalysisId(option.id);
+            setDropdownOpen(false);
+          }}
+          value={selectedAnalysisId}
+        />
+      </div>
+
+      {/* Analysis Content */}
+      {loadingAnalysis ? (
+        <div className="space-y-4">
+          <Skeleton className="h-[200px] w-full rounded-xl" />
+          <Skeleton className="h-[400px] w-full rounded-xl" />
+        </div>
+      ) : fullAnalysis ? (
+        <CompetitorAnalysisDetail analysis={fullAnalysis} />
+      ) : (
+        <div className="text-center py-16 rounded-xl border-2 border-dashed bg-muted/10">
+          <div className="mx-auto max-w-md space-y-3">
+            <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+              <BarChart className="w-6 h-6 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold">No Analysis Data</h3>
+            <p className="text-sm text-muted-foreground">
+              Run a new analysis to get started with competitor insights.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

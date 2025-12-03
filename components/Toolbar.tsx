@@ -12,19 +12,26 @@ import {
   Codepen,
   Image,
   Link,
+  Sparkles,
+  Wand2,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState } from "react";
 import { LinkDialog } from "./LinkDialog";
 import { ImageDialog } from "./ImageDialog";
+import { ImageGenerationDialog } from "./ImageGenerationDialog";
 
 type ToolbarProps = {
   editor: Editor | null;
+  title: string;
 };
 
-export const Toolbar = ({ editor }: ToolbarProps) => {
+export const Toolbar = ({ editor, title }: ToolbarProps) => {
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+  const [isGenDialogOpen, setIsGenDialogOpen] = useState(false);
+  const [initialPrompt, setInitialPrompt] = useState("");
+  const [initialStyle, setInitialStyle] = useState("natural");
 
   if (!editor) {
     return null;
@@ -49,7 +56,32 @@ export const Toolbar = ({ editor }: ToolbarProps) => {
     }
   };
 
+  const onMagicThumbnail = () => {
+    const content = editor.getText();
+    const summary = content.split("\n").slice(1, 4).join(" ").trim();
+
+    const magicPrompt = `A creative thumbnail for an article titled "${title}". Context: ${summary}`;
+
+    setInitialPrompt(magicPrompt);
+    setInitialStyle("thumbnail");
+    setIsGenDialogOpen(true);
+  };
+
   const buttons = [
+    {
+      name: "Generate Image",
+      command: () => setIsGenDialogOpen(true),
+      isActive: false,
+      icon: <Sparkles className="w-4 h-4 text-purple-500" />,
+      disabled: false,
+    },
+    {
+      name: "Magic Thumbnail",
+      command: onMagicThumbnail,
+      isActive: false,
+      icon: <Wand2 className="w-4 h-4 text-indigo-500" />,
+      disabled: false,
+    },
     {
       name: "Bold",
       command: () => editor.chain().focus().toggleBold().run(),
@@ -78,6 +110,7 @@ export const Toolbar = ({ editor }: ToolbarProps) => {
       icon: <Image className="w-4 h-4" />,
       disabled: false,
     },
+
     {
       name: "Bullet List",
       command: () => editor.chain().focus().toggleBulletList().run(),
@@ -149,6 +182,17 @@ export const Toolbar = ({ editor }: ToolbarProps) => {
         isOpen={isImageDialogOpen}
         onClose={() => setIsImageDialogOpen(false)}
         onSetImage={onSetImage}
+      />
+      <ImageGenerationDialog
+        isOpen={isGenDialogOpen}
+        onClose={() => {
+          setIsGenDialogOpen(false);
+          setInitialPrompt("");
+          setInitialStyle("natural");
+        }}
+        onInsert={onSetImage}
+        initialPrompt={initialPrompt}
+        initialStyle={initialStyle}
       />
     </>
   );

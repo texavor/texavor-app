@@ -9,6 +9,7 @@ import {
   Key,
   BarChart3,
   CreditCard,
+  Palette,
 } from "lucide-react";
 
 const settingsCategories = [
@@ -39,6 +40,20 @@ const settingsCategories = [
     description: "Configure your blogs and content strategy",
     icon: <Globe className="h-6 w-6" />,
     href: "/settings/blog-settings",
+  },
+  {
+    id: "thumbnail-styles",
+    title: "Thumbnail Styles",
+    description: "Manage your blog's visual identity and thumbnail templates",
+    icon: <Palette className="h-6 w-6" />,
+    href: "/settings/thumbnail-styles",
+  },
+  {
+    id: "authors",
+    title: "Authors",
+    description: "Manage blog authors and contributors",
+    icon: <User className="h-6 w-6" />,
+    href: "/settings/authors",
   },
   // {
   //   id: "api-keys",

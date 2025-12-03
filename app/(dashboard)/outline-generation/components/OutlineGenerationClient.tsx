@@ -10,7 +10,7 @@ import { CustomTabs } from "@/components/ui/custom-tabs";
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
-import { Plus, List, ArrowLeft } from "lucide-react";
+import { Plus, List, ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type ViewMode = "generate" | "saved" | "editor";
@@ -86,14 +86,14 @@ const OutlineGenerationClient = () => {
   return (
     <div className="space-y-6 w-full h-full">
       {/* Top Section: Form and Recent Searches */}
-      <div className="flex flex-col lg:flex-row gap-6">
-        <div className="w-full lg:w-2/3">
+      <div className="flex flex-col lg:flex-row gap-4 max-h-[170px]">
+        <div className="w-full lg:w-8/12">
           <OutlineForm
             onSubmit={handleGenerate}
             isPending={generateOutline.isPending}
           />
         </div>
-        <div className="w-full lg:w-1/3">
+        <div className="w-full lg:w-4/12">
           <RecentSearches
             searches={recentSearches.data || []}
             onSelect={(topic) => handleGenerate({ topic })}
@@ -102,10 +102,16 @@ const OutlineGenerationClient = () => {
       </div>
 
       {/* Bottom Section: Editor and Metrics */}
-      {currentOutline && (
-        <div className="flex flex-col lg:flex-row gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {generateOutline.isPending && (
+        <div className="flex justify-center items-center mt-8 text-center bg-white p-12 rounded-xl w-full">
+          <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+          <p className="font-poppins font-medium">Generating outline...</p>
+        </div>
+      )}
+      {!generateOutline.isPending && currentOutline && (
+        <div className="flex flex-col lg:flex-row gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* Left: Editor */}
-          <div className="w-full lg:w-2/3">
+          <div className="w-full lg:w-8/12">
             <OutlineEditor
               key={editorKey}
               initialData={currentOutline}
@@ -116,7 +122,7 @@ const OutlineGenerationClient = () => {
           </div>
 
           {/* Right: Metrics & Navigation */}
-          <div className="w-full lg:w-1/3">
+          <div className="w-full lg:w-4/12">
             <div className="sticky top-4 space-y-4">
               {/* Metrics */}
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
@@ -229,6 +235,16 @@ const OutlineGenerationClient = () => {
               </div>
             </div>
           </div>
+        </div>
+      )}
+      {!generateOutline.isPending && !currentOutline && (
+        <div className="mt-8 text-center rounded-xl bg-white p-12 w-full">
+          <p className="text-xl font-semibold font-poppins">
+            No outline generated.
+          </p>
+          <p className="font-inter text-sm text-gray-400">
+            Use the form above to get started or try a different topic.
+          </p>
         </div>
       )}
     </div>

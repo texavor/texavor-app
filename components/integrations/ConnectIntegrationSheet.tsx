@@ -21,8 +21,16 @@ import {
   Trash2,
   AlertCircle,
   ExternalLink,
+  Info,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const MAPPABLE_FIELDS = [
   {
@@ -77,7 +85,7 @@ export default function ConnectIntegrationSheet({
   onSuccess,
   connectMutation,
 }: ConnectIntegrationSheetProps) {
-  const [formData, setFormData] = useState<Record<string, string>>({});
+  const [formData, setFormData] = useState<any>({});
   const [mappingData, setMappingData] = useState<Record<string, string>>({});
   const [customHeaders, setCustomHeaders] = useState<
     { key: string; value: string }[]
@@ -189,7 +197,21 @@ export default function ConnectIntegrationSheet({
             );
             setMappingData(mapping);
           }
+          if (platform.settings.field_mapping) {
+            const mapping: Record<string, string> = {};
+            Object.entries(platform.settings.field_mapping).forEach(
+              ([key, value]) => {
+                mapping[value as string] = key;
+              }
+            );
+            setMappingData(mapping);
+          }
           break;
+      }
+
+      // Load primary setting if it exists
+      if (platform.settings.primary) {
+        newFormData.primary = platform.settings.primary;
       }
 
       setFormData(newFormData);
@@ -838,6 +860,59 @@ export default function ConnectIntegrationSheet({
           )}
 
           <form id="connect-form" onSubmit={handleSubmit} className="space-y-6">
+            {/* Primary Integration Switch */}
+            <div className="flex items-center justify-between space-x-2 border p-4 rounded-lg bg-gray-50/50">
+              <div className="flex flex-col space-y-1">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="primary-integration" className="font-medium">
+                    Set as Primary Integration
+                  </Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-4 w-4 text-gray-500 cursor-pointer" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          This will be used to fetch URL and passed to other
+                          platform as canonical URL
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  Mark this integration as the primary source for canonical
+                  URLs.
+                </span>
+              </div>
+              <Switch
+                id="primary-integration"
+                checked={Boolean(formData.primary)}
+                onCheckedChange={async (checked) => {
+                  setFormData({ ...formData, primary: checked });
+
+                  // If connected, update immediately
+                  if (platform?.is_connected) {
+                    try {
+                      await connectMutation.mutateAsync({
+                        platform: platform.id,
+                        settings: {
+                          primary: checked,
+                        },
+                      });
+                      toast.success("Primary status updated");
+                    } catch (error) {
+                      console.error("Failed to update primary status:", error);
+                      toast.error("Failed to update primary status");
+                      // Revert on error
+                      setFormData({ ...formData, primary: !checked });
+                    }
+                  }
+                }}
+              />
+            </div>
+
             <section className="space-y-4">
               <h3 className="text-sm font-poppins font-medium text-[#0A2918] uppercase tracking-wider">
                 Configuration

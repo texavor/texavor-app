@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const DashboardSkeleton = () => {
   return (
-    <div className="container mx-auto space-y-8 h-full">
+    <div className="mx-auto space-y-8 h-full">
       {/* Highlights Section Skeleton */}
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

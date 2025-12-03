@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import {
   ArrowLeftToLine,
@@ -17,6 +17,7 @@ import {
   TableOfContents,
   ExternalLink,
   LogOutIcon,
+  Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -56,6 +57,11 @@ const SideBarOption = [
     icon: <ListTree className="h-4 w-4" />,
     title: "Outline Generator",
     href: "/outline-generation",
+  },
+  {
+    icon: <Target className="h-4 w-4" />,
+    title: "Competitor Analysis",
+    href: "/competitor-analysis",
   },
 ];
 
@@ -140,9 +146,26 @@ const SidebarItem = ({
 
 const AppSidebar = () => {
   const [isSideOpen, setIsSideOpen] = useState(true);
+  const [isHydrated, setIsHydrated] = useState(false);
   const { blogs, mainLoading, clear } = useAppStore();
   const router = useRouter();
   const pathname = usePathname();
+
+  // Initialize from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("sidebar-open");
+    if (saved !== null) {
+      setIsSideOpen(JSON.parse(saved));
+    }
+    setIsHydrated(true);
+  }, []);
+
+  // Persist sidebar state to localStorage whenever it changes (after hydration)
+  useEffect(() => {
+    if (isHydrated) {
+      localStorage.setItem("sidebar-open", JSON.stringify(isSideOpen));
+    }
+  }, [isSideOpen, isHydrated]);
 
   const handleLogout = async () => {
     try {
@@ -230,7 +253,10 @@ const AppSidebar = () => {
               key={sidebar.title}
               {...sidebar}
               isSideOpen={isSideOpen}
-              isActive={pathname === sidebar.href}
+              isActive={
+                pathname === sidebar.href ||
+                pathname.startsWith(`${sidebar.href}/`)
+              }
             />
           ))}
         </div>
@@ -243,7 +269,10 @@ const AppSidebar = () => {
               key={sidebar.title}
               {...sidebar}
               isSideOpen={isSideOpen}
-              isActive={pathname === sidebar.href}
+              isActive={
+                pathname === sidebar.href ||
+                pathname.startsWith(`${sidebar.href}/`)
+              }
             />
           ))}
         </div>
@@ -255,7 +284,10 @@ const AppSidebar = () => {
               key={sidebar.title}
               {...sidebar}
               isSideOpen={isSideOpen}
-              isActive={pathname === sidebar.href}
+              isActive={
+                pathname === sidebar.href ||
+                pathname.startsWith(`${sidebar.href}/`)
+              }
             />
           ))}
         </div>

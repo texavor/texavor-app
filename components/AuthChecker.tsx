@@ -11,6 +11,11 @@ interface AuthData {
   blogs: any[];
 }
 
+interface SubscriptionData {
+  tier: "trial" | "starter" | "professional" | "business";
+  status: "active" | "inactive" | "trial" | "canceled";
+}
+
 const AuthChecker = () => {
   const router = useRouter();
   const pathname = usePathname();
@@ -38,7 +43,21 @@ const AuthChecker = () => {
     staleTime: Infinity,
     retry: false,
     refetchOnWindowFocus: false,
-    // 🛑 REMOVED onSuccess and onError from here
+  });
+
+  // Fetch subscription data separately
+  const { data: subscriptionData } = useQuery<SubscriptionData>({
+    queryKey: ["subscription-check"],
+    queryFn: async () => {
+      const res = await axiosInstance.get<SubscriptionData>(
+        `${baseURL}/api/v1/subscription`
+      );
+      return res.data;
+    },
+    enabled: isSuccess && !!data, // Only fetch after auth check succeeds
+    staleTime: Infinity,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
 
   // ✅ ADDED: This useEffect handles the "onSuccess" logic
@@ -46,18 +65,46 @@ const AuthChecker = () => {
     if (isSuccess && data) {
       setUser(data.user);
       setBlogs(data.blogs?.[0]);
+
+      // Check if user has blogs first
       if (data.blogs?.length === 0) {
         router.push("/onboarding");
-      } else if (
+        return;
+      }
+
+      // Check if blog is still processing
+      if (
         data.blogs?.find(
           (ele: any) =>
             ele?.status === "pending" || ele?.status === "processing"
         )
       ) {
         router.push("/onboarding/processing");
+        return;
+      }
+
+      // Check subscription status - redirect to pricing if no active plan
+      if (subscriptionData) {
+        const subscriptionTier = subscriptionData.tier;
+        const subscriptionStatus = subscriptionData.status;
+
+        // Don't redirect if already on pricing, onboarding, or subscription pages
+        const isPricingPage = pathname.startsWith("/pricing");
+        const isOnboardingPage = pathname.startsWith("/onboarding");
+        const isSubscriptionPage = pathname.startsWith("/subscription");
+
+        // Redirect to pricing if user is on trial or doesn't have an active subscription
+        if (
+          !isPricingPage &&
+          !isOnboardingPage &&
+          !isSubscriptionPage &&
+          (subscriptionTier === "trial" || subscriptionStatus !== "active")
+        ) {
+          router.push("/pricing");
+        }
       }
     }
-  }, [isSuccess, data, setUser, setBlogs, router]);
+  }, [isSuccess, data, subscriptionData, setUser, setBlogs, router, pathname]);
 
   // ✅ ADDED: This useEffect handles the "onError" logic
   useEffect(() => {

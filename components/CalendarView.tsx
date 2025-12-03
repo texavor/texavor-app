@@ -30,6 +30,7 @@ interface Article {
   status: string;
   created_at: string;
   published_at?: string;
+  scheduled_at?: string;
 }
 
 interface CalendarViewProps {
@@ -73,7 +74,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 
   const getDayArticles = (day: Date) =>
     articles.filter((article) => {
-      const dateToCompare = article.published_at || article.created_at;
+      // Check published_at, scheduled_at, or created_at
+      const dateToCompare =
+        article.scheduled_at || article.published_at || article.created_at;
       return isSameDay(new Date(dateToCompare), day);
     });
 
@@ -88,7 +91,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         ? "#BEE7EF"
         : status === "scheduled"
         ? "#E5D5FF"
-        : "#C9F3D3",
+        : status === "published"
+        ? "#C9F3D3"
+        : "#E5E7EB",
     color:
       status === "draft"
         ? "#C58A00"
@@ -96,7 +101,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         ? "#0F6C7A"
         : status === "scheduled"
         ? "#6A32B9"
-        : "#1E7A33",
+        : status === "published"
+        ? "#1E7A33"
+        : "#6B7280",
   });
 
   return (
