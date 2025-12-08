@@ -1,10 +1,25 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-export default function GoogleCallbackPage() {
+function AuthLoading() {
+  return (
+    <div className="mx-auto grid w-[450px] gap-6 p-10 md:rounded-tl-lg md:rounded-bl-lg  bg-[#EEDED3]">
+      <div className="grid gap-2 text-center">
+        <h1 className="text-3xl font-bold text-[#0A2918] font-poppins">
+          Authenticating with Google...
+        </h1>
+        <p className="text-balance text-[#7A7A7A] font-inter">
+          Please wait while we log you in.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function GoogleCallbackContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -23,16 +38,13 @@ export default function GoogleCallbackPage() {
     }
   }, [searchParams, router]);
 
+  return <AuthLoading />;
+}
+
+export default function GoogleCallbackPage() {
   return (
-    <div className="mx-auto grid w-[450px] gap-6 p-10 md:rounded-tl-lg md:rounded-bl-lg  bg-[#EEDED3]">
-      <div className="grid gap-2 text-center">
-        <h1 className="text-3xl font-bold text-[#0A2918] font-poppins">
-          Authenticating with Google...
-        </h1>
-        <p className="text-balance text-[#7A7A7A] font-inter">
-          Please wait while we log you in.
-        </p>
-      </div>
-    </div>
+    <Suspense fallback={<AuthLoading />}>
+      <GoogleCallbackContent />
+    </Suspense>
   );
 }

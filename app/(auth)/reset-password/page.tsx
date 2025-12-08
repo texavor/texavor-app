@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axiosInstace";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,20 @@ type MyForm = {
   password_confirmation: string;
 };
 
-export default function ResetPasswordPage() {
+function ResetPasswordLoading() {
+  return (
+    <div className="mx-auto grid w-[450px] gap-6 p-10">
+      <div className="grid gap-2">
+        <h1 className="text-3xl font-bold text-[#0A2918] font-poppins">
+          Loading...
+        </h1>
+        <p className="text-balance text-[#7A7A7A] font-inter">Please wait...</p>
+      </div>
+    </div>
+  );
+}
+
+function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("reset_password_token");
@@ -158,5 +171,13 @@ export default function ResetPasswordPage() {
         </Button>
       </form>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<ResetPasswordLoading />}>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

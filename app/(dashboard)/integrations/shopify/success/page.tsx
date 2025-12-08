@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowRight, CheckCircle2, Store } from "lucide-react";
+import { ArrowRight, CheckCircle2, Store, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
-export default function ShopifySuccessPage() {
+function ShopifySuccessLoading() {
+  return (
+    <div className="flex items-center justify-center min-h-[80vh] p-4">
+      <Loader2 className="h-12 w-12 animate-spin text-[#104127]" />
+    </div>
+  );
+}
+
+function ShopifySuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const shop = searchParams.get("shop");
@@ -194,5 +202,13 @@ export default function ShopifySuccessPage() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function ShopifySuccessPage() {
+  return (
+    <Suspense fallback={<ShopifySuccessLoading />}>
+      <ShopifySuccessContent />
+    </Suspense>
   );
 }

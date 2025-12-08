@@ -8,12 +8,27 @@ import { axiosInstance } from "@/lib/axiosInstace";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { Suspense } from "react";
+import { Loader2 } from "lucide-react";
 
 type VerifyEmailForm = {
   email: string;
 };
 
-export default function VerifyEmailPage() {
+function VerifyEmailLoading() {
+  return (
+    <div className="flex items-center justify-center bg-[#EEDED3] p-6">
+      <div className="w-[450px] rounded-lg p-10 grid gap-6 text-center">
+        <div className="flex justify-center">
+          <Loader2 className="h-10 w-10 animate-spin text-[#104127]" />
+        </div>
+        <p className="text-[#7A7A7A] font-inter">Verifying...</p>
+      </div>
+    </div>
+  );
+}
+
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const success = searchParams.get("success") === "true";
@@ -122,5 +137,13 @@ export default function VerifyEmailPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<VerifyEmailLoading />}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

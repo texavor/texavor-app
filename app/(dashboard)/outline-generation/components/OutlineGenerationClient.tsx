@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { OutlineForm } from "./OutlineForm";
 import { OutlineEditor } from "./OutlineEditor";
 import { SavedOutlinesList } from "./SavedOutlinesList";
@@ -15,7 +15,16 @@ import { Button } from "@/components/ui/button";
 
 type ViewMode = "generate" | "saved" | "editor";
 
-const OutlineGenerationClient = () => {
+function OutlineGenerationLoading() {
+  return (
+    <div className="flex justify-center items-center mt-8 text-center bg-white p-12 rounded-xl w-full h-full">
+      <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+      <p className="font-poppins font-medium">Loading...</p>
+    </div>
+  );
+}
+
+function OutlineGenerationContent() {
   const [view, setView] = useState<ViewMode>("generate");
   const [currentOutline, setCurrentOutline] = useState<OutlineData | null>(
     null
@@ -248,6 +257,14 @@ const OutlineGenerationClient = () => {
         </div>
       )}
     </div>
+  );
+}
+
+const OutlineGenerationClient = () => {
+  return (
+    <Suspense fallback={<OutlineGenerationLoading />}>
+      <OutlineGenerationContent />
+    </Suspense>
   );
 };
 

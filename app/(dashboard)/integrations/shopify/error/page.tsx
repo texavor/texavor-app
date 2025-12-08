@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, RefreshCw, AlertCircle } from "lucide-react";
+import { ArrowLeft, RefreshCw, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,8 +11,17 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { motion } from "framer-motion";
+import { Suspense } from "react";
 
-export default function ShopifyErrorPage() {
+function ShopifyErrorLoading() {
+  return (
+    <div className="flex items-center justify-center min-h-[80vh] p-4">
+      <Loader2 className="h-12 w-12 animate-spin text-red-500" />
+    </div>
+  );
+}
+
+function ShopifyErrorContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const errorMessage =
@@ -141,5 +150,13 @@ export default function ShopifyErrorPage() {
         </Card>
       </motion.div>
     </div>
+  );
+}
+
+export default function ShopifyErrorPage() {
+  return (
+    <Suspense fallback={<ShopifyErrorLoading />}>
+      <ShopifyErrorContent />
+    </Suspense>
   );
 }

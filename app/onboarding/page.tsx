@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,16 @@ import { Platform, useOnboardingApi } from "./hooks/useOnboardingApi";
 import { PlatformCard } from "@/components/integrations/PlatformCard";
 import ConnectIntegrationSheet from "@/components/integrations/ConnectIntegrationSheet";
 
-export default function OnboardingPage() {
+function OnboardingLoading() {
+  return (
+    <div className="flex flex-col items-center justify-center h-full text-center space-y-4 px-8">
+      <Loader2 className="h-14 w-14 animate-spin text-[#104127] opacity-30" />
+      <p className="text-lg text-[#104127] font-poppins">Loading...</p>
+    </div>
+  );
+}
+
+function OnboardingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep] = useState(1);
@@ -428,5 +437,13 @@ export default function OnboardingPage() {
         </form>
       )}
     </div>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={<OnboardingLoading />}>
+      <OnboardingContent />
+    </Suspense>
   );
 }

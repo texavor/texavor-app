@@ -6,8 +6,23 @@ import { useMutation } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axiosInstace";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+import { Suspense } from "react";
+import { Loader2 } from "lucide-react";
 
-export default function ConfirmEmailPage() {
+function ConfirmEmailLoading() {
+  return (
+    <div className="mx-auto grid w-[450px] gap-6 p-10 md:rounded-tl-lg md:rounded-bl-lg  bg-[#EEDED3]">
+      <div className="grid gap-2 text-center">
+        <div className="flex justify-center">
+          <Loader2 className="h-10 w-10 animate-spin text-[#104127]" />
+        </div>
+        <p className="text-balance text-[#7A7A7A] font-inter">Loading...</p>
+      </div>
+    </div>
+  );
+}
+
+function ConfirmEmailContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
 
@@ -61,5 +76,13 @@ export default function ConfirmEmailPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function ConfirmEmailPage() {
+  return (
+    <Suspense fallback={<ConfirmEmailLoading />}>
+      <ConfirmEmailContent />
+    </Suspense>
   );
 }

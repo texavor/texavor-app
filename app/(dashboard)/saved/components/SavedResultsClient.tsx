@@ -244,7 +244,7 @@ export default function SavedResultsClient() {
           columns={columns}
           data={resultsResponse?.data || []}
           isLoading={isLoading}
-          onClick={(row) => handleView(row)}
+          onClick={(row: any) => handleView(row)}
           className="cursor-pointer hover:bg-gray-50/50"
         />
       </div>
