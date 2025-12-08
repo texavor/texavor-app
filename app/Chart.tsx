@@ -23,7 +23,7 @@ const Chart = () => {
   ]);
   const chartConfig = {
     easywrite: {
-      lable: "EasyWrite",
+      lable: "Texavor",
       color: "#104127",
     },
     alone: {
@@ -70,7 +70,7 @@ const Chart = () => {
             <div className="flex items-center gap-4">
               <div className="h-1 bg-[#104127] rounded-full w-10" />
               <p className="text-black font-base font-normal text-base">
-                With EasyWrite
+                With Texavor
               </p>
             </div>
             <div className="flex items-center gap-4">

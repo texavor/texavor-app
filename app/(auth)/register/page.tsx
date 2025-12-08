@@ -223,7 +223,7 @@ export default function RegisterPage() {
               >
                 I Agree To The
                 <Link
-                  href="https://www.easywrite.dev/terms-and-conditions"
+                  href="https://www.texavor.com/terms-and-conditions"
                   target="_blank"
                   className="underline text-[#271041] font-medium font-inter"
                 >
@@ -231,7 +231,7 @@ export default function RegisterPage() {
                 </Link>
                 &
                 <Link
-                  href="https://www.easywrite.dev/privacy-policy"
+                  href="https://www.texavor.com/privacy-policy"
                   target="_blank"
                   className="underline text-[#271041] font-medium font-inter"
                 >

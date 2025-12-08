@@ -19,8 +19,22 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "EasyWrite",
-  description: "AI-powered content creation platform",
+  title: "Texavor - Authority for you blog",
+  description:
+    "AI developer content strategist. Generate high-impact, E-E-A-T-optimized technical article ideas for Google & AI Chatbots. Maximize discovery & authority.",
+  openGraph: {
+    title: "Texavor - Authority for you blog",
+    description:
+      "AI developer content strategist. Generate high-impact, E-E-A-T-optimized technical article ideas for Google & AI Chatbots. Maximize discovery & authority.",
+    images: "/easywriteOpenGraph.png",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Texavor - Authority for you blog",
+    description:
+      "AI developer content strategist. Generate high-impact, E-E-A-T-optimized technical article ideas for Google & AI Chatbots. Maximize discovery & authority.",
+    images: "/easywriteOpenGraph.png",
+  },
 };
 
 export default function RootLayout({

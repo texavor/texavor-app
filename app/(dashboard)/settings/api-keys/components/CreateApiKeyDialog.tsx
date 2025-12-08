@@ -54,7 +54,7 @@ export const CreateApiKeyDialog = ({
         <DialogHeader>
           <DialogTitle>Create API Key</DialogTitle>
           <DialogDescription>
-            Create a new API key for accessing the EasyWrite API.
+            Create a new API key for accessing the Texavor API.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
