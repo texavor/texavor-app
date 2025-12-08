@@ -18,6 +18,8 @@ import {
   ExternalLink,
   LogOutIcon,
   Target,
+  Bookmark,
+  ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -63,6 +65,11 @@ const SideBarOption = [
     title: "Competitor Analysis",
     href: "/competitor-analysis",
   },
+  {
+    icon: <Bookmark className="h-4 w-4" />,
+    title: "Saved",
+    href: "/saved",
+  },
 ];
 
 const SideBarOptionSettings = [
@@ -70,6 +77,11 @@ const SideBarOptionSettings = [
     icon: <Blocks className="h-4 w-4" />,
     title: "Integrations",
     href: "/integrations",
+  },
+  {
+    icon: <ImageIcon className="h-4 w-4" />,
+    title: "Thumbnail Styles",
+    href: "/settings/thumbnail-styles",
   },
   {
     icon: <Settings className="h-4 w-4" />,

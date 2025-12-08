@@ -1,5 +1,6 @@
 import axios from "axios";
 import { toast } from "sonner";
+import * as Sentry from "@sentry/nextjs";
 
 export const baseURL =
   process.env.NODE_ENV == "development"
@@ -117,6 +118,7 @@ axiosInstance.interceptors.response.use(
 
       toast.error(message);
     }
+    Sentry.captureException(error);
     return Promise.reject(error);
   }
 );

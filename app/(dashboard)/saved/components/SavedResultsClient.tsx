@@ -1,0 +1,253 @@
+"use client";
+
+import React, { useState } from "react";
+import { useSavedResultsApi, SavedResult } from "../hooks/useSavedResultsApi";
+import { CustomTable } from "@/components/ui/CustomTable";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Search,
+  Trash2,
+  Eye,
+  Star,
+  MoreHorizontal,
+  FileText,
+  Binoculars,
+  Microscope,
+} from "lucide-react";
+import { CustomTabs } from "@/components/ui/custom-tabs";
+import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useRouter } from "next/navigation";
+import { ColumnDef } from "@tanstack/react-table";
+
+export default function SavedResultsClient() {
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const { useSavedResults, deleteResult, toggleFavorite } =
+    useSavedResultsApi();
+
+  const { data: resultsResponse, isLoading } = useSavedResults({
+    type: activeTab === "all" ? undefined : activeTab,
+    q: searchQuery,
+    per_page: 50, // Load more items initially
+  });
+
+  const handleView = (result: SavedResult) => {
+    switch (result.result_type) {
+      case "keyword_research":
+        // Navigate to keyword research with the query
+        // Assuming we can pass query params to pre-fill
+        router.push(
+          `/keyword-research?q=${encodeURIComponent(
+            result.search_params.query
+          )}&mode=${result.search_params.mode}`
+        );
+        break;
+      case "outline_generation":
+        // Navigate to outline generation with the ID if possible, or just view
+        // Based on saved-outlines page, it goes to /outline-generation?id=...
+        // But here we have a unified ID. Let's assume the outline generator can handle it
+        // or we might need to adjust. For now, let's try to match the existing pattern.
+        // If the saved result IS the outline, we might need to pass the data.
+        // However, the previous saved-outlines page used a specific ID.
+        // Let's assume for now we can view it.
+        router.push(`/outline-generation?id=${result.id}`);
+        break;
+      case "topic_generation":
+        router.push(`/topic-generation?id=${result.id}`);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const getIconForType = (type: string) => {
+    switch (type) {
+      case "keyword_research":
+        return <Binoculars className="h-4 w-4 text-blue-500" />;
+      case "outline_generation":
+        return <FileText className="h-4 w-4 text-green-500" />;
+      case "topic_generation":
+        return <Microscope className="h-4 w-4 text-purple-500" />;
+      default:
+        return <FileText className="h-4 w-4" />;
+    }
+  };
+
+  const getLabelForType = (type: string) => {
+    switch (type) {
+      case "keyword_research":
+        return "Keyword Research";
+      case "outline_generation":
+        return "Outline";
+      case "topic_generation":
+        return "Topic";
+      default:
+        return type;
+    }
+  };
+
+  const columns: ColumnDef<SavedResult>[] = [
+    {
+      accessorKey: "title",
+      header: "Title",
+      cell: ({ row }) => {
+        const result = row.original;
+        return (
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gray-50 rounded-lg">
+              {getIconForType(result.result_type)}
+            </div>
+            <div className="flex flex-col">
+              <span className="font-medium text-gray-900">{result.title}</span>
+              <span className="text-xs text-gray-500">
+                {getLabelForType(result.result_type)}
+              </span>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "tags",
+      header: "Tags",
+      cell: ({ row }) => {
+        const tags = row.original.tags || [];
+        return (
+          <div className="flex flex-wrap gap-1">
+            {tags.slice(0, 3).map((tag, i) => (
+              <Badge
+                key={i}
+                variant="secondary"
+                className="text-xs font-normal bg-gray-100 text-gray-600 hover:bg-gray-200"
+              >
+                {tag}
+              </Badge>
+            ))}
+            {tags.length > 3 && (
+              <span className="text-xs text-gray-400">+{tags.length - 3}</span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "saved_at",
+      header: "Date Saved",
+      cell: ({ row }) => {
+        return (
+          <span className="text-sm text-gray-500">
+            {format(new Date(row.original.saved_at), "MMM d, yyyy")}
+          </span>
+        );
+      },
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const result = row.original;
+        return (
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleFavorite.mutate(result.id);
+              }}
+            >
+              <Star
+                className={`h-4 w-4 ${
+                  result.is_favorite
+                    ? "fill-yellow-400 text-yellow-400"
+                    : "text-gray-400"
+                }`}
+              />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="h-4 w-4 text-gray-500" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleView(result)}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  View Details
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-red-600 focus:text-red-600"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm("Are you sure you want to delete this item?")) {
+                      deleteResult.mutate(result.id);
+                    }
+                  }}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        );
+      },
+    },
+  ];
+
+  return (
+    <div className="space-y-6 w-full">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-2xl font-bold font-poppins text-gray-900">
+          Saved Items
+        </h1>
+        <p className="text-gray-500 font-inter">
+          Manage your saved research, outlines, and topics.
+        </p>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+        <div className="w-full sm:w-auto">
+          <CustomTabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            items={[
+              { value: "all", label: "All Items" },
+              { value: "keyword_research", label: "Keywords" },
+              { value: "outline_generation", label: "Outlines" },
+              { value: "topic_generation", label: "Topics" },
+            ]}
+          />
+        </div>
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Search saved items..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+          />
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <CustomTable
+          columns={columns}
+          data={resultsResponse?.data || []}
+          isLoading={isLoading}
+          onClick={(row) => handleView(row)}
+          className="cursor-pointer hover:bg-gray-50/50"
+        />
+      </div>
+    </div>
+  );
+}

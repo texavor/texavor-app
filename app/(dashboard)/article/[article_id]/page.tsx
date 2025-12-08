@@ -9,9 +9,16 @@ import { useRouter } from "next/navigation";
 import { axiosInstance } from "@/lib/axiosInstace";
 import { useAppStore } from "@/store/appStore";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Maximize, Minimize, Settings } from "lucide-react";
+import {
+  Maximize,
+  Minimize,
+  Settings,
+  ImageIcon,
+  AlignLeft,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ArticleDetailsSheet from "@/components/ArticleDetailsSheet";
+import { ThumbnailUploadDialog } from "@/components/ThumbnailUploadDialog";
 
 export default function CreateArticlePage({ params }: any) {
   const router = useRouter();
@@ -26,6 +33,8 @@ export default function CreateArticlePage({ params }: any) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [articleId, setArticleId] = useState({ id: existingId });
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+  const [isThumbnailDialogOpen, setIsThumbnailDialogOpen] = useState(false);
 
   const debouncedTitle = useDebounce(title, 500);
   const debouncedContent = useDebounce(content, 500);
@@ -43,6 +52,7 @@ export default function CreateArticlePage({ params }: any) {
 
       setTitle(res?.data.title || "");
       setContent(res?.data.content || "");
+      setThumbnailUrl(res?.data.thumbnail_url || null);
       setArticleId(res?.data);
       isInitialLoadDone.current = true;
 
@@ -114,6 +124,10 @@ export default function CreateArticlePage({ params }: any) {
   const [insights, setInsights] = useState(null);
   const [isDetailsSheetOpen, setIsDetailsSheetOpen] = useState(false);
 
+  const handleThumbnailSuccess = (url: string) => {
+    setThumbnailUrl(url);
+  };
+
   const toggleMetricsVisibility = () => setShowMetrics((prev) => !prev);
 
   const handleAnalyzeClick = async () => {
@@ -140,7 +154,40 @@ export default function CreateArticlePage({ params }: any) {
             showMetrics && !zenMode ? "w-8/12" : "w-full"
           } space-y-4 transition-all duration-300`}
         >
-          <div className="bg-white rounded-xl p-4 relative">
+          <div className="bg-white rounded-xl p-6 relative">
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2 mb-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsThumbnailDialogOpen(true)}
+                className="text-gray-600 hover:text-gray-900"
+              >
+                <ImageIcon className="h-4 w-4 mr-2" />
+                Add Cover
+              </Button>
+            </div>
+
+            {/* Thumbnail Preview */}
+            {thumbnailUrl && (
+              <div className="mb-4 relative group">
+                <img
+                  src={thumbnailUrl}
+                  alt="Article cover"
+                  className="w-full h-48 object-cover rounded-lg"
+                />
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setIsThumbnailDialogOpen(true)}
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  Change Cover
+                </Button>
+              </div>
+            )}
+
+            {/* Zen Mode and Settings Buttons */}
             <Button
               onClick={toggleZenMode}
               variant="ghost"
@@ -157,7 +204,6 @@ export default function CreateArticlePage({ params }: any) {
               )}
             </Button>
 
-            {/* Article Details Trigger */}
             <Button
               onClick={() => setIsDetailsSheetOpen(true)}
               variant="ghost"
@@ -169,6 +215,8 @@ export default function CreateArticlePage({ params }: any) {
             >
               <Settings className="h-5 w-5" />
             </Button>
+
+            {/* Title Input */}
             <Textarea
               placeholder="Article Title..."
               value={title}
@@ -224,6 +272,16 @@ export default function CreateArticlePage({ params }: any) {
           updateMutation.mutate(data);
           setIsDetailsSheetOpen(false);
         }}
+      />
+
+      {/* Thumbnail Upload Dialog */}
+      <ThumbnailUploadDialog
+        isOpen={isThumbnailDialogOpen}
+        onClose={() => setIsThumbnailDialogOpen(false)}
+        articleId={articleId?.id}
+        articleTitle={title}
+        articleContent={content}
+        onSuccess={handleThumbnailSuccess}
       />
     </div>
   );

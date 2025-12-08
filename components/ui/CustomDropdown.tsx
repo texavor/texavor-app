@@ -53,22 +53,24 @@ const CustomDropdown = ({
                     : "bg-white hover:bg-transparent"
                 }`}
               >
-                {option?.icon &&
-                  (typeof option.icon === "string" ? (
-                    <img
-                      src={option.icon}
-                      alt={option.name}
-                      className="w-4 h-4"
-                    />
-                  ) : (
-                    option.icon
-                  ))}
-                <span
-                  className={`font-ttHoves text-sm leading-5 ${
-                    isSelected ? "text-[#104127]" : "text-[#09090B]"
-                  }`}
-                >
-                  {option?.name}
+                <span className="flex items-center gap-2">
+                  {option?.icon &&
+                    (typeof option.icon === "string" ? (
+                      <img
+                        src={option.icon}
+                        alt={option.name}
+                        className="w-4 h-4"
+                      />
+                    ) : (
+                      option.icon
+                    ))}
+                  <span
+                    className={`font-ttHoves text-sm leading-5 ${
+                      isSelected ? "text-[#104127]" : "text-[#09090B]"
+                    }`}
+                  >
+                    {option?.name}
+                  </span>
                 </span>
                 {isSelected && (
                   <Check className="text-[#104127] max-h-4 max-w-4" />
