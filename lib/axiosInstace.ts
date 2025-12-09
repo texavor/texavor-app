@@ -5,7 +5,7 @@ import * as Sentry from "@sentry/nextjs";
 export const baseURL =
   process.env.NODE_ENV == "development"
     ? "http://localhost:3000"
-    : "https://api.texavor.com";
+    : "https://www.api.texavor.com";
 
 // export const baseURL = "https://api.easywrite.dev";
 
