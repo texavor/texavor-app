@@ -13,7 +13,7 @@ interface AuthData {
 
 interface SubscriptionData {
   tier: "trial" | "starter" | "professional" | "business";
-  status: "active" | "inactive" | "trial" | "canceled";
+  status: "active" | "inactive" | "trial" | "canceled" | "trialing";
 }
 
 const AuthChecker = () => {
@@ -98,7 +98,9 @@ const AuthChecker = () => {
           !isPricingPage &&
           !isOnboardingPage &&
           !isSubscriptionPage &&
-          (subscriptionTier === "trial" || subscriptionStatus !== "active")
+          (subscriptionTier === "trial" ||
+            (subscriptionStatus !== "active" &&
+              subscriptionStatus !== "trialing"))
         ) {
           router.push("/pricing");
         }

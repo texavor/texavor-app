@@ -181,7 +181,21 @@ const AppSidebar = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post("/api/logout");
+      // Use axiosInstance to send headers if available
+      // Note: We import axiosInstance from lib, so we need to update imports or just add headers manually here
+      // But since we are importing axios directly on line 30, let's fix that import first or just use axios with headers.
+      // Actually, let's just use axiosInstance if possible, but I need to see imports.
+      // existing import is `import axios from "axios";`
+      // I will assume I can change line 30 in a separate edit or just use axios with manual header.
+
+      const token = localStorage.getItem("auth_token");
+      await axios.post(
+        "/api/logout",
+        {},
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }
+      );
       toast.success("Logout Successfull!");
       router.push("/login");
     } catch (error) {
@@ -191,6 +205,11 @@ const AppSidebar = () => {
       localStorage.removeItem("access_token");
       localStorage.removeItem("access_expires_at");
       localStorage.removeItem("user");
+
+      // Manually clear the cookie to prevent middleware loop
+      document.cookie =
+        "_easywrite_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
       clear();
       window.location.href = "/login";
     }

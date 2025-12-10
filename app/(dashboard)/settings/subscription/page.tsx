@@ -105,9 +105,17 @@ export default function SubscriptionPage() {
               </Badge>
               <Badge
                 variant={
-                  subscription?.status === "active" ? "default" : "secondary"
+                  subscription?.status === "active"
+                    ? "default"
+                    : subscription?.status === "trialing"
+                    ? "outline" // Use outline or a custom class for trialing
+                    : "secondary"
                 }
-                className="capitalize"
+                className={`capitalize ${
+                  subscription?.status === "trialing"
+                    ? "border-orange-500 text-orange-600 bg-orange-50"
+                    : ""
+                }`}
               >
                 {subscription?.status}
               </Badge>
@@ -119,7 +127,9 @@ export default function SubscriptionPage() {
                 <div className="flex items-center gap-2 text-sm text-gray-700">
                   <Calendar className="w-4 h-4" />
                   <span className="font-inter">
-                    Renews on{" "}
+                    {subscription.status === "trialing"
+                      ? "Trial ends on "
+                      : "Renews on "}
                     {new Date(
                       subscription.subscription_details.current_period_end
                     ).toLocaleDateString()}
@@ -140,7 +150,14 @@ export default function SubscriptionPage() {
 
             {/* Action Buttons */}
             <div className="flex gap-3">
-              {subscription?.status === "trial" ? (
+              {/* 
+                  Only show Upgrade Now if status is explicitly 'trial' (Free Tier state) 
+                  or if they are not on a paid plan structure.
+                  If status is 'trialing' (Stripe Trial), they are on a plan, so show Manage.
+                */}
+              {subscription?.tier === "trial" ||
+              (subscription?.status !== "active" &&
+                subscription?.status !== "trialing") ? (
                 <Button
                   onClick={() => router.push("/pricing")}
                   className="bg-[#0A2918] hover:bg-[#0A2918]/90"

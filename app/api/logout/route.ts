@@ -9,7 +9,7 @@ const backendBaseURL =
 export async function POST() {
   try {
     //@ts-ignore
-    const authorization = headers().get("Authorization");
+    const authorization = (await headers()).get("Authorization");
     if (authorization) {
       try {
         await fetch(`${backendBaseURL}/api/v1/logout`, {
@@ -26,7 +26,7 @@ export async function POST() {
     }
 
     //@ts-ignore
-    cookies().set({
+    (await cookies()).set({
       name: "_easywrite_session",
       value: "",
       path: "/",

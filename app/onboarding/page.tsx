@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useMutation } from "@tanstack/react-query";
-import { Loader2, Plus, X } from "lucide-react";
+import { Loader2, Plus, X, Globe } from "lucide-react";
 import { Toaster, toast } from "sonner";
 import { axiosInstance } from "@/lib/axiosInstace";
 import { useSearchParams } from "next/navigation";
@@ -205,6 +205,18 @@ function OnboardingContent() {
     );
   }
 
+  const getFaviconUrl = (url: string) => {
+    try {
+      if (!url) return null;
+      // Add protocol if missing for URL parsing
+      const urlToParse = url.startsWith("http") ? url : `https://${url}`;
+      const domain = new URL(urlToParse).hostname;
+      return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+    } catch {
+      return null;
+    }
+  };
+
   return (
     <div
       className={`mx-auto grid ${
@@ -379,30 +391,54 @@ function OnboardingContent() {
                 <Label className="font-inter text-[#7A7A7A] font-medium">
                   Competitors
                 </Label>
-                {competitors.map((competitor, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <Input
-                      type="url"
-                      value={competitor}
-                      onChange={(e) =>
-                        handleCompetitorChange(index, e.target.value)
-                      }
-                      placeholder="https://competitor.com"
-                      className="bg-white text-black font-inter px-3"
-                    />
-                    {competitors.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="hover:bg-transparent"
-                        onClick={() => handleRemoveCompetitor(index)}
-                      >
-                        <X className="h-4 w-4 text-black" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
+                {competitors.map((competitor, index) => {
+                  const faviconUrl = getFaviconUrl(competitor);
+                  return (
+                    <div key={index} className="flex items-center gap-2">
+                      <div className="h-10 w-10 flex-shrink-0 rounded-md border bg-white flex items-center justify-center overflow-hidden">
+                        {faviconUrl && competitor ? (
+                          <img
+                            src={faviconUrl}
+                            alt="Favicon"
+                            className="h-6 w-6 object-contain"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display =
+                                "none";
+                              (
+                                e.target as HTMLImageElement
+                              ).nextElementSibling?.classList.remove("hidden");
+                            }}
+                          />
+                        ) : null}
+                        <Globe
+                          className={`h-5 w-5 text-gray-400 ${
+                            faviconUrl && competitor ? "hidden" : ""
+                          }`}
+                        />
+                      </div>
+                      <Input
+                        type="url"
+                        value={competitor}
+                        onChange={(e) =>
+                          handleCompetitorChange(index, e.target.value)
+                        }
+                        placeholder="https://competitor.com"
+                        className="bg-white text-black font-inter px-3"
+                      />
+                      {competitors.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="hover:bg-transparent"
+                          onClick={() => handleRemoveCompetitor(index)}
+                        >
+                          <X className="h-4 w-4 text-black" />
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
                 <Button
                   type="button"
                   variant="outline"
