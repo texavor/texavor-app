@@ -30,15 +30,17 @@ export default function LoginPage() {
           password: data?.password,
         },
       });
-      if (res?.data?.data?.blogs?.length === 0) {
+      const blogs = res?.data?.data?.blogs;
+
+      if (!blogs || blogs.length === 0) {
         router.push("/onboarding");
       } else if (
-        res?.data?.data?.blogs?.find(
+        blogs.find(
           (ele: any) =>
             ele?.status === "pending" || ele?.status === "processing"
         )
       ) {
-        const blog = res?.data?.data?.blogs?.find(
+        const blog = blogs.find(
           (ele: any) =>
             ele?.status === "pending" || ele?.status === "processing"
         );

@@ -40,7 +40,7 @@ axiosInstance.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
+  async (error) => {
     const { response } = error;
 
     // Handle limit enforcement (403 with upgrade_required flag)
@@ -65,8 +65,13 @@ axiosInstance.interceptors.response.use(
       typeof window !== "undefined" &&
       window.location.pathname !== "/login"
     ) {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("access_expires_at");
+      try {
+        await axios.post("/api/logout");
+      } catch (error) {
+        console.error("Logout failed:", error);
+      }
+
+      localStorage.removeItem("auth_token");
       localStorage.removeItem("user");
       window.location.href = "/login";
     } else {
