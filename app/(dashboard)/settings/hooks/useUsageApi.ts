@@ -3,12 +3,17 @@ import { axiosInstance } from "@/lib/axiosInstace";
 import { Usage } from "../types";
 
 // Get usage statistics
-export const useGetUsage = () => {
+export const useGetUsage = (blogId?: string, options = {}) => {
   return useQuery({
-    queryKey: ["usage"],
+    queryKey: ["usage", blogId],
     queryFn: async (): Promise<Usage> => {
-      const response = await axiosInstance.get("/api/v1/usage");
+      // Always use the nested route
+      const url = `/api/v1/blogs/${blogId}/usage`;
+
+      const response = await axiosInstance.get(url);
       return response.data;
     },
+    enabled: !!blogId,
+    ...options,
   });
 };

@@ -20,6 +20,7 @@ import {
   Target,
   Bookmark,
   ImageIcon,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -87,6 +88,11 @@ const SideBarOptionSettings = [
     icon: <Settings className="h-4 w-4" />,
     title: "Settings",
     href: "/settings",
+  },
+  {
+    icon: <Users className="h-4 w-4" />,
+    title: "Team",
+    href: "/team",
   },
 ];
 

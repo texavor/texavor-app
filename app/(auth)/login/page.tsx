@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import { axiosInstance, baseURL } from "@/lib/axiosInstace";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
@@ -17,8 +17,9 @@ type MyForm = {
   password: string;
 };
 
-export default function LoginPage() {
+export function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
 
   async function postData(data: MyForm) {
@@ -49,6 +50,13 @@ export default function LoginPage() {
       }
 
       const blogs = res?.data?.data?.blogs;
+
+      const redirectTo = searchParams.get("redirect_to");
+
+      if (redirectTo) {
+        router.push(redirectTo);
+        return;
+      }
 
       if (!blogs || blogs.length === 0) {
         router.push("/onboarding");
@@ -215,5 +223,15 @@ export default function LoginPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+import { Suspense } from "react";
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

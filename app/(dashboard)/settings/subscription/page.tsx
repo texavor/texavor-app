@@ -15,10 +15,13 @@ import { redirectToCustomerPortal } from "@/lib/stripe";
 import { useRouter } from "next/navigation";
 import { Calendar, CreditCard } from "lucide-react";
 
+import { useAppStore } from "@/store/appStore";
+
 export default function SubscriptionPage() {
+  const { blogs } = useAppStore();
   const { data: subscription, isLoading: isSubLoading }: any =
-    useGetSubscription();
-  const { data: usageData, isLoading: isUsageLoading } = useGetUsage();
+    useGetSubscription(blogs?.id);
+  const { data: usageData, isLoading: isUsageLoading } = useGetUsage(blogs?.id);
   const isLoading = isSubLoading || isUsageLoading;
   const { mutateAsync: createCustomerPortal, isPending: isPortalLoading } =
     useCreateCustomerPortal();

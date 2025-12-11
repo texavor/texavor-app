@@ -203,4 +203,19 @@ export const competitorApi = {
     );
     return response.data;
   },
+
+  // Check analysis limits
+  async getLimits(blogId: string, competitorId: string) {
+    const response = await axiosInstance.get<AnalysisLimit>(
+      `/api/v1/blogs/${blogId}/competitors/${competitorId}/analysis_limits`
+    );
+    return response.data;
+  },
 };
+
+export interface AnalysisLimit {
+  limit: number;
+  remaining: number;
+  reset_at: string;
+  can_analyze: boolean;
+}

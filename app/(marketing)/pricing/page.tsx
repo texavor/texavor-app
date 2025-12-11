@@ -242,7 +242,7 @@ export default function PricingPage() {
         {/* Footer */}
         <div className="mt-12 text-center">
           <p className="font-inter text-gray-600">
-            All plans include a 14-day free trial. No credit card required.
+            All plans include a 7-day free trial. No credit card required.
           </p>
           <p className="font-inter text-sm text-gray-500 mt-2">
             Need a custom plan?{" "}

@@ -3,16 +3,18 @@ import { axiosInstance } from "@/lib/axiosInstace";
 import { Subscription } from "../types";
 
 // Get subscription information
-export const useGetSubscription = () => {
+export const useGetSubscription = (blogId?: string, options = {}) => {
   return useQuery<Subscription>({
-    queryKey: ["subscription"],
+    queryKey: ["subscription", blogId],
     queryFn: async () => {
-      const response = await axiosInstance.get<Subscription>(
-        "/api/v1/subscription"
-      );
+      const url = blogId
+        ? `/api/v1/blogs/${blogId}/subscription`
+        : "/api/v1/subscription";
+      const response = await axiosInstance.get<Subscription>(url);
       return response.data;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
+    ...options,
   });
 };
 

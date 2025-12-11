@@ -16,8 +16,11 @@ import {
   Puzzle,
 } from "lucide-react";
 
+import { useAppStore } from "@/store/appStore";
+
 export default function UsagePage() {
-  const { data: usage, isLoading } = useGetUsage();
+  const { blogs } = useAppStore();
+  const { data: usage, isLoading } = useGetUsage(blogs?.id);
 
   if (isLoading) {
     return (

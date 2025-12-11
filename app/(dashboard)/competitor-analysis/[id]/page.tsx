@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAppStore } from "@/store/appStore";
-import { competitorApi, Competitor, Analysis } from "@/lib/api/competitors";
+import {
+  competitorApi,
+  Competitor,
+  Analysis,
+  AnalysisLimit,
+} from "@/lib/api/competitors";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -14,7 +19,14 @@ import {
   CheckCircle2,
   FileText,
   Globe,
+  Info,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import Link from "next/link";
 import { toast } from "sonner";
 import CompetitorAnalysisDetail from "../components/CompetitorAnalysisDetail";
@@ -36,6 +48,7 @@ export default function CompetitorDetailPage() {
   );
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
+  const [limits, setLimits] = useState<AnalysisLimit | null>(null);
 
   useEffect(() => {
     if (blogs?.id && competitorId) {
@@ -50,12 +63,14 @@ export default function CompetitorDetailPage() {
       setCompetitor(data.competitor);
       setAnalyses(data.analyses);
 
+      const limitsData = await competitorApi.getLimits(blogs.id, competitorId);
+      setLimits(limitsData);
+
       if (data.analyses.length > 0 && !selectedAnalysisId) {
         setSelectedAnalysisId(data.analyses[0].id);
       }
     } catch (error) {
       console.error("Failed to load competitor data:", error);
-      toast.error("Failed to load competitor data");
       router.push("/competitor-analysis");
     } finally {
       if (!silent) setLoading(false);
@@ -75,9 +90,26 @@ export default function CompetitorDetailPage() {
         // Manually set loading to true to show skeleton immediately
         setLoadingAnalysis(true);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to start analysis:", error);
-      toast.error("Failed to start analysis. Please try again.");
+      if (error.response?.status === 429) {
+        toast.error(
+          error.response.data.message || "Weekly analysis limit reached."
+        );
+        // Update limits state from error response if available, or just re-fetch
+        if (error.response.data.limit !== undefined) {
+          setLimits({
+            limit: error.response.data.limit,
+            remaining: error.response.data.remaining,
+            reset_at: error.response.data.reset_at,
+            can_analyze: false,
+          });
+        } else {
+          loadData(true); // Re-fetch to be safe
+        }
+      } else {
+        toast.error("Failed to start analysis. Please try again.");
+      }
     } finally {
       setAnalyzing(false);
     }
@@ -269,17 +301,58 @@ export default function CompetitorDetailPage() {
 
           {/* Actions */}
           <div className="flex flex-col gap-3 shrink-0 w-full md:w-auto">
-            <Button
-              onClick={handleAnalyze}
-              disabled={analyzing}
-              size="lg"
-              className="rounded-full px-8 shadow-sm hover:shadow-md transition-all"
-            >
-              <RefreshCw
-                className={`mr-2 h-4 w-4 ${analyzing ? "animate-spin" : ""}`}
-              />
-              Run Analysis
-            </Button>
+            <div className="flex flex-col items-end gap-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="cursor-help">
+                      <Button
+                        onClick={handleAnalyze}
+                        disabled={
+                          analyzing || (limits ? !limits.can_analyze : false)
+                        }
+                        size="lg"
+                        className="rounded-full px-8 shadow-sm hover:shadow-md transition-all"
+                      >
+                        <RefreshCw
+                          className={`mr-2 h-4 w-4 ${
+                            analyzing ? "animate-spin" : ""
+                          }`}
+                        />
+                        Run Analysis
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {limits && (
+                    <TooltipContent>
+                      <p>
+                        Weekly Limit: {limits.remaining}/{limits.limit}{" "}
+                        remaining
+                      </p>
+                      {limits.remaining === 0 && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Resets on{" "}
+                          {new Date(limits.reset_at).toLocaleDateString()} at{" "}
+                          {new Date(limits.reset_at).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      )}
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+              {limits && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground pr-2">
+                  <Info className="w-3 h-3" />
+                  <span>
+                    {limits.remaining} of {limits.limit} analyses remaining this
+                    week
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

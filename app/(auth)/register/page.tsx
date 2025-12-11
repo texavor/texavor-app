@@ -23,14 +23,35 @@ type MyForm = {
   terms: boolean;
 };
 
-export default function RegisterPage() {
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+
+// ... (keep unused imports if any, but better to just use what's needed)
+
+function RegisterContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Get query params
+  const emailParam = searchParams.get("email") || "";
+  const redirectTo = searchParams.get("redirect_to");
+
+  // Extract invite token from redirect_to if present
+  let inviteToken = "";
+  if (redirectTo && redirectTo.includes("token=")) {
+    // Simple extraction assuming token is in the redirect url
+    // redirect_to=/accept-invite?token=ABC
+    const match = redirectTo.match(/token=([^&]*)/);
+    if (match) {
+      inviteToken = match[1];
+    }
+  }
+
   async function postData(data: MyForm) {
     try {
-      const res = await axiosInstance.post("/api/v1/signup", {
+      const payload: any = {
         user: {
           first_name: data.firstName,
           last_name: data.lastName,
@@ -39,9 +60,38 @@ export default function RegisterPage() {
           confirm_password: data.confirmPassword,
           terms: data.terms,
         },
-      });
-      if (res?.data?.status?.code === 200) {
-        router.push("/confirm-email");
+      };
+
+      if (inviteToken) {
+        payload.invite_token = inviteToken;
+      }
+
+      const res = await axiosInstance.post("/api/v1/signup", payload);
+
+      // Extract and save token if present (Auto-login support)
+      const authHeader = res.headers["authorization"];
+      if (authHeader) {
+        const token = authHeader.split(" ")[1];
+        if (token) {
+          if (typeof window !== "undefined") {
+            localStorage.setItem("auth_token", token);
+            document.cookie = `_easywrite_session=${token}; path=/; secure; samesite=strict`;
+          }
+        }
+      }
+
+      if (
+        res?.data?.status?.code === 200 ||
+        res?.status === 201 ||
+        res?.status === 200
+      ) {
+        if (inviteToken && redirectTo) {
+          // If user registered with an invite, they are likely auto-confirmed (handled by backend)
+          // Redirect them to the accept-invite page
+          router.push(redirectTo);
+        } else {
+          router.push("/confirm-email");
+        }
       }
     } catch (error) {
       console.error(error);
@@ -56,7 +106,7 @@ export default function RegisterPage() {
     defaultValues: {
       firstName: "",
       lastName: "",
-      email: "",
+      email: emailParam,
       password: "",
       confirmPassword: "",
       terms: false,
@@ -294,5 +344,13 @@ export default function RegisterPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <RegisterContent />
+    </Suspense>
   );
 }

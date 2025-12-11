@@ -1,5 +1,6 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
+import { useGetSubscription } from "@/app/(dashboard)/settings/hooks/useSubscriptionApi";
 import { useRouter, usePathname } from "next/navigation";
 import { axiosInstance, baseURL } from "@/lib/axiosInstace";
 import { useAppStore } from "@/store/appStore";
@@ -9,11 +10,6 @@ import { useEffect } from "react";
 interface AuthData {
   user: any;
   blogs: any[];
-}
-
-interface SubscriptionData {
-  tier: "trial" | "starter" | "professional" | "business";
-  status: "active" | "inactive" | "trial" | "canceled" | "trialing";
 }
 
 const AuthChecker = () => {
@@ -29,6 +25,7 @@ const AuthChecker = () => {
     "/confirm-email",
     "/email-verified",
     "/google-callback",
+    "/accept-invite",
   ];
 
   const isExcludedPath = excluded.some((p) => pathname.startsWith(p));
@@ -46,18 +43,8 @@ const AuthChecker = () => {
   });
 
   // Fetch subscription data separately
-  const { data: subscriptionData } = useQuery<SubscriptionData>({
-    queryKey: ["subscription-check"],
-    queryFn: async () => {
-      const res = await axiosInstance.get<SubscriptionData>(
-        `${baseURL}/api/v1/subscription`
-      );
-      return res.data;
-    },
+  const { data: subscriptionData } = useGetSubscription(data?.blogs?.[0]?.id, {
     enabled: isSuccess && !!data, // Only fetch after auth check succeeds
-    staleTime: Infinity,
-    retry: false,
-    refetchOnWindowFocus: false,
   });
 
   // ✅ ADDED: This useEffect handles the "onSuccess" logic

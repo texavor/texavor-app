@@ -12,6 +12,7 @@ import {
   Home,
   ChevronRight,
   Target,
+  Users,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -66,6 +67,7 @@ const ROUTE_ICONS: Record<string, React.ReactNode> = {
   "/integrations": <Blocks className="h-4 w-4" />,
   "/settings": <Settings className="h-4 w-4" />,
   "/support": <MessageCircleQuestion className="h-4 w-4" />,
+  "/team": <Users className="h-4 w-4" />,
   "/blogs": <Newspaper className="h-4 w-4" />,
   "/docs": <TableOfContents className="h-4 w-4" />,
 };
@@ -73,8 +75,8 @@ const ROUTE_ICONS: Record<string, React.ReactNode> = {
 const Topbar = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const { clear, user, mainLoading } = useAppStore();
-  const { data: usage, isLoading: isLoadingUsage } = useGetUsage();
+  const { clear, user, mainLoading, blogs } = useAppStore();
+  const { data: usage, isLoading: isLoadingUsage } = useGetUsage(blogs?.id);
 
   // Get dynamic page title based on current pathname
   const getPageTitle = (path: string) => {
