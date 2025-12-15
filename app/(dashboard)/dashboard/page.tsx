@@ -161,7 +161,7 @@ const DashboardPage = () => {
                             backgroundColor: getStatusColor(item?.status).text,
                           }}
                         />
-                        {item?.status}
+                        <p className="capitalize">{item?.status}</p>
                       </div>
                       <span className="text-xs text-gray-500 font-medium w-16 text-right">
                         {item?.time_ago}
