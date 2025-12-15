@@ -63,7 +63,7 @@ function OnboardingContent() {
         }
       } catch (err) {
         clearInterval(interval);
-        toast.error("Error checking onboarding status.");
+        console.log("Error checking onboarding status.");
       }
     }, 5000); // poll every 5 seconds
   };
@@ -94,11 +94,11 @@ function OnboardingContent() {
         // Instead of polling immediately, go to Step 3
         setStep(3);
       } else {
-        toast.error("Invalid response from server.");
+        console.log("Invalid response from server.");
       }
     },
     onError: () => {
-      toast.error("Failed to save onboarding information.");
+      console.log("Failed to save onboarding information.");
     },
   });
 
@@ -151,7 +151,6 @@ function OnboardingContent() {
       }
     } catch (error) {
       console.error("Import error:", error);
-      toast.error("Failed to start import.");
       setImporting(false);
     }
   };
@@ -220,7 +219,7 @@ function OnboardingContent() {
   return (
     <div
       className={`mx-auto grid ${
-        step === 3 ? "w-[900px]" : "w-[450px]"
+        step === 3 ? "w-[600px]" : "w-[450px]"
       } gap-6 p-10 transition-all duration-500`}
     >
       <Toaster richColors />
@@ -244,13 +243,15 @@ function OnboardingContent() {
               <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               {getPlatforms.data?.map((platform) => (
-                <PlatformCard
-                  key={platform.id}
-                  platform={platform}
-                  onConnect={handlePlatformSelect}
-                />
+                <div className="max-w-[300px]">
+                  <PlatformCard
+                    key={platform.id}
+                    platform={platform}
+                    onConnect={handlePlatformSelect}
+                  />
+                </div>
               ))}
             </div>
           )}
@@ -395,7 +396,7 @@ function OnboardingContent() {
                   const faviconUrl = getFaviconUrl(competitor);
                   return (
                     <div key={index} className="flex items-center gap-2">
-                      <div className="h-10 w-10 flex-shrink-0 rounded-md border bg-white flex items-center justify-center overflow-hidden">
+                      <div className="h-10 w-10 flex-shrink-0 rounded-md border bg-white flex items-center justify-center overflow-hidden no-scrollbar">
                         {faviconUrl && competitor ? (
                           <img
                             src={faviconUrl}

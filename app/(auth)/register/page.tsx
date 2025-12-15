@@ -90,7 +90,9 @@ function RegisterContent() {
           // Redirect them to the accept-invite page
           router.push(redirectTo);
         } else {
-          router.push("/confirm-email");
+          router.push(
+            `/confirm-email?email=${encodeURIComponent(payload.user.email)}`
+          );
         }
       }
     } catch (error) {

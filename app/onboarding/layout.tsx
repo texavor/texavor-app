@@ -10,7 +10,7 @@ export default function AuthLayout({
     <div className="relative h-screen bg-[#05140C]">
       <div className="relative z-10 flex items-center justify-center w-full h-full text-white">
         <div className="flex">
-          <div className="min-h-[700px] max-h-[800px] min-w-[400px] md:rounded-tl-lg md:rounded-bl-lg bg-[#EEDED3] overflow-y-auto overflow-x-hidden">
+          <div className="min-h-[700px] max-h-[800px] min-w-[400px] md:rounded-tl-lg md:rounded-bl-lg bg-[#EEDED3] no-scrollbar overflow-y-auto overflow-x-hidden">
             {children}
           </div>
           <div className="w-[600px]  bg-green-950 rounded-tr-md rounded-br-md">

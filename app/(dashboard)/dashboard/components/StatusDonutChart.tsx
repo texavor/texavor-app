@@ -39,7 +39,7 @@ export const StatusDonutChart = ({ data }: StatusDonutChartProps) => {
   const total = chartData.reduce((acc, curr) => acc + curr.value, 0);
 
   return (
-    <Card className="border-none shadow-none flex flex-col">
+    <Card className="border-none shadow-none flex flex-col bg-white">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg font-bold font-poppins text-gray-900">
           Article Status
@@ -48,16 +48,16 @@ export const StatusDonutChart = ({ data }: StatusDonutChartProps) => {
           <ArrowUp className="w-3 h-3 mr-1" />+{data?.trend || 0}%
         </div>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col justify-between min-h-[424px]">
-        <div className="h-[280px] w-full relative my-auto">
+      <CardContent className="flex-1 flex flex-col justify-between">
+        <div className="h-[220px] w-full relative my-auto">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={chartData}
                 cx="50%"
                 cy="50%"
-                innerRadius={85}
-                outerRadius={115}
+                innerRadius={65}
+                outerRadius={95}
                 paddingAngle={0}
                 dataKey="value"
                 stroke="none"
@@ -77,7 +77,7 @@ export const StatusDonutChart = ({ data }: StatusDonutChartProps) => {
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <div className="mt-6 space-y-4">
+        <div className="mt-4 space-y-3">
           {chartData.map((item) => (
             <div
               key={item.name}

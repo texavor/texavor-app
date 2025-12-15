@@ -105,13 +105,13 @@ const SideBarOptionExternal = [
   {
     icon: <Newspaper className="h-4 w-4" />,
     title: "Blogs",
-    href: "/blogs",
+    href: "http://texavor.com/blog",
     external: true,
   },
   {
     icon: <TableOfContents className="h-4 w-4" />,
     title: "Docs",
-    href: "/docs",
+    href: "http://texavor.com/docs",
     external: true,
   },
 ];

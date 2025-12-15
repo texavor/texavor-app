@@ -9,7 +9,7 @@ import { FileText, CheckCircle2, FileEdit, Lightbulb } from "lucide-react";
 import { StatsCard } from "./components/StatsCard";
 import { ActivityChart } from "./components/ActivityChart";
 import { StatusDonutChart } from "./components/StatusDonutChart";
-import { SeoAnalyzerCard } from "./components/SeoAnalyzerCard";
+import { ContentInsightsCard } from "./components/ContentInsightsCard";
 import { useRouter } from "next/navigation";
 import { getStatusColor } from "@/lib/constants";
 import { DashboardSkeleton } from "./components/DashboardSkeleton";
@@ -37,7 +37,11 @@ interface DashboardData {
     }[];
   };
   analytics: {
-    seo_score_distribution: { good: number; average: number; poor: number };
+    content_insights: {
+      total_words: number;
+      avg_words_per_article: number;
+      avg_reading_time_minutes: number;
+    };
     article_status_distribution: {
       published: number;
       drafts: number;
@@ -127,7 +131,7 @@ const DashboardPage = () => {
             {/* Recent Activity List */}
             <div className="bg-white rounded-xl p-6 shadow-none border-none">
               <div className="space-y-6">
-                {overview?.recent_activity?.map((item, i) => (
+                {overview?.recent_activity?.map((item: any, i) => (
                   <div
                     key={i}
                     className="flex items-start justify-between group"
@@ -162,16 +166,19 @@ const DashboardPage = () => {
                       <span className="text-xs text-gray-500 font-medium w-16 text-right">
                         {item?.time_ago}
                       </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-gray-400"
-                        onClick={() => {
-                          router.push(`/dashboard/article/${item?.id}`);
-                        }}
-                      >
-                        <FileEdit className="w-3 h-3" />
-                      </Button>
+                      {item?.source !== "fetched" &&
+                        item?.status !== "published" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-gray-400"
+                            onClick={() => {
+                              router.push(`/dashboard/article/${item?.id}`);
+                            }}
+                          >
+                            <FileEdit className="w-3 h-3" />
+                          </Button>
+                        )}
                     </div>
                   </div>
                 ))}
@@ -181,7 +188,7 @@ const DashboardPage = () => {
 
           {/* Right Column: Side Charts */}
           <div className="space-y-6">
-            <SeoAnalyzerCard data={analytics?.seo_score_distribution} />
+            <ContentInsightsCard data={analytics?.content_insights} />
             <StatusDonutChart data={analytics?.article_status_distribution} />
           </div>
         </div>
