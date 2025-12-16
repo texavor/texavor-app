@@ -1,34 +1,22 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Textarea } from "@/components/ui/textarea";
 import Editor from "@/components/Editor";
 import InsightsPanel from "./InsightsPanel";
 import { useDebounce } from "@/hooks/use-debounce";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { axiosInstance } from "@/lib/axiosInstace";
 import { useAppStore } from "@/store/appStore";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import {
-  Maximize,
-  Minimize,
-  Settings,
-  ImageIcon,
-  AlignLeft,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
 import ArticleDetailsSheet from "@/components/ArticleDetailsSheet";
 import { ThumbnailUploadDialog } from "@/components/ThumbnailUploadDialog";
 
-export default function CreateArticlePage({ params }: any) {
+export default function CreateArticlePage() {
   const router = useRouter();
+  const params = useParams();
   const { blogs, zenMode, toggleZenMode } = useAppStore();
-  // ... (keeping the rest same, just showing the import change context)
-  // Actually I need to replace the usage too.
 
-  // I will use a larger range to cover both import and usage.
-
-  const existingId = params?.article_id;
+  const existingId = params?.article_id as string;
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -43,38 +31,55 @@ export default function CreateArticlePage({ params }: any) {
   const isInitialLoadDone = useRef(false);
 
   const { data: fetchedArticle, isLoading } = useQuery({
-    queryKey: ["article", blogs],
+    queryKey: ["article", existingId, blogs?.id],
     queryFn: async () => {
+      // Don't fetch if it's a new article
+      if (existingId === "new") {
+        isInitialLoadDone.current = true;
+        return null;
+      }
+
       const res = await axiosInstance.get(
-        `/api/v1/blogs/${blogs.id}/articles/${existingId}`
+        `/api/v1/blogs/${blogs?.id}/articles/${existingId}`
       );
       if (!res?.data) return null;
-
-      setTitle(res?.data.title || "");
-      setContent(res?.data.content || "");
-      setThumbnailUrl(res?.data.thumbnail_url || null);
-      setArticleId(res?.data);
-      isInitialLoadDone.current = true;
-
-      return res.data; // Return the data
+      return res.data;
     },
-    enabled: !!existingId && !!blogs?.id,
+    enabled: !!existingId && !!blogs?.id && existingId !== "new",
+    refetchOnWindowFocus: false,
   });
+
+  useEffect(() => {
+    if (fetchedArticle) {
+      // Only update state if data has changed significantly or if it's initial load.
+      // Since we disabled refetchOnWindowFocus, this mainly runs on navigation (ID change).
+      setTitle(fetchedArticle.title || "");
+      setContent(fetchedArticle.content || "");
+      setThumbnailUrl(fetchedArticle.thumbnail_url || null);
+      setArticleId(fetchedArticle);
+      isInitialLoadDone.current = true;
+    }
+  }, [fetchedArticle]);
 
   const { data: fetchedInsights, isLoading: isLoadingInsights } = useQuery({
-    queryKey: ["articleInsight", blogs],
+    queryKey: ["articleInsight", existingId, blogs?.id],
     queryFn: async () => {
+      if (existingId === "new") return null;
+
       const res = await axiosInstance.get(
-        `/api/v1/blogs/${blogs.id}/articles/${existingId}/article_analyses`
+        `/api/v1/blogs/${blogs?.id}/articles/${existingId}/article_analyses`
       );
       if (!res?.data) return null;
-
-      setInsights(res?.data);
-
-      return res.data; // Return the data
+      return res.data;
     },
-    enabled: !!existingId && !!blogs?.id,
+    enabled: !!existingId && !!blogs?.id && existingId !== "new",
   });
+
+  useEffect(() => {
+    if (fetchedInsights) {
+      setInsights(fetchedInsights);
+    }
+  }, [fetchedInsights]);
 
   const createMutation = useMutation({
     mutationFn: async (payload: { title: string; content: string }) => {
@@ -85,8 +90,11 @@ export default function CreateArticlePage({ params }: any) {
       return res.data;
     },
     onSuccess: (data) => {
-      setArticleId(data.id);
-      router.replace(`/article/${data.id}`);
+      setArticleId(data); // Set the full article object
+      // Optionally update URL without full reload if you want
+      // router.replace(`/article/${data.id}`);
+      // But replacing URL might trigger re-mount depending on Next.js config
+      // For now, updating state is critical so subsequent saves use PATCH.
     },
   });
 
@@ -100,17 +108,24 @@ export default function CreateArticlePage({ params }: any) {
   });
 
   useEffect(() => {
-    if (existingId && !isInitialLoadDone.current) return; // block autosave until initial fetch done
+    // Only block if we are expecting a specific existing article to load and it hasn't loaded yet
+    if (existingId && existingId !== "new" && !isInitialLoadDone.current)
+      return;
 
     const shouldSave =
       debouncedTitle.trim().length > 0 || debouncedContent.trim().length > 0;
     if (!shouldSave) return;
 
-    if (!articleId) {
-      createMutation.mutate({
-        title: debouncedTitle,
-        content: debouncedContent,
-      });
+    // Check if we have a real ID (from DB) or if it's still 'new' or undefined
+    const isNewArticle = !articleId?.id || articleId.id === "new";
+
+    if (isNewArticle) {
+      if (!createMutation.isPending) {
+        createMutation.mutate({
+          title: debouncedTitle,
+          content: debouncedContent,
+        });
+      }
     } else {
       updateMutation.mutate({
         title: debouncedTitle,
@@ -131,6 +146,8 @@ export default function CreateArticlePage({ params }: any) {
   const toggleMetricsVisibility = () => setShowMetrics((prev) => !prev);
 
   const handleAnalyzeClick = async () => {
+    if (!articleId?.id || articleId.id === "new") return; // Cannot analyze unsaved article
+
     setIsAnalyzing(true);
 
     try {
@@ -146,7 +163,6 @@ export default function CreateArticlePage({ params }: any) {
 
   return (
     <div className="relative">
-      {/* Zen Mode Toggle */}
       <div className="flex justify-between gap-2">
         {/* LEFT — Editor */}
         <div
@@ -154,88 +170,22 @@ export default function CreateArticlePage({ params }: any) {
             showMetrics && !zenMode ? "w-8/12" : "w-full"
           } space-y-4 transition-all duration-300`}
         >
-          <div className="bg-white rounded-xl p-6 relative">
-            {/* Action Buttons */}
-            <div className="flex items-center gap-2 mb-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsThumbnailDialogOpen(true)}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                <ImageIcon className="h-4 w-4 mr-2" />
-                Add Cover
-              </Button>
-            </div>
-
-            {/* Thumbnail Preview */}
-            {thumbnailUrl && (
-              <div className="mb-4 relative group">
-                <img
-                  src={thumbnailUrl}
-                  alt="Article cover"
-                  className="w-full h-48 object-cover rounded-lg"
-                />
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setIsThumbnailDialogOpen(true)}
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  Change Cover
-                </Button>
-              </div>
-            )}
-
-            {/* Zen Mode and Settings Buttons */}
-            <Button
-              onClick={toggleZenMode}
-              variant="ghost"
-              size="icon"
-              className={`z-50 bg-white shadow-md hover:bg-gray-100 ${
-                zenMode ? "fixed top-4 right-4" : "absolute top-2 right-2"
-              }`}
-              title={zenMode ? "Exit Zen Mode" : "Enter Zen Mode"}
-            >
-              {zenMode ? (
-                <Minimize className="h-5 w-5" />
-              ) : (
-                <Maximize className="h-5 w-5" />
-              )}
-            </Button>
-
-            <Button
-              onClick={() => setIsDetailsSheetOpen(true)}
-              variant="ghost"
-              size="icon"
-              className={`z-50 bg-white shadow-md hover:bg-gray-100 ${
-                zenMode ? "fixed top-4 right-16" : "absolute top-2 right-14"
-              }`}
-              title="Article Details"
-            >
-              <Settings className="h-5 w-5" />
-            </Button>
-
-            {/* Title Input */}
-            <Textarea
-              placeholder="Article Title..."
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              rows={2}
-              className="border-none font-poppins text-4xl font-semibold resize-none focus:ring-0 shadow-none focus-visible:ring-[0px] pr-12 overflow-y-auto overflow-x-visible h-[6rem]"
-            />
-          </div>
-
-          <Editor value={content} onChange={setContent} title={title} />
+          <Editor
+            value={content}
+            onChange={setContent}
+            title={title}
+            onTitleChange={setTitle}
+            thumbnailUrl={thumbnailUrl}
+            onAddCover={() => setIsThumbnailDialogOpen(true)}
+            onSettingsClick={() => setIsDetailsSheetOpen(true)}
+            showMetrics={showMetrics}
+            onToggleMetrics={toggleMetricsVisibility}
+          />
         </div>
 
         {/* RIGHT — Insights Panel */}
-        {!zenMode && (
-          <div
-            className={`${
-              showMetrics ? "w-4/12" : "w-12"
-            } transition-all duration-300`}
-          >
+        {!zenMode && showMetrics && (
+          <div className="w-4/12 transition-all duration-300 sticky top-0">
             <InsightsPanel
               showMetrics={showMetrics}
               toggleMetricsVisibility={toggleMetricsVisibility}

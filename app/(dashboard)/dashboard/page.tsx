@@ -173,7 +173,7 @@ const DashboardPage = () => {
                             size="icon"
                             className="h-6 w-6 text-gray-400"
                             onClick={() => {
-                              router.push(`/dashboard/article/${item?.id}`);
+                              router.push(`/article/${item?.id}`);
                             }}
                           >
                             <FileEdit className="w-3 h-3" />

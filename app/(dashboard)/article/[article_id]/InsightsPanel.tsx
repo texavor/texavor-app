@@ -12,17 +12,7 @@ const InsightsPanel = ({
   insights, // backend result object
 }: any) => {
   if (!showMetrics) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Button
-          onClick={toggleMetricsVisibility}
-          variant="outline"
-          className="text-sm rotate-90"
-        >
-          Show Metrics
-        </Button>
-      </div>
-    );
+    return null;
   }
 
   const {
@@ -40,17 +30,6 @@ const InsightsPanel = ({
 
   return (
     <div className="bg-white max-h-[calc(100vh-100px)] p-4 rounded-xl overflow-y-auto no-scrollbar space-y-6">
-      {/* Header */}
-      <div className="flex justify-end">
-        <Button
-          onClick={toggleMetricsVisibility}
-          variant="outline"
-          className="text-sm"
-        >
-          Hide Metrics
-        </Button>
-      </div>
-
       <div className="space-y-6">
         {/* Top Section — Content Insights */}
         <div className="flex justify-between items-center">

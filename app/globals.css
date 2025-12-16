@@ -154,3 +154,12 @@
 .animate-fade-slide-up {
     animation: fade-slide-up 0.5s ease-out forwards;
 }
+
+/* Tiptap Placeholder Styles */
+.tiptap p.is-editor-empty:first-child::before {
+  color: #1f2937; /* gray-800 */
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
