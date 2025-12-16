@@ -23,6 +23,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Article {
   id: string;
@@ -44,6 +45,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   currentDate,
   onDateChange,
   articles,
+  isLoading,
 }) => {
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(monthStart);
@@ -175,31 +177,40 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                     </div>
 
                     <div className="flex-1 flex flex-col gap-2">
-                      {displayedArticles.map((article) => (
-                        <div
-                          key={article.id}
-                          style={statusStyle(article.status)}
-                          className="text-xs px-2 py-1 rounded-md border truncate cursor-pointer hover:shadow-sm"
-                          title={article.title}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {article.title}
+                      {isLoading ? (
+                        <div className="space-y-2 mt-1">
+                          <Skeleton className="h-5 w-full bg-[#f9f4f0]" />
+                          <Skeleton className="h-5 w-[80%] bg-[#f9f4f0]" />
                         </div>
-                      ))}
+                      ) : (
+                        <>
+                          {displayedArticles.map((article) => (
+                            <div
+                              key={article.id}
+                              style={statusStyle(article.status)}
+                              className="text-xs px-2 py-1 rounded-md border truncate cursor-pointer hover:shadow-sm"
+                              title={article.title}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {article.title}
+                            </div>
+                          ))}
 
-                      {remainingCount > 0 && (
-                        <div
-                          className="text-xs text-gray-600 font-medium pl-1 hover:text-gray-800 cursor-pointer flex items-center gap-2 w-max"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenDay(day);
-                          }}
-                        >
-                          <span className="bg-gray-100 px-2 py-0.5 rounded-full text-[11px] border border-gray-200">
-                            +{remainingCount}
-                          </span>
-                          <span className="underline">more</span>
-                        </div>
+                          {remainingCount > 0 && (
+                            <div
+                              className="text-xs text-gray-600 font-medium pl-1 hover:text-gray-800 cursor-pointer flex items-center gap-2 w-max"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenDay(day);
+                              }}
+                            >
+                              <span className="bg-gray-100 px-2 py-0.5 rounded-full text-[11px] border border-gray-200">
+                                +{remainingCount}
+                              </span>
+                              <span className="underline">more</span>
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>

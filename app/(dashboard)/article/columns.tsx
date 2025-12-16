@@ -1,9 +1,18 @@
 "use client";
-
+import { axiosInstance } from "@/lib/axiosInstace";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { getStatusColor } from "@/lib/constants";
 
-import { Column, ColumnDef } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  MoreHorizontal,
+  ExternalLink,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import CustomDropdown from "@/components/ui/CustomDropdown";
@@ -24,7 +33,11 @@ export interface Article {
   created_at: string;
   url: string;
   status: string;
+  source?: string;
+  blog_id: string;
 }
+
+import { Column, ColumnDef } from "@tanstack/react-table";
 
 const SortableHeader = ({
   column,
@@ -154,24 +167,51 @@ export const columns: ColumnDef<Article>[] = [
     cell: ({ row }) => {
       const article = row.original;
       const [open, setOpen] = useState(false);
+      const queryClient = useQueryClient();
+      const isFetched = article.source === "fetched";
 
-      const actions = [
-        {
-          id: "view_article",
-          name: "View Article",
-          action: () => window.open(article?.url, "_blank"),
-        },
-        {
-          id: "view",
-          name: "View article",
-          action: () => console.log("View article"),
-        },
-        {
-          id: "details",
-          name: "View article details",
-          action: () => console.log("View article details"),
-        },
-      ];
+      const handleDelete = async () => {
+        try {
+          await axiosInstance.delete(
+            `/api/v1/blogs/${article.blog_id}/articles/${article.id}`
+          );
+          toast.success("Article deleted successfully");
+          queryClient.invalidateQueries({ queryKey: ["articles"] });
+        } catch (error) {
+          // Error handled by axiosInstance interceptor usually, but safe to log
+          console.error("Delete failed", error);
+        }
+      };
+
+      const actions = [];
+
+      // View Live Article - Only if published + has URL
+      if (article.status === "published" && article.url) {
+        actions.push({
+          id: "view_live",
+          name: "View Live Article",
+          icon: <ExternalLink className="h-4 w-4 text-gray-500" />,
+          action: () => window.open(article.url, "_blank"),
+        });
+      }
+
+      // Edit - Only for internal articles
+      if (!isFetched) {
+        actions.push({
+          id: "edit",
+          name: "Edit Article",
+          icon: <Pencil className="h-4 w-4 text-gray-500" />,
+          action: () => (window.location.href = `/article/${article.id}`),
+        });
+      }
+
+      // Delete (Always available)
+      actions.push({
+        id: "delete",
+        name: "Delete",
+        icon: <Trash2 className="h-4 w-4 text-red-500" />,
+        action: handleDelete,
+      });
 
       return (
         <CustomDropdown

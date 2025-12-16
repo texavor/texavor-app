@@ -59,7 +59,7 @@ export function CustomTable<TData, TValue>({
     <div className="w-full">
       <div className="rounded-xl overflow-hidden border bg-white">
         <div
-          className={`relative max-h-[calc(100vh-246px)] overflow-y-auto no-scrollbar ${className}`}
+          className={`relative max-h-[calc(100vh-226px)] overflow-y-auto no-scrollbar ${className}`}
         >
           <Table>
             <TableHeader className="sticky top-0 bg-[#EEDED3] z-10 bg-white">

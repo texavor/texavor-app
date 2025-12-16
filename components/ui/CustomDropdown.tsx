@@ -47,11 +47,10 @@ const CustomDropdown = ({
                 key={option.name}
                 onClick={() => onSelect(option)}
                 disabled={option.disabled}
-                className={`flex min-w-[150px] cursor-pointer justify-between ${
-                  isSelected
-                    ? "bg-[#EAF9F2] hover:bg-[#9BCCB5]"
-                    : "bg-white hover:bg-transparent"
-                }`}
+                className="flex min-w-[150px] cursor-pointer justify-between items-center py-2 px-3 focus:bg-[#f9f4f0] rounded-md outline-none transition-colors"
+                style={{
+                  backgroundColor: isSelected ? "#f9f4f0" : "transparent",
+                }}
               >
                 <span className="flex items-center gap-2">
                   {option?.icon &&
@@ -59,21 +58,17 @@ const CustomDropdown = ({
                       <img
                         src={option.icon}
                         alt={option.name}
-                        className="w-4 h-4"
+                        className="w-4 h-4 object-contain"
                       />
                     ) : (
                       option.icon
                     ))}
-                  <span
-                    className={`font-ttHoves text-sm leading-5 ${
-                      isSelected ? "text-[#104127]" : "text-[#09090B]"
-                    }`}
-                  >
+                  <span className="font-poppins text-xs font-normal text-[#09090B]">
                     {option?.name}
                   </span>
                 </span>
                 {isSelected && (
-                  <Check className="text-[#104127] max-h-4 max-w-4" />
+                  <Check className="text-[#09090B] h-4 w-4 stroke-[2]" />
                 )}
               </DropdownMenuItem>
             );
