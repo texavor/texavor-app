@@ -27,7 +27,7 @@ export async function POST() {
 
     //@ts-ignore
     (await cookies()).set({
-      name: "_easywrite_session",
+      name: "_texavor_session",
       value: "",
       path: "/",
       expires: new Date(0),

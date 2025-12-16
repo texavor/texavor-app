@@ -39,14 +39,14 @@ export function LoginContent() {
         if (token) {
           localStorage.setItem("auth_token", token);
           // Manually set cookie for middleware access (bypassing Cross-Origin Set-Cookie block for navigation guard)
-          document.cookie = `_easywrite_session=${token}; path=/; secure; samesite=strict`;
+          document.cookie = `_texavor_session=${token}; path=/; secure; samesite=strict`;
         }
       } else {
         // Fallback: If no header, maybe the user relies purely on cookies (which are failing).
         // We set a dummy cookie to pass middleware if the API call was 200 OK.
         // This assumes the API works via withCredentials for data, even if navigation guard needs a cookie.
         // However, ideally we need the real token.
-        document.cookie = `_easywrite_session=active; path=/; secure; samesite=strict`;
+        document.cookie = `_texavor_session=active; path=/; secure; samesite=strict`;
       }
 
       const blogs = res?.data?.data?.blogs;

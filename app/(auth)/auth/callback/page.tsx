@@ -24,7 +24,8 @@ function AuthCallbackContent() {
   useEffect(() => {
     const token = searchParams.get("token");
     if (token) {
-      localStorage.setItem("token", token);
+      localStorage.setItem("auth_token", token);
+      document.cookie = `_texavor_session=${token}; path=/; secure; samesite=strict`;
       router.push("/dashboard");
     } else {
       router.push("/login");

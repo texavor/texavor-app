@@ -214,7 +214,7 @@ const AppSidebar = () => {
 
       // Manually clear the cookie to prevent middleware loop
       document.cookie =
-        "_easywrite_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        "_texavor_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
 
       clear();
       window.location.href = "/login";

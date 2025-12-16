@@ -110,21 +110,21 @@ const Navigation = () => {
           <div className="w-[62px] h-[36px] overflow-hidden absolute">
             <Image
               src="/singlelogo.png"
-              alt="easywrite.dev"
+              alt="Texavor"
               height={24}
               width={24}
               className="absolute opacity-0 group-hover:opacity-100 top-0 left-1/2 -translate-x-1/2 rotate-180 transition-transform duration-300 ease-in-out -translate-y-10 group-hover:translate-y-0"
             />
             <Image
               src="/singlelogo.png"
-              alt="easywrite.dev"
+              alt="Texavor"
               height={24}
               width={24}
               className="absolute opacity-0 group-hover:opacity-100 top-[13px] left-[10px] transition-transform duration-300 delay-100 ease-in-out translate-y-10 group-hover:translate-y-0"
             />
             <Image
               src="/singlelogo.png"
-              alt="easywrite.dev"
+              alt="Texavor"
               height={24}
               width={24}
               className="absolute opacity-0 group-hover:opacity-100 top-[13px] left-[29px] transition-transform duration-300 ease-in-out translate-y-10 group-hover:translate-y-0"
@@ -133,29 +133,27 @@ const Navigation = () => {
           <div className="relative w-[62px] h-[36px] overflow-hidden group-hover:opacity-0">
             <Image
               src="/singlelogo.png"
-              alt="easywrite.dev"
+              alt="Texavor"
               height={24}
               width={24}
               className="absolute top-0 left-1/2 -translate-x-1/2 rotate-180"
             />
             <Image
               src="/singlelogo.png"
-              alt="easywrite.dev"
+              alt="Texavor"
               height={24}
               width={24}
               className="absolute top-[13px] left-[10px]"
             />
             <Image
               src="/singlelogo.png"
-              alt="easywrite.dev"
+              alt="Texavor"
               height={24}
               width={24}
               className="absolute top-[13px] left-[29px]"
             />
           </div>
-          <p className="text-[#104127] font-bold text-[24px]">
-            easywrite<span className="text-normal text-black">.dev</span>
-          </p>
+          <p className="text-[#104127] font-bold text-[24px]">Texavor</p>
         </Link>
 
         {/* Desktop Navigation */}

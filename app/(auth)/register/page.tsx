@@ -75,7 +75,7 @@ function RegisterContent() {
         if (token) {
           if (typeof window !== "undefined") {
             localStorage.setItem("auth_token", token);
-            document.cookie = `_easywrite_session=${token}; path=/; secure; samesite=strict`;
+            document.cookie = `_texavor_session=${token}; path=/; secure; samesite=strict`;
           }
         }
       }

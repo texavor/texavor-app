@@ -10,7 +10,7 @@ const PROTECTED_ROUTES = [
 const AUTH_ROUTES = ["/login", "/register", "/forgot-password"];
 
 export function middleware(req: NextRequest) {
-  const token = req.cookies.get("_easywrite_session")?.value;
+  const token = req.cookies.get("_texavor_session")?.value;
   const pathname = req.nextUrl.pathname;
 
   // Skip all static assets and Next.js internals

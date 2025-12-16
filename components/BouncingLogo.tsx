@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
+import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 
 const BouncingLogo = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -48,7 +48,7 @@ const BouncingLogo = () => {
           src="/easywritelogo.png"
           height={100}
           width={100}
-          alt="easywrite logo"
+          alt="Texavor logo"
         />
       </div>
     </div>
