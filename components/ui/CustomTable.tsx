@@ -29,7 +29,8 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   isLoading?: boolean;
   onClick: any;
-  className: string;
+  className?: string;
+  getRowClassName?: (row: TData) => string;
 }
 
 export function CustomTable<TData, TValue>({
@@ -38,6 +39,7 @@ export function CustomTable<TData, TValue>({
   isLoading,
   onClick,
   className = "",
+  getRowClassName,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState({});
@@ -101,7 +103,9 @@ export function CustomTable<TData, TValue>({
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
                     onClick={() => onClick(row?.original)}
-                    className={onclick ? "cursor-pointer" : ""}
+                    className={
+                      getRowClassName ? getRowClassName(row.original) : ""
+                    }
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell

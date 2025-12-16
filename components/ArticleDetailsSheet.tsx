@@ -37,31 +37,24 @@ import {
   ChevronDown,
   RefreshCw,
   Settings2,
+  HelpCircle,
 } from "lucide-react";
-
-interface ArticleDetails {
-  id?: string;
-  title: string;
-  content: string;
-  slug: string;
-  canonical_url: string;
-  seo_title: string;
-  seo_description: string;
-  seo_keywords: string;
-  scheduled_at: string | null;
-  published_at: string | null;
-  author_id: string | null;
-  tags: string[];
-  categories: string[];
-  key_phrases: string[];
-  cross_post_platforms: string[];
-  platform_settings?: Record<string, any>; // Per-platform override settings
-}
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  useArticleSettingsStore,
+  ArticleDetails,
+} from "@/store/articleSettingsStore";
 
 interface ArticleDetailsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  articleData: ArticleDetails;
+  // articleData prop is no longer the primary source of state, but kept for interface compatibility if needed, though likely unused for state init now.
+  articleData?: ArticleDetails;
   onSave: (data: ArticleDetails) => void;
 }
 
@@ -70,11 +63,18 @@ type PublishMode = "publish" | "schedule";
 export default function ArticleDetailsSheet({
   open,
   onOpenChange,
-  articleData,
+  articleData, // Unused for state now, state comes from store
   onSave,
 }: ArticleDetailsSheetProps) {
-  const [formData, setFormData] = useState<ArticleDetails>(articleData);
-  const [publishMode, setPublishMode] = useState<PublishMode>("publish");
+  const {
+    formData,
+    setFormData,
+    platformSettings,
+    setPlatformSettings,
+    publishMode,
+    setPublishMode,
+  } = useArticleSettingsStore();
+
   const [authorDropdownOpen, setAuthorDropdownOpen] = useState(false);
   const { blogs } = useAppStore();
   const { getIntegrations } = useIntegrationsApi();
@@ -87,14 +87,11 @@ export default function ArticleDetailsSheet({
     isLoading: isLoadingPublications,
     retryPublication,
     refetch: refetchPublications,
-  } = usePublicationsApi(blogs?.id || "", articleData?.id || "");
+  } = usePublicationsApi(blogs?.id || "", formData?.id || "");
 
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [selectedIntegration, setSelectedIntegration] = useState<any>(null);
-  const [platformSettings, setPlatformSettings] = useState<Record<string, any>>(
-    {}
-  );
   const [authors, setAuthors] = useState<Author[]>([]);
 
   // Fetch authors
@@ -104,31 +101,8 @@ export default function ArticleDetailsSheet({
     }
   }, [blogs?.id]);
 
-  // Sync formData when articleData changes
-  useEffect(() => {
-    let initialCrossPostPlatforms = articleData.cross_post_platforms;
-
-    // Always default to all connected integrations if not explicitly set
-    if (!initialCrossPostPlatforms || initialCrossPostPlatforms.length === 0) {
-      initialCrossPostPlatforms = connectedIntegrations.map((p) => p.id);
-    }
-
-    setFormData({
-      ...articleData,
-      cross_post_platforms: initialCrossPostPlatforms,
-    });
-
-    // Initialize platform settings from articleData
-    if (articleData.platform_settings) {
-      setPlatformSettings(articleData.platform_settings);
-    }
-
-    if (articleData.scheduled_at) {
-      setPublishMode("schedule");
-    } else {
-      setPublishMode("publish");
-    }
-  }, [articleData, getIntegrations.data]); // Add getIntegrations.data dependency
+  // NO useEffect to sync articleData -> formData here.
+  // Initialization happens in page.tsx or persistent store logic.
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -146,18 +120,18 @@ export default function ArticleDetailsSheet({
 
   const handleCrossPostChange = (platformId: string) => {
     setFormData((prev) => {
-      const currentlySelected = prev.cross_post_platforms || [];
+      const currentlySelected = prev.article_publications || [];
       if (currentlySelected.includes(platformId)) {
         return {
           ...prev,
-          cross_post_platforms: currentlySelected.filter(
+          article_publications: currentlySelected.filter(
             (id) => id !== platformId
           ),
         };
       } else {
         return {
           ...prev,
-          cross_post_platforms: [...currentlySelected, platformId],
+          article_publications: [...currentlySelected, platformId],
         };
       }
     });
@@ -246,12 +220,29 @@ export default function ArticleDetailsSheet({
               </div>
 
               <div className="space-y-1.5">
-                <Label
-                  htmlFor="canonical_url"
-                  className="text-foreground/80 font-inter"
-                >
-                  Canonical URL
-                </Label>
+                <div className="flex items-center gap-2">
+                  <Label
+                    htmlFor="canonical_url"
+                    className="text-foreground/80 font-inter"
+                  >
+                    Canonical URL
+                  </Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="w-[200px] text-xs">
+                          Set this only if you need a single fixed canonical URL
+                          for all the platform; otherwise, the primary
+                          platform's URL will automatically be used as the
+                          canonical URL for other platforms.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <Input
                   id="canonical_url"
                   name="canonical_url"
@@ -344,19 +335,44 @@ export default function ArticleDetailsSheet({
                 </p>
               </div>
               <div className="space-y-1.5">
-                <Label
-                  htmlFor="seo_keywords"
-                  className="text-foreground/80 font-inter"
-                >
-                  Keywords
+                <Label htmlFor="tags" className="text-foreground/80 font-inter">
+                  Tags
                 </Label>
                 <Input
-                  id="seo_keywords"
-                  name="seo_keywords"
-                  value={formData.seo_keywords || ""}
-                  onChange={handleChange}
-                  placeholder="comma, separated, keywords"
-                  className="font-inter"
+                  id="tags"
+                  name="tags"
+                  value={formData.tags?.join(", ") || ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const tagsArray = value.split(",").map((tag) => tag.trim());
+                    // .filter((tag) => tag.length > 0); // Don't filter empty while typing or it deletes spaces
+                    // Actually, we should just store the array.
+                    // But if we split/join on every render, trailing comma might be an issue.
+                    // Better to split only on save? No, form data needs to be accurate for other things maybe.
+                    // Let's keep it simple: just split.
+                    // Wait, if I type "tag1, " -> split gives ["tag1", ""].
+                    // value is "tag1, ".
+                    // If I render from join, it becomes "tag1, ". Correct.
+                    // If I type "tag1, t" -> ["tag1", "t"]. join -> "tag1, t".
+                    setFormData((prev) => ({
+                      ...prev,
+                      tags: value.split(",").map((t) => t.trimStart()), // Keep internal spaces, but trim start/end of tag?
+                      // Actually, standard behavior for tag inputs is usually specialized component.
+                      // But user asked for text input behavior.
+                      // Let's just use the raw value for local state if possible?
+                      // But formData.tags is string[].
+                      // I'll handle the split carefully.
+                    }));
+                  }}
+                  // Re-thinking: Direct split/map on change makes it hard to type ", " (comma space).
+                  // Because "tag1," -> split -> ["tag1", ""]. join -> "tag1, ".
+                  // It works.
+                  // But "tag1,  " (two spaces) -> ["tag1", ""]. join -> "tag1, ". (one space).
+                  // So you can't type multiple spaces easily?
+                  // Maybe I should add a local state for the input string and sync to formData on blur or effect?
+                  // Or just use a different approach.
+                  // User instruction: "keywords is not proper change to tags and send to bakcned as tags"
+                  // Simple approach:
                 />
               </div>
             </div>
@@ -403,14 +419,27 @@ export default function ArticleDetailsSheet({
                     type="datetime-local"
                     value={
                       formData.scheduled_at
-                        ? new Date(formData.scheduled_at)
-                            .toISOString()
-                            .slice(0, 16)
+                        ? (() => {
+                            const date = new Date(formData.scheduled_at);
+                            const offsetMs =
+                              date.getTimezoneOffset() * 60 * 1000;
+                            const localDate = new Date(
+                              date.getTime() - offsetMs
+                            );
+                            return localDate.toISOString().slice(0, 16);
+                          })()
                         : ""
                     }
-                    onChange={(e) =>
-                      handleDateChange("scheduled_at", e.target.value)
-                    }
+                    onChange={(e) => {
+                      const localValue = e.target.value;
+                      if (!localValue) {
+                        handleDateChange("scheduled_at", "");
+                        return;
+                      }
+                      const date = new Date(localValue);
+                      const utcIsoString = date.toISOString();
+                      handleDateChange("scheduled_at", utcIsoString);
+                    }}
                   />
                 </div>
               )}
@@ -426,7 +455,7 @@ export default function ArticleDetailsSheet({
                         <div className="flex items-center space-x-2">
                           <Checkbox
                             id={`crosspost-${platform.id}`}
-                            checked={formData.cross_post_platforms.includes(
+                            checked={formData.article_publications.includes(
                               platform.id
                             )}
                             onCheckedChange={() =>

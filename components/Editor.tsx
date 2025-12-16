@@ -25,6 +25,7 @@ import {
   Share,
 } from "lucide-react";
 import CustomDropdown from "@/components/ui/CustomDropdown";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * Enhanced props to include layout elements previously found in the parent page.
@@ -39,6 +40,7 @@ type EditorProps = {
   onSettingsClick?: () => void;
   showMetrics?: boolean;
   onToggleMetrics?: () => void;
+  isLoading?: boolean;
 };
 
 const Editor = ({
@@ -51,6 +53,7 @@ const Editor = ({
   onSettingsClick,
   showMetrics,
   onToggleMetrics,
+  isLoading,
 }: EditorProps) => {
   const { zenMode, toggleZenMode } = useAppStore();
   const [isExportOpen, setIsExportOpen] = React.useState(false);
@@ -76,7 +79,9 @@ const Editor = ({
       a.download = `${title || "article"}.md`;
       document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
+      if (document.body.contains(a)) {
+        document.body.removeChild(a);
+      }
       URL.revokeObjectURL(url);
     } else if (option.id === "download_pdf") {
       window.print();
@@ -101,6 +106,7 @@ const Editor = ({
       icon: <FileText className="w-4 h-4" />,
     },
   ];
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -147,6 +153,47 @@ const Editor = ({
       editor.commands.setContent(value || "");
     }
   }, [value, editor]);
+
+  // Loading Skeleton View
+  if (isLoading) {
+    return (
+      <div
+        className={`${
+          zenMode
+            ? "sticky top-0 h-[calc(100vh-10px)]"
+            : "h-[calc(100vh-100px)]"
+        } rounded-xl bg-white font-inter flex flex-col relative group p-6 space-y-8`}
+      >
+        {/* Placeholder for toolbar */}
+        <div className="flex justify-between items-center mb-4">
+          <Skeleton className="w-32 h-8 rounded-md" />
+          <div className="flex gap-2">
+            <Skeleton className="w-8 h-8 rounded-md" />
+            <Skeleton className="w-8 h-8 rounded-md" />
+            <Skeleton className="w-8 h-8 rounded-md" />
+          </div>
+        </div>
+
+        {/* Title Skeleton */}
+        <div className="max-w-4xl mx-auto w-full space-y-4">
+          {/* Cover image placeholder */}
+          <Skeleton className="w-full h-10 rounded-md" />
+
+          {/* Title placeholder */}
+          <Skeleton className="w-3/4 h-12 rounded-md mt-8" />
+
+          {/* Content placeholder */}
+          <div className="space-y-4 mt-8">
+            <Skeleton className="w-full h-4 rounded" />
+            <Skeleton className="w-full h-4 rounded" />
+            <Skeleton className="w-5/6 h-4 rounded" />
+            <Skeleton className="w-full h-4 rounded" />
+            <Skeleton className="w-4/5 h-4 rounded" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

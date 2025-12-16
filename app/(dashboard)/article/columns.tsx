@@ -81,7 +81,8 @@ const SortableHeader = ({
   );
 };
 
-export const columns: ColumnDef<Article>[] = [
+// Fix type definition to be compatible with CustomTable
+export const columns: ColumnDef<Article, any>[] = [
   {
     accessorKey: "title",
     header: ({ column }) => (
@@ -122,25 +123,29 @@ export const columns: ColumnDef<Article>[] = [
   {
     accessorKey: "status",
     header: ({ column }) => (
-      <SortableHeader column={column}>Status</SortableHeader>
+      <div className="flex w-full justify-center">
+        <SortableHeader column={column}>Status</SortableHeader>
+      </div>
     ),
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
       const statusColor = getStatusColor(status);
 
       return (
-        <div
-          className="capitalize px-3 py-1 rounded-full text-xs font-medium w-fit flex items-center gap-2"
-          style={{
-            backgroundColor: statusColor.bg,
-            color: statusColor.text,
-          }}
-        >
+        <div className="flex w-full justify-center">
           <div
-            className="w-1.5 h-1.5 rounded-full"
-            style={{ backgroundColor: statusColor.text }}
-          />
-          {status}
+            className="capitalize px-3 py-1 rounded-full text-xs font-medium w-fit flex items-center gap-2"
+            style={{
+              backgroundColor: statusColor.bg,
+              color: statusColor.text,
+            }}
+          >
+            <div
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ backgroundColor: statusColor.text }}
+            />
+            {status}
+          </div>
         </div>
       );
     },

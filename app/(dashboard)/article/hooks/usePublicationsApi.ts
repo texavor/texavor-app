@@ -39,7 +39,7 @@ export const usePublicationsApi = (blogId: string, articleId: string) => {
       );
       return res.data.publications || [];
     },
-    enabled: !!blogId && !!articleId,
+    enabled: !!blogId && !!articleId && articleId !== "new",
     refetchInterval: (query) => {
       // Poll every 5 seconds if there are publishing or pending publications
       const hasActivePublications = query.state.data?.some(

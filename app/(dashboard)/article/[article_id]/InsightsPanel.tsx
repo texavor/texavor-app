@@ -46,11 +46,14 @@ const InsightsPanel = ({
         </div>
 
         {/* Readability Score */}
-        <div>
-          <p className="text-sm font-semibold text-black font-poppins mb-1">
-            Readability Score
-          </p>
-          <ScoreMeter value={readability / 100} />
+        <div className="space-y-1">
+          <div className="flex justify-between items-center">
+            <p className="text-sm font-semibold text-black font-poppins">
+              Readability Score
+            </p>
+            <p className="text-sm font-inter">{readability}/10</p>
+          </div>
+          <ScoreMeter value={readability / 10} />
         </div>
 
         {/* SEO Details (formerly Keyword Optimization) */}

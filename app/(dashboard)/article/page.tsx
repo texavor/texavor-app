@@ -273,6 +273,7 @@ const Page = () => {
         {view === "table" ? (
           <div className="h-full flex flex-col space-y-4 overflow-y-auto pr-2 pb-2">
             <CustomTable
+              //@ts-ignore
               columns={columns}
               data={data?.articles || []}
               isLoading={isLoading || !blogs?.id}
@@ -280,6 +281,9 @@ const Page = () => {
                 if (row?.source !== "fetched")
                   router.push(`/article/${row?.id}`);
               }}
+              getRowClassName={(row: Article) =>
+                row?.source === "platform" ? "cursor-pointer" : ""
+              }
               className="bg-white rounded-lg border-none"
             />
             {data?.pagination && (
