@@ -174,19 +174,12 @@ const PdfDocument: React.FC<PdfDocumentProps> = ({
           case "img":
             const src = element.attribs.src;
             if (src) {
-              console.log("🎨 PdfDocument rendering image:", {
-                src: src.substring(0, 80) + "...",
-                isBase64: src.startsWith("data:"),
-                isProxy: src.includes("/api/v1/proxy_image"),
-              });
-
               return (
                 <View style={{ marginBottom: 10 }}>
                   <PdfImage style={styles.image} src={src} />
                 </View>
               );
             }
-            console.warn("⚠️  PdfDocument: Image element has no src");
             return null;
           case "ul":
           case "ol":
@@ -221,8 +214,6 @@ const PdfDocument: React.FC<PdfDocumentProps> = ({
   };
 
   const contentComponents = parse(content, options);
-
-  console.log("PdfDocument received content length:", content.length);
 
   return (
     <Document>

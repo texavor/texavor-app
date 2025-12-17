@@ -120,24 +120,19 @@ const Editor = ({
           const doc = parser.parseFromString(html, "text/html");
           const images = doc.getElementsByTagName("img");
 
-          console.log(`🔄 Processing ${images.length} images for PDF...`);
-
           await Promise.all(
-            Array.from(images).map(async (img, index) => {
+            Array.from(images).map(async (img) => {
               const src = img.getAttribute("src");
               if (!src) return;
 
               try {
                 // If it's already Base64, skip
                 if (src.startsWith("data:")) {
-                  console.log(`📦 Image ${index + 1}: Already Base64`);
                   return;
                 }
 
                 // If it's an external URL, fetch via proxy
                 if (src.startsWith("http://") || src.startsWith("https://")) {
-                  console.log(`⬇️  Image ${index + 1}: Fetching via proxy...`);
-
                   const { axiosInstance } = await import("@/lib/axiosInstace");
                   const response = await axiosInstance.get(
                     "/api/v1/proxy_image",
@@ -156,18 +151,11 @@ const Editor = ({
                   });
 
                   img.src = base64;
-                  console.log(
-                    `✅ Image ${
-                      index + 1
-                    }: Converted to Base64 (${src.substring(0, 50)}...)`
-                  );
                 } else if (src.startsWith("/")) {
                   // Make relative URLs absolute
                   img.src = `${window.location.origin}${src}`;
-                  console.log(`🔗 Image ${index + 1}: Made absolute ${src}`);
                 }
               } catch (err) {
-                console.error(`❌ Image ${index + 1}: Failed to process`, err);
                 // Keep original src as fallback
               }
             })
@@ -177,7 +165,6 @@ const Editor = ({
         };
 
         const processedContent = await processImagesForPdf(contentHTML);
-        console.log("✨ Processed content for PDF generation");
 
         const blob = await pdf(
           <PdfDocument
