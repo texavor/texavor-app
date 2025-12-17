@@ -31,6 +31,8 @@ export interface Article {
   title: string;
   categories: string[];
   created_at: string;
+  published_at?: string | null;
+  scheduled_at?: string | null;
   url: string;
   status: string;
   source?: string;
@@ -154,12 +156,22 @@ export const columns: ColumnDef<Article, any>[] = [
     },
   },
   {
-    accessorKey: "created_at",
+    accessorKey: "published_at",
     header: ({ column }) => (
       <SortableHeader column={column}>Published At</SortableHeader>
     ),
     cell: ({ row }) => {
-      const date = new Date(row.getValue("created_at"));
+      const publishedAt = row.original.published_at;
+      const scheduledAt = row.original.scheduled_at;
+
+      // Use published_at first, then scheduled_at, then fallback to "-"
+      const dateToShow = publishedAt || scheduledAt;
+
+      if (!dateToShow) {
+        return <div className="text-gray-400">-</div>;
+      }
+
+      const date = new Date(dateToShow);
       return <div>{format(date, "dd MMM yyyy")}</div>;
     },
     meta: {

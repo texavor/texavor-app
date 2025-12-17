@@ -223,18 +223,44 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 
       {/* SHADCN DIALOG */}
       <Dialog open={!!openDay} onOpenChange={closeModal}>
-        <DialogContent className="min-w-xl bg-white">
-          <DialogHeader>
-            <DialogTitle>
+        <DialogContent className="sm:max-w-[600px] bg-white">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="text-2xl font-semibold text-gray-900">
               {openDay && format(openDay, "EEEE, MMMM d, yyyy")}
             </DialogTitle>
-            <DialogDescription>Articles</DialogDescription>
+            <DialogDescription className="text-sm text-gray-500">
+              {openDay && getDayArticles(openDay).length > 0
+                ? `${getDayArticles(openDay).length} article${
+                    getDayArticles(openDay).length === 1 ? "" : "s"
+                  } scheduled for this day`
+                : "No articles scheduled"}
+            </DialogDescription>
           </DialogHeader>
 
-          <div className="max-h-80 overflow-y-auto space-y-3 no-scrollbar">
+          <div className="max-h-[400px] overflow-y-auto space-y-2 py-2 no-scrollbar">
             {openDay && getDayArticles(openDay).length === 0 && (
-              <div className="text-sm text-gray-500">
-                No articles for this day.
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                  <svg
+                    className="w-8 h-8 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-gray-900">
+                  No articles scheduled
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Articles for this day will appear here
+                </p>
               </div>
             )}
 
@@ -242,32 +268,43 @@ const CalendarView: React.FC<CalendarViewProps> = ({
               getDayArticles(openDay).map((a) => (
                 <div
                   key={a.id}
-                  className="flex bg-[#EEDED3] items-start justify-between gap-4 p-3 rounded-md border border-gray-100"
+                  className="group flex items-start justify-between gap-4 p-4 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer"
                 >
                   <div className="flex-1 min-w-0">
                     <div
-                      className="text-sm font-medium text-gray-900 truncate"
+                      className="text-sm font-medium text-gray-900 mb-1 line-clamp-2 group-hover:text-gray-700"
                       title={a.title}
                     >
                       {a.title}
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-gray-500">
                       {format(new Date(a.created_at), "MMM d, yyyy")}
                     </div>
                   </div>
 
                   <div
                     style={statusStyle(a.status)}
-                    className="text-xs px-2 py-0.5 rounded-md border shrink-0 capitalize"
+                    className="text-xs px-3 py-1.5 rounded-full font-medium shrink-0 capitalize flex items-center gap-1.5"
                   >
+                    <div
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{
+                        backgroundColor:
+                          statusStyle(a.status).color || "#6B7280",
+                      }}
+                    />
                     {a.status}
                   </div>
                 </div>
               ))}
           </div>
 
-          <DialogFooter>
-            <Button onClick={closeModal} variant="ghost">
+          <DialogFooter className="mt-4">
+            <Button
+              onClick={closeModal}
+              variant="outline"
+              className="w-full sm:w-auto"
+            >
               Close
             </Button>
           </DialogFooter>
