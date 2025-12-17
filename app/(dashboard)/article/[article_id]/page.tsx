@@ -39,7 +39,7 @@ export default function CreateArticlePage() {
     return () => {
       resetArticleSettings();
     };
-  }, []);
+  }, [resetArticleSettings]);
 
   const debouncedTitle = useDebounce(title, 500);
   const debouncedContent = useDebounce(content, 500);
@@ -114,18 +114,21 @@ export default function CreateArticlePage() {
         // If already initialized, we still want to sync 'article_publications' because it might have been empty initially
         // and populated later (e.g. if it was a separate inclusion).
         // We use the store's setFormData to merge specific fields we trust from backend.
-        useArticleSettingsStore.getState().setFormData((prev) => ({
-             ...prev,
-             article_publications: details.article_publications,
-             // We can also sync other fields if we trust backend more for these
-             tags: details.tags,
-             categories: details.categories,
-             key_phrases: details.key_phrases,
-             // Don't overwrite title/content as user might be typing
-        }));
+        // Use setTimeout to avoid state update during render
+        setTimeout(() => {
+          useArticleSettingsStore.getState().setFormData((prev) => ({
+            ...prev,
+            article_publications: details.article_publications,
+            // We can also sync other fields if we trust backend more for these
+            tags: details.tags,
+            categories: details.categories,
+            key_phrases: details.key_phrases,
+            // Don't overwrite title/content as user might be typing
+          }));
+        }, 0);
       }
     }
-  }, [fetchedArticle]);
+  }, [fetchedArticle, isInitialized, initializeArticleSettings]);
 
   const { data: fetchedInsights, isLoading: isLoadingInsights } = useQuery({
     queryKey: ["articleInsight", existingId, blogs?.id],
@@ -245,6 +248,29 @@ export default function CreateArticlePage() {
     setThumbnailUrl(url);
   };
 
+  const handleRemoveCover = async () => {
+    // Clear thumbnail locally
+    setThumbnailUrl(null);
+
+    // Update article on backend to remove thumbnail
+    if (articleId?.id && articleId.id !== "new") {
+      try {
+        await axiosInstance.patch(
+          `/api/v1/blogs/${blogs?.id}/articles/${articleId.id}`,
+          {
+            article: {
+              thumbnail_url: null,
+            },
+          }
+        );
+      } catch (error) {
+        console.error("Failed to remove cover:", error);
+        // Revert local state on error
+        // Note: We don't have the previous URL here, so user would need to re-add
+      }
+    }
+  };
+
   const toggleMetricsVisibility = () => setShowMetrics((prev) => !prev);
 
   const handleAnalyzeClick = async () => {
@@ -263,6 +289,29 @@ export default function CreateArticlePage() {
     setIsAnalyzing(false);
   };
 
+  const handleManualSave = async () => {
+    // Don't save if there's no content
+    if (!title?.trim() && !content?.trim()) return;
+
+    const isNewArticle = !articleId?.id || articleId.id === "new";
+
+    if (isNewArticle) {
+      // Create new article
+      await createMutation.mutateAsync({
+        title: title || "",
+        content: content || "",
+      });
+    } else {
+      // Update existing article
+      await updateMutation.mutateAsync({
+        article: {
+          title: title || "",
+          content: content || "",
+        },
+      });
+    }
+  };
+
   return (
     <div className="relative">
       <div className="flex justify-between gap-2">
@@ -279,7 +328,10 @@ export default function CreateArticlePage() {
             onTitleChange={setTitle}
             thumbnailUrl={thumbnailUrl}
             onAddCover={() => setIsThumbnailDialogOpen(true)}
+            onRemoveCover={handleRemoveCover}
             onSettingsClick={() => setIsDetailsSheetOpen(true)}
+            onSave={handleManualSave}
+            isSaving={createMutation.isPending || updateMutation.isPending}
             showMetrics={showMetrics}
             onToggleMetrics={toggleMetricsVisibility}
             isLoading={isLoading && existingId !== "new"}

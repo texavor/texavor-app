@@ -25,6 +25,7 @@ import { axiosInstance } from "@/lib/axiosInstace";
 import { useAppStore } from "@/store/appStore";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { uploadImage } from "@/lib/imageService";
 
 interface ThumbnailUploadDialogProps {
   isOpen: boolean;
@@ -72,18 +73,18 @@ export function ThumbnailUploadDialog({
     (s) => s.id === stylesData.selected_style_id
   );
 
-  // Upload mutation
+  // Upload mutation - now uses decoupled flow
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append("article[thumbnail]", file);
+      // Step 1: Upload image to /api/v1/images and get URL
+      const imageUrl = await uploadImage(file);
 
+      // Step 2: Update article with the thumbnail_url
       const response = await axiosInstance.patch(
         `/api/v1/blogs/${blogs?.id}/articles/${articleId}`,
-        formData,
         {
-          headers: {
-            "Content-Type": "multipart/form-data",
+          article: {
+            thumbnail_url: imageUrl,
           },
         }
       );

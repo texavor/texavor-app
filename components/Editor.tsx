@@ -23,6 +23,8 @@ import {
   PanelRightClose,
   PanelRightOpen,
   Share,
+  Save,
+  Loader2,
 } from "lucide-react";
 import CustomDropdown from "@/components/ui/CustomDropdown";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -37,7 +39,10 @@ type EditorProps = {
   onTitleChange?: (value: string) => void;
   thumbnailUrl?: string | null;
   onAddCover?: () => void;
+  onRemoveCover?: () => void;
   onSettingsClick?: () => void;
+  onSave?: () => void | Promise<void>;
+  isSaving?: boolean;
   showMetrics?: boolean;
   onToggleMetrics?: () => void;
   isLoading?: boolean;
@@ -50,13 +55,31 @@ const Editor = ({
   onTitleChange,
   thumbnailUrl,
   onAddCover,
+  onRemoveCover,
   onSettingsClick,
+  onSave,
+  isSaving,
   showMetrics,
   onToggleMetrics,
   isLoading,
 }: EditorProps) => {
   const { zenMode, toggleZenMode } = useAppStore();
   const [isExportOpen, setIsExportOpen] = React.useState(false);
+
+  // Keyboard shortcut for save (Ctrl+S / Cmd+S)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (onSave) {
+          onSave();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onSave]);
   const [isGeneratingPDF, setIsGeneratingPDF] = React.useState(false);
 
   const handleExport = async (option: any) => {
@@ -78,12 +101,15 @@ const Editor = ({
       const a = document.createElement("a");
       a.href = url;
       a.download = `${title || "article"}.md`;
+      a.style.display = "none";
       document.body.appendChild(a);
       a.click();
-      // Use setTimeout to ensure the click event is processed before removing
+      // Cleanup - remove element and revoke URL
       setTimeout(() => {
-        if (document.body.contains(a)) {
+        try {
           document.body.removeChild(a);
+        } catch (e) {
+          // Element may have already been removed
         }
         URL.revokeObjectURL(url);
       }, 100);
@@ -181,13 +207,16 @@ const Editor = ({
         const a = document.createElement("a");
         a.href = url;
         a.download = `${titleText}.pdf`;
+        a.style.display = "none";
         document.body.appendChild(a);
         a.click();
 
-        // Cleanup
+        // Cleanup - remove element and revoke URL
         setTimeout(() => {
-          if (document.body.contains(a)) {
+          try {
             document.body.removeChild(a);
+          } catch (e) {
+            // Element may have already been removed
           }
           URL.revokeObjectURL(url);
         }, 100);
@@ -322,23 +351,39 @@ const Editor = ({
           zenMode ? "fixed top-7 left-0" : "absolute top-4 left-0"
         }`}
       >
-        {/* Left Side: Add Cover */}
+        {/* Left Side: Add/Change Cover */}
         <div>
-          {!thumbnailUrl && (
-            <Button
-              onClick={onAddCover}
-              variant="ghost"
-              size="sm"
-              className="bg-white shadow-sm hover:bg-gray-100 border border-gray-100 text-gray-600 gap-2"
-            >
-              <ImageIcon className="h-4 w-4" />
-              <span className="hidden sm:inline">Add Cover</span>
-            </Button>
-          )}
+          <Button
+            onClick={onAddCover}
+            variant="ghost"
+            size="sm"
+            className="bg-white shadow-sm hover:bg-gray-100 border border-gray-100 text-gray-600 gap-2"
+          >
+            <ImageIcon className="h-4 w-4" />
+            <span className="hidden sm:inline">
+              {thumbnailUrl ? "Change Cover" : "Add Cover"}
+            </span>
+          </Button>
         </div>
 
         {/* Right Side: Controls */}
         <div className="flex gap-2">
+          {/* Save Button */}
+          <Button
+            onClick={onSave}
+            disabled={isSaving || !onSave}
+            variant="ghost"
+            size="icon"
+            className="bg-white shadow-sm hover:bg-gray-100 border border-gray-100"
+            title="Save (Ctrl+S / Cmd+S)"
+          >
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 text-gray-600 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4 text-gray-600" />
+            )}
+          </Button>
+
           {/* Metrics Toggle */}
           <Button
             onClick={onToggleMetrics}
@@ -419,15 +464,15 @@ const Editor = ({
               <img
                 src={thumbnailUrl}
                 alt="Article cover"
-                className="w-full h-64 object-cover rounded-lg shadow-sm"
+                className="w-full h-90 object-cover rounded-lg shadow-sm"
               />
               <Button
-                variant="secondary"
+                variant="destructive"
                 size="sm"
-                onClick={onAddCover}
+                onClick={onRemoveCover}
                 className="absolute top-2 right-2 opacity-0 group-hover/image:opacity-100 transition-opacity"
               >
-                Change Cover
+                Remove Cover
               </Button>
             </div>
           )}
