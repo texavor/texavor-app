@@ -27,7 +27,11 @@ interface PublicationsResponse {
   publications: Publication[];
 }
 
-export const usePublicationsApi = (blogId: string, articleId: string) => {
+export const usePublicationsApi = (
+  blogId: string,
+  articleId: string,
+  isEnabled: boolean = true
+) => {
   const queryClient = useQueryClient();
 
   // Fetch publications for an article
@@ -39,7 +43,7 @@ export const usePublicationsApi = (blogId: string, articleId: string) => {
       );
       return res.data.publications || [];
     },
-    enabled: !!blogId && !!articleId && articleId !== "new",
+    enabled: !!blogId && !!articleId && articleId !== "new" && isEnabled,
     refetchInterval: (query) => {
       // Poll every 5 seconds if there are publishing or pending publications
       const hasActivePublications = query.state.data?.some(

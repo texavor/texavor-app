@@ -15,7 +15,6 @@ export interface ArticleDetails {
   tags: string[];
   categories: string[];
   key_phrases: string[];
-  key_phrases: string[];
   article_publications: string[];
   platform_settings?: Record<string, any>;
 }

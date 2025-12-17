@@ -87,7 +87,7 @@ export default function ArticleDetailsSheet({
     isLoading: isLoadingPublications,
     retryPublication,
     refetch: refetchPublications,
-  } = usePublicationsApi(blogs?.id || "", formData?.id || "");
+  } = usePublicationsApi(blogs?.id || "", formData?.id || "", open);
 
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
