@@ -4,7 +4,7 @@ import { ColumnDef, Column } from "@tanstack/react-table";
 import { CustomTable } from "@/components/ui/CustomTable";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Bookmark } from "lucide-react";
 import { useState } from "react";
 
 export type KeywordData = {
@@ -20,6 +20,9 @@ interface KeywordResultsTableProps {
   data: KeywordData[];
   mode: "basic" | "detailed";
   isLoading: boolean;
+  onSave?: (term: string, data: KeywordData) => void;
+  onGenerateTopic?: (term: string) => void;
+  savedTerms?: Set<string>;
 }
 
 const SortableHeader = ({
@@ -68,6 +71,9 @@ export const KeywordResultsTable = ({
   data,
   mode,
   isLoading,
+  onSave,
+  onGenerateTopic,
+  savedTerms,
 }: KeywordResultsTableProps) => {
   const formatCurrency = (value?: number) => {
     if (value === undefined) return "-";
@@ -80,6 +86,58 @@ export const KeywordResultsTable = ({
   const formatNumber = (value?: number) => {
     if (value === undefined) return "-";
     return new Intl.NumberFormat("en-US").format(value);
+  };
+
+  const actionsColumn: ColumnDef<KeywordData> = {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => {
+      const term = row.getValue("term") as string;
+      const rowData = row.original;
+      const isSaved = savedTerms?.has(term);
+
+      return (
+        <div className="flex items-center gap-2">
+          {onSave && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!isSaved) {
+                  onSave(term, rowData);
+                }
+              }}
+              className={`h-8 w-8 transition-colors ${
+                isSaved
+                  ? "text-[#104127] bg-[#EAF9F2]"
+                  : "text-gray-500 hover:text-[#104127] hover:bg-[#EAF9F2]"
+              }`}
+              title={isSaved ? "Saved" : "Save Keyword"}
+              disabled={isSaved}
+            >
+              <Bookmark
+                className={`h-4 w-4 ${isSaved ? "fill-current" : ""}`}
+              />
+            </Button>
+          )}
+          {onGenerateTopic && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onGenerateTopic(term);
+              }}
+              className="h-8 px-2 text-xs border-[#104127] text-[#104127] hover:bg-[#EAF9F2]"
+              title="Generate Topic"
+            >
+              Generate Topic
+            </Button>
+          )}
+        </div>
+      );
+    },
   };
 
   const basicColumns: ColumnDef<KeywordData>[] = [
@@ -101,6 +159,7 @@ export const KeywordResultsTable = ({
         </Badge>
       ),
     },
+    actionsColumn,
   ];
 
   const detailedColumns: ColumnDef<KeywordData>[] = [
@@ -160,6 +219,7 @@ export const KeywordResultsTable = ({
         );
       },
     },
+    actionsColumn,
   ];
 
   return (

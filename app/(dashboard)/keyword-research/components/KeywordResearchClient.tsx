@@ -4,22 +4,55 @@ import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Loader2, Zap, Database } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { KeywordResultsTable, KeywordData } from "./KeywordResultsTable";
 import { toast } from "sonner";
 import { axiosInstance } from "@/lib/axiosInstace";
 import { useAppStore } from "@/store/appStore";
-import { RecentSearches } from "./RecentSearches";
+import { RecentSearches } from "@/components/dashboard/RecentSearches";
 import { ScoreMeter, Gauge } from "@/components/ScoreMeter";
 import { CustomTabs } from "@/components/ui/custom-tabs";
+import { useRouter } from "next/navigation";
+import { useSavedResultsApi } from "../../saved/hooks/useSavedResultsApi";
 
 export default function KeywordResearchClient() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { saveResult } = useSavedResultsApi();
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<"basic" | "detailed">("basic");
+  const [searchedMode, setSearchedMode] = useState<"basic" | "detailed">(
+    "basic"
+  );
   const [results, setResults] = useState<KeywordData[]>([]);
   const [seedData, setSeedData] = useState<KeywordData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [savedTerms, setSavedTerms] = useState<Set<string>>(new Set());
   const { blogs } = useAppStore();
+
+  const handleSaveKeyword = (term: string, data: KeywordData) => {
+    saveResult.mutate(
+      {
+        result_type: "keyword_research",
+        title: term,
+        search_params: { query: term, mode },
+        result_data: { seed: data, related: [] },
+        tags: ["keyword"],
+      },
+      {
+        onSuccess: () => {
+          setSavedTerms((prev) => new Set(prev).add(term));
+          toast.success("Keyword saved successfully!");
+        },
+        onError: () => toast.error("Failed to save keyword."),
+      }
+    );
+  };
+
+  const handleGenerateTopic = (term: string) => {
+    router.push(`/topic-generation?keyword=${encodeURIComponent(term)}`);
+  };
 
   const handleSearch = async (searchQuery?: string) => {
     const term = searchQuery || query;
@@ -36,6 +69,7 @@ export default function KeywordResearchClient() {
     setHasSearched(true);
     setResults([]);
     setSeedData(null);
+    setSearchedMode(mode); // Lock in the mode used for this search
 
     try {
       const response = await axiosInstance.get(
@@ -48,9 +82,12 @@ export default function KeywordResearchClient() {
 
       setSeedData(response?.data.seed);
       setResults(response?.data.related || []);
+      // Invalidate recent searches to show the new one
+      queryClient.invalidateQueries({
+        queryKey: ["recentSearches", blogs?.id, "keyword_research"],
+      });
     } catch (error) {
       console.error("Error fetching keywords:", error);
-      toast.error("Failed to fetch keyword data. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -61,7 +98,7 @@ export default function KeywordResearchClient() {
       {/* Top Section: Search and Recent Searches */}
       <div className="flex flex-col flex-row gap-4 w-full">
         {/* Left: Search Input */}
-        <div className="w-full w-8/12 bg-white p-4 rounded-xl space-y-2">
+        <div className="w-full w-8/12 bg-white p-4 rounded-xl space-y-2 border-none shadow-none">
           <div className="flex flex-col space-y-1 mb-2">
             <p className="font-poppins text-black font-medium">
               Keyword Research
@@ -116,9 +153,11 @@ export default function KeywordResearchClient() {
           </Button>
         </div>
 
-        {/* Right: Recent Searches */}
         <div className="w-full max-w-4/12">
-          <RecentSearches onSelect={(term) => handleSearch(term)} />
+          <RecentSearches
+            type="keyword_research"
+            onSelect={(term) => handleSearch(term)}
+          />
         </div>
       </div>
 
@@ -137,14 +176,17 @@ export default function KeywordResearchClient() {
             </div>
             <KeywordResultsTable
               data={results}
-              mode={mode}
+              mode={searchedMode}
               isLoading={isLoading}
+              onSave={handleSaveKeyword}
+              onGenerateTopic={handleGenerateTopic}
+              savedTerms={savedTerms}
             />
           </div>
 
           {/* Right: Metrics */}
           <div className="w-full lg:w-4/12 space-y-4">
-            {seedData && mode === "detailed" ? (
+            {seedData && searchedMode === "detailed" ? (
               <div className="bg-white p-6 rounded-xl space-y-6">
                 <h3 className="font-semibold font-poppins text-lg">
                   Analysis for{" "}

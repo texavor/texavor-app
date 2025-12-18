@@ -14,8 +14,8 @@ import {
   FileText,
   Binoculars,
   Microscope,
+  ChevronDown,
 } from "lucide-react";
-import { CustomTabs } from "@/components/ui/custom-tabs";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -24,13 +24,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import CustomDropdown from "@/components/ui/CustomDropdown";
 import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
+
+const TYPE_OPTIONS = [
+  { id: "all", name: "All Items" },
+  { id: "keyword_research", name: "Keywords" },
+  { id: "outline_generation", name: "Outlines" },
+  { id: "topic_generation", name: "Topics" },
+];
 
 export default function SavedResultsClient() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
   const { useSavedResults, deleteResult, toggleFavorite } =
     useSavedResultsApi();
 
@@ -43,8 +52,6 @@ export default function SavedResultsClient() {
   const handleView = (result: SavedResult) => {
     switch (result.result_type) {
       case "keyword_research":
-        // Navigate to keyword research with the query
-        // Assuming we can pass query params to pre-fill
         router.push(
           `/keyword-research?q=${encodeURIComponent(
             result.search_params.query
@@ -52,13 +59,6 @@ export default function SavedResultsClient() {
         );
         break;
       case "outline_generation":
-        // Navigate to outline generation with the ID if possible, or just view
-        // Based on saved-outlines page, it goes to /outline-generation?id=...
-        // But here we have a unified ID. Let's assume the outline generator can handle it
-        // or we might need to adjust. For now, let's try to match the existing pattern.
-        // If the saved result IS the outline, we might need to pass the data.
-        // However, the previous saved-outlines page used a specific ID.
-        // Let's assume for now we can view it.
         router.push(`/outline-generation?id=${result.id}`);
         break;
       case "topic_generation":
@@ -94,6 +94,9 @@ export default function SavedResultsClient() {
         return type;
     }
   };
+
+  const selectedType =
+    TYPE_OPTIONS.find((opt) => opt.id === activeTab) || TYPE_OPTIONS[0];
 
   const columns: ColumnDef<SavedResult>[] = [
     {
@@ -215,26 +218,38 @@ export default function SavedResultsClient() {
         </p>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-        <div className="w-full sm:w-auto">
-          <CustomTabs
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-2">
+          <CustomDropdown
+            open={typeDropdownOpen}
+            onOpenChange={setTypeDropdownOpen}
+            options={TYPE_OPTIONS}
             value={activeTab}
-            onValueChange={setActiveTab}
-            items={[
-              { value: "all", label: "All Items" },
-              { value: "keyword_research", label: "Keywords" },
-              { value: "outline_generation", label: "Outlines" },
-              { value: "topic_generation", label: "Topics" },
-            ]}
+            onSelect={(opt: any) => {
+              setActiveTab(opt.id);
+              setTypeDropdownOpen(false);
+            }}
+            trigger={
+              <Button
+                variant="outline"
+                className="h-9 bg-white hover:bg-white rounded-md font-inter text-sm border-gray-200 flex items-center gap-2 px-3 min-w-[140px] justify-between"
+              >
+                <span className="font-medium text-gray-700">
+                  {selectedType?.name}
+                </span>
+                <ChevronDown className="h-4 w-4 text-gray-500" />
+              </Button>
+            }
           />
         </div>
+
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             placeholder="Search saved items..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+            className="pl-10 bg-white border-gray-200 focus:bg-white transition-colors"
           />
         </div>
       </div>

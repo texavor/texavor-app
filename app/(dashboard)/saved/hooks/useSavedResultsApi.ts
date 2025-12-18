@@ -75,11 +75,9 @@ export const useSavedResultsApi = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["savedResults", blogs?.id] });
-      toast.success("Result saved successfully!");
     },
     onError: (error) => {
       console.error("Error saving result:", error);
-      toast.error("Failed to save result.");
     },
   });
 

@@ -1,14 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axiosInstace";
 import { useAppStore } from "@/store/appStore";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, History, FileText, TrendingUp, Target } from "lucide-react";
+import {
+  Loader2,
+  History,
+  FileText,
+  TrendingUp,
+  Target,
+  Trash2,
+  X,
+  Save,
+  PenTool,
+} from "lucide-react";
 import { ScoreMeter, Gauge } from "@/components/ScoreMeter";
+import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { RecentSearches } from "@/components/dashboard/RecentSearches";
 
 import {
   Accordion,
@@ -16,23 +29,36 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSavedResultsApi } from "../saved/hooks/useSavedResultsApi";
 
 const Page = () => {
   const { blogs } = useAppStore();
   const [topics, setTopics] = useState<any[]>([]);
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { saveResult } = useSavedResultsApi();
 
-  const { data: recentSearches = [] } = useQuery<string[]>({
-    queryKey: ["recentSearches", blogs?.id],
-    queryFn: async () => {
-      const res = await axiosInstance.get(
-        `/api/v1/blogs/${blogs?.id}/recent_searches?type=topic_generation`
-      );
-      return res?.data?.data || [];
-    },
-    enabled: !!blogs?.id,
-    staleTime: 1000 * 60 * 60, // 1 hour
-  });
+  const handleSaveTopic = (topic: any) => {
+    saveResult.mutate(
+      {
+        result_type: "topic_generation",
+        title: topic.keyword, // Using keyword as title since it seems to be the main topic
+        result_data: topic,
+        search_params: { keywords: [topic.keyword] },
+        tags: ["topic"],
+      },
+      {
+        onSuccess: () => toast.success("Topic saved successfully!"),
+        onError: () => toast.error("Failed to save topic."),
+      }
+    );
+  };
+
+  const handleGenerateOutline = (topicTitle: string) => {
+    router.push(`/outline-generation?topic=${encodeURIComponent(topicTitle)}`);
+  };
 
   const OpportunityMeter = ({ value }: { value: number }) => {
     const segments = Array.from({ length: 10 }, (_, i) => i < value);
@@ -55,27 +81,15 @@ const Page = () => {
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (data: string) => {
-      queryClient.setQueryData(
-        ["recentSearches", blogs?.id],
-        (oldData: string[] | undefined) => {
-          const old = oldData || [];
-          const updatedSearches = [
-            { keywords: [data] },
-            ...old.filter((s) => s !== data),
-          ].slice(0, 5);
-          return updatedSearches;
-        }
-      );
       return axiosInstance.post(`/api/v1/blogs/${blogs?.id}/topic_generation`, {
         keywords: [data],
       });
     },
     onSuccess: (res) => {
       setTopics(res?.data?.data || []);
-    },
-    onError: (error) => {
-      console.log(error);
-      setTopics([]);
+      queryClient.invalidateQueries({
+        queryKey: ["recentSearches", blogs?.id, "topic_generation"],
+      });
     },
   });
 
@@ -90,6 +104,14 @@ const Page = () => {
     },
   });
 
+  useEffect(() => {
+    const keywordParam = searchParams.get("keyword");
+    if (keywordParam) {
+      const decoded = decodeURIComponent(keywordParam);
+      form.setFieldValue("keywords", decoded);
+    }
+  }, [searchParams, form]);
+
   const handleRecentSearch = (keyword: string) => {
     form.setFieldValue("keywords", keyword);
     mutate(keyword);
@@ -102,7 +124,7 @@ const Page = () => {
   return (
     <div>
       <div className="flex flex-col lg:flex-row gap-4 max-h-[170px]">
-        <div className="bg-white rounded-xl w-full lg:w-8/12 p-4 space-y-2">
+        <div className="bg-white rounded-xl w-full lg:w-8/12 p-4 space-y-2 border-none shadow-none">
           <p className="font-poppins text-black font-medium">Generate Topic</p>
           <p className="font-inter text-[#7A7A7A] text-sm font-normal">
             Search tags, keywords or combination of words to generate articles
@@ -141,26 +163,11 @@ const Page = () => {
             </Button>
           </form>
         </div>
-        <div className="bg-white rounded-xl w-full lg:w-4/12 p-4 space-y-2">
-          <h3 className="font-poppins text-black font-medium flex items-center gap-2">
-            <History size={18} /> Recent Searches
-          </h3>
-          {recentSearches.length > 0 ? (
-            <ul className="space-y-1 pt-1 overflow-y-auto max-h-[110px] no-scrollbar">
-              {recentSearches.map((search: any, index) => (
-                <li key={index}>
-                  <button
-                    onClick={() => handleRecentSearch(search?.keywords?.[0])}
-                    className="text-sm font-inter text-gray-600 hover:text-black text-left w-full cursor-pointer truncate max-w-fit"
-                  >
-                    {search?.keywords?.[0]}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-gray-400 pt-2">No recent searches.</p>
-          )}
+        <div className="bg-white rounded-xl w-full lg:w-4/12 border-none shadow-none overflow-hidden">
+          <RecentSearches
+            type="topic_generation"
+            onSelect={(keyword) => handleRecentSearch(keyword)}
+          />
         </div>
       </div>
 
@@ -312,6 +319,34 @@ const Page = () => {
                                         : "Limited potential"}
                                     </p>
                                   </div>
+                                </div>
+                                <div className="flex gap-2 mt-4">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleSaveTopic(candidate);
+                                    }}
+                                    className="h-8 px-2 text-gray-500 hover:text-[#104127] hover:bg-[#EAF9F2]"
+                                    title="Save Topic"
+                                  >
+                                    <Save className="h-4 w-4 mr-1" />
+                                    Save
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleGenerateOutline(candidate.keyword);
+                                    }}
+                                    className="h-8 px-2 text-xs border-[#104127] text-[#104127] hover:bg-[#EAF9F2]"
+                                    title="Generate Outline"
+                                  >
+                                    <PenTool className="h-4 w-4 mr-1" />
+                                    Generate Outline
+                                  </Button>
                                 </div>
                               </div>
                             </AccordionContent>

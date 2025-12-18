@@ -4,7 +4,7 @@ import React, { useState, Suspense } from "react";
 import { OutlineForm } from "./OutlineForm";
 import { OutlineEditor } from "./OutlineEditor";
 import { SavedOutlinesList } from "./SavedOutlinesList";
-import { RecentSearches } from "./RecentSearches";
+import { RecentSearches } from "@/components/dashboard/RecentSearches";
 import { useOutlineApi, OutlineData } from "../hooks/useOutlineApi";
 import { CustomTabs } from "@/components/ui/custom-tabs";
 import { useSearchParams } from "next/navigation";
@@ -30,19 +30,20 @@ function OutlineGenerationContent() {
     null
   );
   const [editorKey, setEditorKey] = useState(0);
+  const [prefilledTopic, setPrefilledTopic] = useState("");
   const searchParams = useSearchParams();
   const outlineId = searchParams.get("id");
+  const topicParam = searchParams.get("topic");
 
   const {
     generateOutline,
-    recentSearches,
     savedOutlines,
     saveOutline,
     updateOutline,
     deleteOutline,
   } = useOutlineApi();
 
-  // Load outline from URL ID
+  // Load outline from URL ID or Topic
   useEffect(() => {
     if (outlineId && savedOutlines.data) {
       const found = savedOutlines.data.find((o) => o.id === outlineId);
@@ -51,8 +52,10 @@ function OutlineGenerationContent() {
         setEditorKey((prev) => prev + 1);
         setView("editor");
       }
+    } else if (topicParam) {
+      setPrefilledTopic(decodeURIComponent(topicParam));
     }
-  }, [outlineId, savedOutlines.data]);
+  }, [outlineId, topicParam, savedOutlines.data]);
 
   const handleGenerate = (data: { topic: string }) => {
     generateOutline.mutate(
@@ -100,11 +103,14 @@ function OutlineGenerationContent() {
           <OutlineForm
             onSubmit={handleGenerate}
             isPending={generateOutline.isPending}
+            initialValues={
+              prefilledTopic ? { topic: prefilledTopic } : undefined
+            }
           />
         </div>
         <div className="w-full lg:w-4/12">
           <RecentSearches
-            searches={recentSearches.data || []}
+            type="outline_generation"
             onSelect={(topic) => handleGenerate({ topic })}
           />
         </div>

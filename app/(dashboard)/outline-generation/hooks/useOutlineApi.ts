@@ -54,22 +54,6 @@ export const useOutlineApi = () => {
     },
   });
 
-  // 2. Recent Searches
-  const recentSearches = useQuery({
-    queryKey: ["recentSearches", blogs?.id, "outline_generation"],
-    queryFn: async () => {
-      const response = await axiosInstance.get(
-        `/api/v1/blogs/${blogs?.id}/recent_searches?search_type=outline_generation`
-      );
-      return response.data.data as {
-        id: string;
-        keywords: string[];
-        created_at: string;
-      }[];
-    },
-    enabled: !!blogs?.id,
-  });
-
   // 3. List Saved Outlines
   const savedOutlines = useQuery({
     queryKey: ["savedOutlines", blogs?.id],
@@ -143,7 +127,6 @@ export const useOutlineApi = () => {
 
   return {
     generateOutline,
-    recentSearches,
     savedOutlines,
     saveOutline,
     updateOutline,
