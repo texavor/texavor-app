@@ -17,6 +17,7 @@ import {
   X,
   Save,
   PenTool,
+  Check,
 } from "lucide-react";
 import { ScoreMeter, Gauge } from "@/components/ScoreMeter";
 import { toast } from "sonner";
@@ -35,22 +36,28 @@ import { useSavedResultsApi } from "../saved/hooks/useSavedResultsApi";
 const Page = () => {
   const { blogs } = useAppStore();
   const [topics, setTopics] = useState<any[]>([]);
+  const [savedTopics, setSavedTopics] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { saveResult } = useSavedResultsApi();
 
-  const handleSaveTopic = (topic: any) => {
+  const handleSaveTopic = (topic: any, searchKeyword: string) => {
+    if (savedTopics.has(topic.title)) return;
+
     saveResult.mutate(
       {
         result_type: "topic_generation",
-        title: topic.keyword, // Using keyword as title since it seems to be the main topic
+        title: topic.title || searchKeyword, // Ensure we have a title
         result_data: topic,
-        search_params: { keywords: [topic.keyword] },
+        search_params: { keywords: [searchKeyword] }, // Use the actual search keyword
         tags: ["topic"],
       },
       {
-        onSuccess: () => toast.success("Topic saved successfully!"),
+        onSuccess: () => {
+          setSavedTopics((prev) => new Set(prev).add(topic.title));
+          toast.success("Topic saved successfully!");
+        },
         onError: () => toast.error("Failed to save topic."),
       }
     );
@@ -276,7 +283,15 @@ const Page = () => {
                                       <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
                                         Difficulty
                                       </span>
-                                      <span className="text-2xl font-bold text-yellow-600">
+                                      <span
+                                        className={`text-2xl font-bold ${
+                                          candidate.difficulty <= 3
+                                            ? "text-green-600"
+                                            : candidate.difficulty <= 7
+                                            ? "text-yellow-600"
+                                            : "text-red-600"
+                                        }`}
+                                      >
                                         {candidate.difficulty}
                                         <span className="text-sm text-gray-500 font-normal">
                                           /10
@@ -285,6 +300,7 @@ const Page = () => {
                                     </div>
                                     <ScoreMeter
                                       value={candidate.difficulty / 10}
+                                      inverse={true}
                                     />
                                     <p className="text-xs text-gray-500 mt-1.5">
                                       {candidate.difficulty <= 3
@@ -322,24 +338,43 @@ const Page = () => {
                                 </div>
                                 <div className="flex gap-2 mt-4">
                                   <Button
-                                    variant="ghost"
+                                    variant={
+                                      savedTopics.has(candidate.title)
+                                        ? "secondary"
+                                        : "ghost"
+                                    }
                                     size="sm"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handleSaveTopic(candidate);
+                                      handleSaveTopic(candidate, topic.keyword);
                                     }}
-                                    className="h-8 px-2 text-gray-500 hover:text-[#104127] hover:bg-[#EAF9F2]"
-                                    title="Save Topic"
+                                    disabled={savedTopics.has(candidate.title)}
+                                    className={`h-8 px-2 ${
+                                      savedTopics.has(candidate.title)
+                                        ? "text-green-700 bg-green-50"
+                                        : "text-gray-500 hover:text-[#104127] hover:bg-[#EAF9F2]"
+                                    }`}
+                                    title={
+                                      savedTopics.has(candidate.title)
+                                        ? "Topic Saved"
+                                        : "Save Topic"
+                                    }
                                   >
-                                    <Save className="h-4 w-4 mr-1" />
-                                    Save
+                                    {savedTopics.has(candidate.title) ? (
+                                      <Check className="h-4 w-4 mr-1" />
+                                    ) : (
+                                      <Save className="h-4 w-4 mr-1" />
+                                    )}
+                                    {savedTopics.has(candidate.title)
+                                      ? "Saved"
+                                      : "Save"}
                                   </Button>
                                   <Button
                                     variant="outline"
                                     size="sm"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handleGenerateOutline(candidate.keyword);
+                                      handleGenerateOutline(candidate.title);
                                     }}
                                     className="h-8 px-2 text-xs border-[#104127] text-[#104127] hover:bg-[#EAF9F2]"
                                     title="Generate Outline"
@@ -370,7 +405,12 @@ const Page = () => {
                     </p>
                   </div>
                   <div className="space-y-4">
-                    <Gauge label="Difficulty" value={topics[0].difficulty} />
+                    <Gauge
+                      label="Difficulty"
+                      value={topics[0].difficulty}
+                      inverse={true}
+                      max={10}
+                    />
                     <div className="space-y-1">
                       <div className="flex justify-between items-center">
                         <p className="text-sm font-semibold text-black font-poppins">
@@ -391,7 +431,7 @@ const Page = () => {
                           {topics[0].authority_score}
                         </p>
                       </div>
-                      <ScoreMeter value={topics[0].authority_score} />
+                      <ScoreMeter value={topics[0].authority_score / 10} />
                     </div>
                     <div className="space-y-1">
                       <div className="flex justify-between items-center">
@@ -402,7 +442,7 @@ const Page = () => {
                           {topics[0].geo_score}
                         </p>
                       </div>
-                      <ScoreMeter value={topics[0].geo_score} />
+                      <ScoreMeter value={topics[0].geo_score / 10} />
                     </div>
                   </div>
                   {uniqueCompetitors.length > 0 && (

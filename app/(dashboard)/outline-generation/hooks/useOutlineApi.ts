@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axiosInstace";
 import { useAppStore } from "@/store/appStore";
 import { toast } from "sonner";
+import { savedResultsService } from "@/lib/api/savedResults";
 
 export interface OutlineSection {
   heading: string;
@@ -40,7 +41,10 @@ export const useOutlineApi = () => {
         `/api/v1/blogs/${blogs?.id}/outline_generation`,
         data
       );
-      return response.data.data as OutlineData;
+      return {
+        ...response.data.data,
+        topic: response.data.data.topic || data.topic,
+      } as OutlineData;
     },
     onSuccess: () => {
       // Invalidate recent searches to show the new one
@@ -50,42 +54,70 @@ export const useOutlineApi = () => {
     },
     onError: (error) => {
       console.error("Error generating outline:", error);
-      toast.error("Failed to generate outline. Please try again.");
     },
   });
 
-  // 3. List Saved Outlines
+  // 3. List Saved Outlines (using saved_results API)
   const savedOutlines = useQuery({
-    queryKey: ["savedOutlines", blogs?.id],
+    queryKey: ["savedResults", blogs?.id, "outline_generation"],
     queryFn: async () => {
-      const response = await axiosInstance.get(
-        `/api/v1/blogs/${blogs?.id}/outlines`
-      );
-      return response.data.data as OutlineData[];
+      const response = await savedResultsService.list(blogs?.id || "", {
+        type: "outline_generation",
+      });
+      // Transform saved results to OutlineData format
+      return response.data.map((result) => ({
+        id: result.id,
+        ...result.result_data,
+        topic: result.search_params?.topic || "",
+        created_at: result.saved_at,
+      })) as OutlineData[];
     },
     enabled: !!blogs?.id,
   });
 
-  // 4. Create Saved Outline
+  // 4. Create Saved Outline (using saved_results API)
   const saveOutline = useMutation({
     mutationFn: async (outline: OutlineData) => {
-      const response = await axiosInstance.post(
-        `/api/v1/blogs/${blogs?.id}/outlines`,
-        { outline }
-      );
-      return response.data.data;
+      const response = await savedResultsService.create(blogs?.id || "", {
+        result_type: "outline_generation",
+        title: outline.title,
+        search_params: {
+          topic: outline.topic,
+          tone: outline.tone,
+          target_audience: outline.target_audience,
+        },
+        result_data: {
+          title: outline.title,
+          meta_description: outline.meta_description,
+          introduction: outline.introduction,
+          sections: outline.sections,
+          conclusion: outline.conclusion,
+          estimated_word_count: outline.estimated_word_count,
+          target_keywords: outline.target_keywords,
+          tone: outline.tone,
+          target_audience: outline.target_audience,
+        },
+      });
+      // Transform back to OutlineData format
+      return {
+        id: response.id,
+        ...response.result_data,
+        topic: response.search_params?.topic || "",
+        created_at: response.saved_at,
+      } as OutlineData;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["savedOutlines", blogs?.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["savedResults", blogs?.id, "outline_generation"],
+      });
       toast.success("Outline saved successfully!");
     },
     onError: (error) => {
       console.error("Error saving outline:", error);
-      toast.error("Failed to save outline.");
     },
   });
 
-  // 5. Update Saved Outline
+  // 5. Update Saved Outline (using saved_results API)
   const updateOutline = useMutation({
     mutationFn: async ({
       id,
@@ -94,34 +126,62 @@ export const useOutlineApi = () => {
       id: string;
       outline: OutlineData;
     }) => {
-      const response = await axiosInstance.put(
-        `/api/v1/blogs/${blogs?.id}/outlines/${id}`,
-        { outline }
+      // Update the result_data with new outline
+      const response = await axiosInstance.patch(
+        `/api/v1/blogs/${blogs?.id}/saved_results/${id}`,
+        {
+          saved_result: {
+            title: outline.title,
+            result_data: {
+              title: outline.title,
+              meta_description: outline.meta_description,
+              introduction: outline.introduction,
+              sections: outline.sections,
+              conclusion: outline.conclusion,
+              estimated_word_count: outline.estimated_word_count,
+              target_keywords: outline.target_keywords,
+              tone: outline.tone,
+              target_audience: outline.target_audience,
+            },
+            search_params: {
+              topic: outline.topic,
+              tone: outline.tone,
+              target_audience: outline.target_audience,
+            },
+          },
+        }
       );
-      return response.data.data;
+      return {
+        id: response.data.data.id,
+        ...response.data.data.result_data,
+        topic: response.data.data.search_params?.topic || "",
+        created_at: response.data.data.saved_at,
+      } as OutlineData;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["savedOutlines", blogs?.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["savedResults", blogs?.id, "outline_generation"],
+      });
       toast.success("Outline updated successfully!");
     },
     onError: (error) => {
       console.error("Error updating outline:", error);
-      toast.error("Failed to update outline.");
     },
   });
 
-  // 6. Delete Saved Outline
+  // 6. Delete Saved Outline (using saved_results API)
   const deleteOutline = useMutation({
     mutationFn: async (id: string) => {
-      await axiosInstance.delete(`/api/v1/blogs/${blogs?.id}/outlines/${id}`);
+      await savedResultsService.delete(blogs?.id || "", id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["savedOutlines", blogs?.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["savedResults", blogs?.id, "outline_generation"],
+      });
       toast.success("Outline deleted successfully!");
     },
     onError: (error) => {
       console.error("Error deleting outline:", error);
-      toast.error("Failed to delete outline.");
     },
   });
 

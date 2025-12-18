@@ -9,7 +9,7 @@ const PROTECTED_ROUTES = [
 ];
 const AUTH_ROUTES = ["/login", "/register", "/forgot-password"];
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const token = req.cookies.get("_texavor_session")?.value;
   const pathname = req.nextUrl.pathname;
 

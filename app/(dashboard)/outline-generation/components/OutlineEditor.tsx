@@ -27,6 +27,7 @@ import {
   Save,
   Loader2,
   FileText,
+  Check,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -91,8 +92,8 @@ const SortableSectionItem = ({
       className="mb-4 scroll-mt-20"
       id={`outline-section-${index}`}
     >
-      <Card className="border-gray-200 shadow-sm bg-white">
-        <CardHeader className="p-4 pb-2 flex flex-row items-center gap-2 space-y-0">
+      <Card className="border-none shadow-none bg-white">
+        <CardHeader className="p-4 pb-1 flex flex-row items-center gap-2 space-y-0">
           <div
             {...attributes}
             {...listeners}
@@ -160,6 +161,26 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
   isSaving,
 }) => {
   const [data, setData] = useState<OutlineData>(initialData);
+  const [showSavedMessage, setShowSavedMessage] = useState(false);
+
+  // Track previous isSaving to detect completion
+  useEffect(() => {
+    if (!isSaving && showSavedMessage) {
+      const timer = setTimeout(() => setShowSavedMessage(false), 2000);
+      return () => clearTimeout(timer);
+    }
+    // If just finished saving (was saving, now not), triggering logic handled in button click or just assume false->true->false cycle
+    // We can just rely on the parent changing isSaving from true to false
+  }, [isSaving, showSavedMessage]);
+
+  // Use a ref to track previous value because we can't inspect previous prop in useEffect directly without it
+  const prevIsSaving = React.useRef(isSaving);
+  useEffect(() => {
+    if (prevIsSaving.current && !isSaving) {
+      setShowSavedMessage(true);
+    }
+    prevIsSaving.current = isSaving;
+  }, [isSaving]);
 
   // Only sync ID if it changes (e.g. after save), do not reset other state to avoid loops
   useEffect(() => {
@@ -242,7 +263,7 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-10">
       {/* Header / Meta Info */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
+      <div className="bg-white p-6 rounded-xl shadow-none border-none space-y-4">
         <div className="flex justify-between items-start">
           <div className="space-y-1 w-full mr-4">
             <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -262,10 +283,12 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
           >
             {isSaving ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : showSavedMessage ? (
+              <Check className="mr-2 h-4 w-4" />
             ) : (
               <Save className="mr-2 h-4 w-4" />
             )}
-            Save
+            {isSaving ? "Saving..." : showSavedMessage ? "Saved!" : "Save"}
           </Button>
         </div>
 
@@ -287,7 +310,7 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
       {/* Introduction */}
       <Card
         id="outline-intro"
-        className="border-gray-200 shadow-sm bg-white scroll-mt-20"
+        className="border-none shadow-none bg-white scroll-mt-20"
       >
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-semibold text-gray-800 flex items-center gap-2">
@@ -348,7 +371,7 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
       {/* Conclusion */}
       <Card
         id="outline-conclusion"
-        className="border-gray-200 shadow-sm bg-white scroll-mt-20"
+        className="border-none shadow-none bg-white scroll-mt-20"
       >
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-semibold text-gray-800 flex items-center gap-2">

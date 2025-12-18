@@ -58,6 +58,7 @@ function OutlineGenerationContent() {
   }, [outlineId, topicParam, savedOutlines.data]);
 
   const handleGenerate = (data: { topic: string }) => {
+    setPrefilledTopic(data.topic);
     generateOutline.mutate(
       { topic: data.topic },
       {
@@ -101,6 +102,7 @@ function OutlineGenerationContent() {
       <div className="flex flex-col lg:flex-row gap-4 max-h-[170px]">
         <div className="w-full lg:w-8/12">
           <OutlineForm
+            key={prefilledTopic} // Force re-render when prefilled topic changes
             onSubmit={handleGenerate}
             isPending={generateOutline.isPending}
             initialValues={
@@ -140,7 +142,7 @@ function OutlineGenerationContent() {
           <div className="w-full lg:w-4/12">
             <div className="sticky top-4 space-y-4">
               {/* Metrics */}
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
+              <div className="bg-white p-6 rounded-xl shadow-none border-none space-y-4">
                 <h3 className="font-poppins text-lg font-semibold text-gray-900">
                   Outline Metrics
                 </h3>
@@ -203,11 +205,11 @@ function OutlineGenerationContent() {
               </div>
 
               {/* Table of Contents Navigation */}
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
-                <h3 className="font-poppins text-lg font-semibold text-gray-900">
+              <div className="bg-white p-6 rounded-xl shadow-none border-none space-y-4">
+                <h3 className="font-poppins text-base font-semibold text-gray-900">
                   Outline Structure
                 </h3>
-                <div className="space-y-1 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                <div className="space-y-1 max-h-[calc(100vh-530px)] overflow-y-auto no-scrollbar pr-2">
                   <button
                     onClick={() => {
                       document
