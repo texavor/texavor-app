@@ -142,6 +142,8 @@ export default function CreateArticlePage() {
       return res.data;
     },
     enabled: !!existingId && !!blogs?.id && existingId !== "new",
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   useEffect(() => {

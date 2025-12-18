@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 import {
   DndContext,
   closestCenter,
@@ -28,8 +30,11 @@ import {
   Loader2,
   FileText,
   Check,
+  FileEdit,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { axiosInstance } from "@/lib/axiosInstace";
+import { useAppStore } from "@/store/appStore";
 
 interface OutlineEditorProps {
   initialData: OutlineData;
@@ -160,8 +165,88 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
   onChange,
   isSaving,
 }) => {
+  const router = useRouter();
+  const { blogs } = useAppStore();
   const [data, setData] = useState<OutlineData>(initialData);
   const [showSavedMessage, setShowSavedMessage] = useState(false);
+
+  // Mutation to create article from outline
+  const createArticleMutation = useMutation({
+    mutationFn: async () => {
+      let outlineId = data?.id;
+
+      console.log("Initial outline ID:", outlineId);
+
+      // If outline hasn't been saved yet, save it first
+      if (!outlineId) {
+        const outlineToSave = {
+          ...data,
+          sections: items.map((i) => i.section),
+        };
+
+        console.log("Saving outline first...", outlineToSave);
+
+        // Save using the saved_results API
+        const saveRes = await axiosInstance.post(
+          `/api/v1/blogs/${blogs?.id}/saved_results`,
+          {
+            saved_result: {
+              result_type: "outline_generation",
+              title: outlineToSave.title,
+              search_params: {
+                topic: outlineToSave.topic,
+                tone: outlineToSave.tone,
+                target_audience: outlineToSave.target_audience,
+              },
+              result_data: {
+                title: outlineToSave.title,
+                meta_description: outlineToSave.meta_description,
+                introduction: outlineToSave.introduction,
+                sections: outlineToSave.sections,
+                conclusion: outlineToSave.conclusion,
+                estimated_word_count: outlineToSave.estimated_word_count,
+                target_keywords: outlineToSave.target_keywords,
+                tone: outlineToSave.tone,
+                target_audience: outlineToSave.target_audience,
+              },
+            },
+          }
+        );
+
+        console.log("Save response:", saveRes?.data);
+        // Extract the saved_result ID from the response
+        outlineId = saveRes?.data?.data?.id || saveRes?.data?.id;
+        console.log("Extracted outline ID:", outlineId);
+
+        // Update local data with the saved outline ID
+        setData((prev) => ({ ...prev, id: outlineId }));
+      }
+
+      console.log("Creating article with saved_result_id:", outlineId);
+      console.log("Article payload:", {
+        title: data.title || "Untitled Article",
+        content: data.meta_description || "",
+        saved_result_id: outlineId,
+        source: "texavor",
+      });
+
+      // Now create the article with the outline ID
+      const res = await axiosInstance.post(
+        `/api/v1/blogs/${blogs?.id}/articles`,
+        {
+          title: data.title || "Untitled Article",
+          content: data.meta_description || "",
+          saved_result_id: outlineId,
+          source: "texavor",
+        }
+      );
+      return res?.data;
+    },
+    onSuccess: (articleData) => {
+      // Navigate to the article editor
+      router.push(`/article/${articleData?.id}`);
+    },
+  });
 
   // Track previous isSaving to detect completion
   useEffect(() => {
@@ -276,20 +361,38 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
               placeholder="Article Title"
             />
           </div>
-          <Button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="bg-[#104127] text-white hover:bg-[#0d3320] min-w-[120px]"
-          >
-            {isSaving ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : showSavedMessage ? (
-              <Check className="mr-2 h-4 w-4" />
-            ) : (
-              <Save className="mr-2 h-4 w-4" />
-            )}
-            {isSaving ? "Saving..." : showSavedMessage ? "Saved!" : "Save"}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="bg-[#104127] text-white hover:bg-[#0d3320] min-w-[120px]"
+            >
+              {isSaving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : showSavedMessage ? (
+                <Check className="mr-2 h-4 w-4" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              {isSaving ? "Saving..." : showSavedMessage ? "Saved!" : "Save"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => createArticleMutation.mutate()}
+              disabled={createArticleMutation.isPending}
+              className="border-[#104127] text-[#104127] hover:bg-[#EAF9F2] min-w-[140px]"
+              title="Create Article from Outline"
+            >
+              {createArticleMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <FileEdit className="mr-2 h-4 w-4" />
+              )}
+              {createArticleMutation.isPending
+                ? "Creating..."
+                : "Create Article"}
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-1">
