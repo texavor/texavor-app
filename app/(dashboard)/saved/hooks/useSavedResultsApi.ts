@@ -19,11 +19,11 @@ export interface SavedResult {
 
 export interface SavedResultsResponse {
   data: SavedResult[];
-  meta: {
-    total: number;
+  pagination: {
     page: number;
     per_page: number;
-    total_pages: number;
+    count: number;
+    pages: number;
   };
 }
 

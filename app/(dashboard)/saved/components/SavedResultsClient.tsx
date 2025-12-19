@@ -10,12 +10,12 @@ import {
   Search,
   Trash2,
   Eye,
-  Star,
   MoreHorizontal,
   FileText,
   Binoculars,
   Microscope,
   ChevronDown,
+  ListTree,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -36,13 +36,39 @@ const TYPE_OPTIONS = [
   { id: "topic_generation", name: "Topics" },
 ];
 
+const useDebounce = <T,>(value: T, delay: number): T => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
+import { useAppStore } from "@/store/appStore";
+import CustomPagination from "@/components/ui/CustomPagination";
+
+// ... existing imports
+
 export default function SavedResultsClient() {
   const router = useRouter();
+  const { blogs } = useAppStore(); // Get blogs for ID check
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
   const { useSavedResults, deleteResult, toggleFavorite } =
     useSavedResultsApi();
+
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(50);
 
   const [selectedResult, setSelectedResult] = useState<SavedResult | null>(
     null
@@ -51,21 +77,34 @@ export default function SavedResultsClient() {
 
   const { data: resultsResponse, isLoading } = useSavedResults({
     type: activeTab === "all" ? undefined : activeTab,
-    q: searchQuery,
-    per_page: 50, // Load more items initially
+    q: debouncedSearchQuery,
+    page,
+    per_page: perPage,
   });
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handlePerPageChange = (newPerPage: number) => {
+    setPerPage(newPerPage);
+    setPage(1);
+  };
 
   const handleView = (result: SavedResult) => {
     setSelectedResult(result);
     setIsSheetOpen(true);
   };
 
+  // ... (keep helper functions like getIconForType, same columns)
+
+  // ... (keep getIconForType, getLabelForType definitions)
   const getIconForType = (type: string) => {
     switch (type) {
       case "keyword_research":
         return <Binoculars className="h-4 w-4 text-blue-500" />;
       case "outline_generation":
-        return <FileText className="h-4 w-4 text-green-500" />;
+        return <ListTree className="h-4 w-4 text-green-500" />;
       case "topic_generation":
         return <Microscope className="h-4 w-4 text-purple-500" />;
       default:
@@ -123,39 +162,11 @@ export default function SavedResultsClient() {
     },
     {
       id: "actions",
+      header: () => <div className="text-right">Action</div>,
       cell: ({ row }) => {
         const result = row.original;
         return (
           <div className="flex items-center justify-end gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 text-xs bg-white text-gray-700 border-gray-200 hover:bg-gray-50 shadow-none"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleView(result);
-              }}
-            >
-              View
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleFavorite.mutate(result.id);
-              }}
-            >
-              <Star
-                className={`h-4 w-4 ${
-                  result.is_favorite
-                    ? "fill-yellow-400 text-yellow-400"
-                    : "text-gray-400"
-                }`}
-              />
-            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -199,6 +210,7 @@ export default function SavedResultsClient() {
             onSelect={(opt: any) => {
               setActiveTab(opt.id);
               setTypeDropdownOpen(false);
+              setPage(1); // Reset page on filter change
             }}
             trigger={
               <Button
@@ -225,14 +237,21 @@ export default function SavedResultsClient() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="rounded-xl shadow-none border-none overflow-hidden flex flex-col space-y-4">
         <CustomTable
           columns={columns}
           data={resultsResponse?.data || []}
-          isLoading={isLoading}
+          isLoading={isLoading || !blogs?.id}
           onClick={(row: any) => handleView(row)}
           className="cursor-pointer hover:bg-gray-50/50"
         />
+        {resultsResponse?.pagination && (
+          <CustomPagination
+            pagination={resultsResponse.pagination}
+            onPageChange={handlePageChange}
+            onPerPageChange={handlePerPageChange}
+          />
+        )}
       </div>
 
       <SavedResultDetailsSheet

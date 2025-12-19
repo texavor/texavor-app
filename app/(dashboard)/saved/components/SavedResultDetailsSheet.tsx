@@ -18,6 +18,7 @@ import {
   Eye,
   Target,
   List,
+  ListTree,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,7 @@ import { axiosInstance } from "@/lib/axiosInstace";
 import { useAppStore } from "@/store/appStore";
 import { toast } from "sonner";
 import { ScoreMeter } from "@/components/ScoreMeter";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface SavedResultDetailsSheetProps {
   open: boolean;
@@ -96,7 +98,7 @@ export default function SavedResultDetailsSheet({
       case "keyword_research":
         return <Binoculars className="h-6 w-6 text-blue-500" />;
       case "outline_generation":
-        return <FileText className="h-6 w-6 text-green-500" />;
+        return <ListTree className="h-6 w-6 text-green-500" />;
       case "topic_generation":
         return <Microscope className="h-6 w-6 text-purple-500" />;
       default:
@@ -191,8 +193,8 @@ export default function SavedResultDetailsSheet({
                   Search Query
                 </label>
                 <div className="flex items-center gap-2">
-                  <Search className="h-5 w-5 text-blue-500" />
-                  <span className="font-semibold text-gray-900 text-lg">
+                  <Search className="h-4 w-4 text-blue-500" />
+                  <span className="font-semibold text-gray-900 text-base">
                     {params.query || displayResult.title}
                   </span>
                 </div>
@@ -230,7 +232,7 @@ export default function SavedResultDetailsSheet({
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">
                 Topic Title
               </label>
-              <div className="font-bold text-gray-900 text-xl leading-tight font-poppins">
+              <div className="font-bold text-gray-900 text-lg leading-tight font-poppins">
                 {displayResult.title}
               </div>
             </div>
@@ -316,7 +318,7 @@ export default function SavedResultDetailsSheet({
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">
                 Outline Title
               </label>
-              <div className="font-bold text-gray-900 text-xl leading-tight font-poppins">
+              <div className="font-bold text-gray-900 text-lg leading-tight font-poppins">
                 {displayResult.title}
               </div>
             </div>
@@ -370,24 +372,6 @@ export default function SavedResultDetailsSheet({
             )}
           </div>
         )}
-
-        <div className="pt-6 border-t border-gray-100 mt-auto">
-          <div className="flex gap-4 text-sm text-gray-500 items-center">
-            <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
-              <Calendar className="h-3.5 w-3.5" />
-              <span className="text-xs font-medium">
-                Saved {format(new Date(displayResult.saved_at), "MMM d, yyyy")}
-              </span>
-            </div>
-            {data.tone && (
-              <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
-                <span className="text-xs font-medium capitalize">
-                  Tone: {data.tone}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
       </div>
     );
   };
@@ -453,8 +437,13 @@ export default function SavedResultDetailsSheet({
 
         <div className="flex-1 overflow-y-auto px-6 py-6">
           {isLoading && !freshResult ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+            <div className="space-y-4">
+              <Skeleton className="h-20 w-full rounded-xl" />
+              <div className="grid grid-cols-2 gap-4">
+                <Skeleton className="h-24 w-full rounded-xl" />
+                <Skeleton className="h-24 w-full rounded-xl" />
+              </div>
+              <Skeleton className="h-40 w-full rounded-xl" />
             </div>
           ) : (
             renderContent()
