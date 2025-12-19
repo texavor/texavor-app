@@ -202,13 +202,13 @@ const TopicGenerationClient = () => {
                             className="bg-white shadow-nonoe border-none rounded-xl"
                           >
                             <AccordionTrigger className="px-4 pt-4 pb-2 text-left  hover:no-underline cursor-pointer">
-                              <div>
-                                <div className="flex items-start justify-between gap-4 mb-3">
+                              <div className="w-full">
+                                <div className="flex items-start justify-between gap-4 mb-3 w-full">
                                   <h3 className="font-semibold font-poppins text-lg text-gray-900 leading-tight flex-1 no-underline">
                                     {candidate.title}
                                   </h3>
-                                  <div className="flex gap-2 flex-shrink-0">
-                                    <div className="bg-green-50 font-inter text-green-700 capitalize px-3 py-1 rounded-full text-xs font-semibold border border-green-200">
+                                  <div className="flex gap-2 flex-shrink-0 items-start">
+                                    <div className="bg-green-50 font-inter text-green-700 capitalize px-3 py-1 rounded-full text-xs font-semibold border border-green-200 whitespace-nowrap">
                                       {candidate.content_type}
                                     </div>
                                   </div>
