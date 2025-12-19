@@ -69,7 +69,7 @@ const Editor = ({
   // Keyboard shortcut for save (Ctrl+S / Cmd+S)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
         if (onSave) {
           onSave();
@@ -77,8 +77,8 @@ const Editor = ({
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onSave]);
   const [isGeneratingPDF, setIsGeneratingPDF] = React.useState(false);
 
@@ -192,15 +192,40 @@ const Editor = ({
 
         const processedContent = await processImagesForPdf(contentHTML);
 
+        // Process cover image if present
+        let processedCoverUrl = thumbnailUrl;
+        if (
+          thumbnailUrl &&
+          (thumbnailUrl.startsWith("http://") ||
+            thumbnailUrl.startsWith("https://"))
+        ) {
+          try {
+            const { axiosInstance } = await import("@/lib/axiosInstace");
+            const response = await axiosInstance.get("/api/v1/proxy_image", {
+              params: { url: thumbnailUrl },
+              responseType: "blob",
+            });
+
+            // Convert blob to Base64
+            const blob = response.data;
+            const base64 = await new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.readAsDataURL(blob);
+            });
+
+            processedCoverUrl = base64;
+          } catch (err) {
+            console.error("Failed to process cover image:", err);
+            // Keep original URL as fallback
+          }
+        }
+
         const blob = await pdf(
           <PdfDocument
             content={processedContent}
             title={titleText}
-            coverUrl={thumbnailUrl} // Cover also needs processing?? It's passed as prop. PdfDocument handles it.
-            // If coverUrl is relative, PdfDocument handles it.
-            // If it needs auth, we might need to pre-fetch it too?
-            // Let's check PdfDocument cover handling. It's a standard PdfImage.
-            // I'll leave coverUrl as is for now, user cares about content images first.
+            coverUrl={processedCoverUrl}
           />
         ).toBlob();
         const url = URL.createObjectURL(blob);

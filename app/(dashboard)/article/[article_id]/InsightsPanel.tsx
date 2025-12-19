@@ -72,9 +72,9 @@ const InsightsPanel = ({
     if (!outlineTopic.trim()) return;
 
     generateOutline.mutate(
-      { 
+      {
         topic: outlineTopic,
-        article_id: articleId 
+        article_id: articleId,
       },
       {
         onSuccess: (data: OutlineData) => {
@@ -87,7 +87,7 @@ const InsightsPanel = ({
   return (
     <div className="bg-white max-h-[calc(100vh-100px)] rounded-xl flex flex-col">
       <Tabs defaultValue="insights" className="w-full flex flex-col h-full">
-        <div className="sticky top-0 bg-white z-10 p-4 pb-2">
+        <div className="sticky top-0 bg-white z-10 p-4 pb-2 rounded-t-xl">
           <TabsList className="w-full">
             <TabsTrigger value="insights" className="flex-1">
               Content Insights
