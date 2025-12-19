@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ScoreMeter, Gauge } from "@/components/ScoreMeter";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -282,16 +283,19 @@ const InsightsPanel = ({
                   <h3 className="font-poppins text-base font-semibold text-gray-900">
                     Outline
                   </h3>
-                  {savedResult?.id && (
-                    <Button
-                      size="sm"
-                      onClick={() =>
-                        (window.location.href = `/outline-generation/${savedResult.id}`)
-                      }
-                      className="text-xs bg-[#104127] text-white hover:bg-[#0d3320]"
+                  {(savedResult?.id || generatedOutline?.id) && (
+                    <Link
+                      href={`/outline-generation/${
+                        savedResult?.id || generatedOutline?.id
+                      }`}
                     >
-                      Edit Outline
-                    </Button>
+                      <Button
+                        size="sm"
+                        className="text-xs bg-[#104127] text-white hover:bg-[#0d3320] shadow-none border-none"
+                      >
+                        Edit Outline
+                      </Button>
+                    </Link>
                   )}
                 </div>
 

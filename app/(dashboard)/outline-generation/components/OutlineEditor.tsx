@@ -353,23 +353,12 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
     <div className="space-y-6 max-w-4xl mx-auto pb-10">
       {/* Header / Meta Info */}
       <div className="bg-white p-6 rounded-xl shadow-none border-none space-y-4">
-        <div className="flex justify-between items-start">
-          <div className="space-y-1 w-full mr-4">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              Article Title
-            </label>
-            <Input
-              value={data.title}
-              onChange={(e) => setData({ ...data, title: e.target.value })}
-              className="text-xl font-bold font-poppins border-transparent hover:border-gray-200 focus:border-green-500 px-2 h-auto py-2"
-              placeholder="Article Title"
-            />
-          </div>
-          <div className="flex gap-2">
+        <div className="space-y-3">
+          <div className="flex gap-2 justify-end">
             <Button
               onClick={handleSave}
               disabled={isSaving}
-              className="bg-[#104127] text-white hover:bg-[#0d3320] min-w-[120px]"
+              className="bg-[#104127] text-white hover:bg-[#0d3320] shadow-none"
             >
               {isSaving ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -394,7 +383,7 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
               <Button
                 variant="outline"
                 onClick={() => router.push(`/article/${linkedArticle.id}`)}
-                className="border-[#104127] text-[#104127] hover:bg-[#EAF9F2] min-w-[140px]"
+                className="border-[#104127] text-[#104127] hover:bg-[#EAF9F2] shadow-none border-none"
               >
                 <FileEdit className="mr-2 h-4 w-4" />
                 Return to Article
@@ -404,7 +393,7 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
                 variant="outline"
                 onClick={() => createArticleMutation.mutate()}
                 disabled={createArticleMutation.isPending}
-                className="border-[#104127] text-[#104127] hover:bg-[#EAF9F2] min-w-[140px]"
+                className="border-[#104127] text-[#104127] hover:bg-[#EAF9F2] shadow-none border-none"
                 title="Create Article from Outline"
               >
                 {createArticleMutation.isPending ? (
@@ -418,6 +407,18 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
               </Button>
             ) : null}
           </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              Article Title
+            </label>
+            <Input
+              value={data.title}
+              onChange={(e) => setData({ ...data, title: e.target.value })}
+              className="text-xl font-bold font-poppins border-transparent hover:border-gray-200 focus:border-green-500 px-2 h-auto py-2 w-full"
+              placeholder="Article Title"
+            />
+          </div>
         </div>
 
         <div className="space-y-1">
@@ -429,7 +430,7 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
             onChange={(e) =>
               setData({ ...data, meta_description: e.target.value })
             }
-            className="resize-none text-sm text-gray-600 font-inter border-gray-200 focus:border-green-500 min-h-[80px]"
+            className="resize-none text-sm text-gray-600 font-inter border-gray-200 focus:border-green-500 min-h-[80px] shadow-none"
             placeholder="Meta description..."
           />
         </div>
@@ -462,10 +463,9 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
             Outline Sections
           </h3>
           <Button
-            variant="outline"
             size="sm"
             onClick={addSection}
-            className="text-green-700 border-green-200 hover:bg-green-50"
+            className="bg-[#104127] text-white hover:bg-[#0d3320] shadow-none border-none"
           >
             <Plus size={16} className="mr-1" /> Add Section
           </Button>
