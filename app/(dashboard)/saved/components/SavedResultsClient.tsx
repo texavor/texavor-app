@@ -209,15 +209,6 @@ export default function SavedResultsClient() {
 
   return (
     <div className="space-y-6 w-full">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold font-poppins text-gray-900">
-          Saved Items
-        </h1>
-        <p className="text-gray-500 font-inter">
-          Manage your saved research, outlines, and topics.
-        </p>
-      </div>
-
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-2">
           <CustomDropdown
@@ -232,7 +223,7 @@ export default function SavedResultsClient() {
             trigger={
               <Button
                 variant="outline"
-                className="h-9 bg-white hover:bg-white rounded-md font-inter text-sm border-gray-200 flex items-center gap-2 px-3 min-w-[140px] justify-between"
+                className="h-9 bg-white hover:bg-white rounded-md font-inter text-sm border-gray-200 flex items-center gap-2 px-3 min-w-[140px] justify-between border-none shadow-none"
               >
                 <span className="font-medium text-gray-700">
                   {selectedType?.name}

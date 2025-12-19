@@ -129,7 +129,7 @@ export const KeywordResultsTable = ({
                 e.stopPropagation();
                 onGenerateTopic(term);
               }}
-              className="h-8 px-2 text-xs border-[#104127] text-[#104127] hover:bg-[#EAF9F2]"
+              className="h-8 px-2 text-xs border-[#104127] text-[#104127] hover:bg-[#EAF9F2] shadow-none"
               title="Generate Topic"
             >
               Generate Topic
@@ -154,7 +154,10 @@ export const KeywordResultsTable = ({
       accessorKey: "source",
       header: "Source",
       cell: ({ row }) => (
-        <Badge variant="secondary" className="bg-[#EAF9F2] text-[#104127]">
+        <Badge
+          variant="secondary"
+          className="bg-[#EAF9F2] text-[#104127] border-none shadow-none"
+        >
           {row.getValue("source") || "Unknown"}
         </Badge>
       ),
@@ -215,7 +218,11 @@ export const KeywordResultsTable = ({
         if (val > 70) color = "bg-red-500";
 
         return (
-          <Badge className={`${color} text-white hover:${color}`}>{val}</Badge>
+          <Badge
+            className={`${color} text-white hover:${color} border-none shadow-none`}
+          >
+            {val}
+          </Badge>
         );
       },
     },
