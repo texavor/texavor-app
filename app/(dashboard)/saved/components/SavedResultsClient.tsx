@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import SavedResultDetailsSheet from "./SavedResultDetailsSheet";
 import { useSavedResultsApi, SavedResult } from "../hooks/useSavedResultsApi";
 import { CustomTable } from "@/components/ui/CustomTable";
 import { Input } from "@/components/ui/input";
@@ -43,6 +44,11 @@ export default function SavedResultsClient() {
   const { useSavedResults, deleteResult, toggleFavorite } =
     useSavedResultsApi();
 
+  const [selectedResult, setSelectedResult] = useState<SavedResult | null>(
+    null
+  );
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+
   const { data: resultsResponse, isLoading } = useSavedResults({
     type: activeTab === "all" ? undefined : activeTab,
     q: searchQuery,
@@ -50,23 +56,8 @@ export default function SavedResultsClient() {
   });
 
   const handleView = (result: SavedResult) => {
-    switch (result.result_type) {
-      case "keyword_research":
-        router.push(
-          `/keyword-research?q=${encodeURIComponent(
-            result.search_params.query
-          )}&mode=${result.search_params.mode}`
-        );
-        break;
-      case "outline_generation":
-        router.push(`/outline-generation?id=${result.id}`);
-        break;
-      case "topic_generation":
-        router.push(`/topic-generation?id=${result.id}`);
-        break;
-      default:
-        break;
-    }
+    setSelectedResult(result);
+    setIsSheetOpen(true);
   };
 
   const getIconForType = (type: string) => {
@@ -120,29 +111,6 @@ export default function SavedResultsClient() {
       },
     },
     {
-      accessorKey: "tags",
-      header: "Tags",
-      cell: ({ row }) => {
-        const tags = row.original.tags || [];
-        return (
-          <div className="flex flex-wrap gap-1">
-            {tags.slice(0, 3).map((tag, i) => (
-              <Badge
-                key={i}
-                variant="secondary"
-                className="text-xs font-normal bg-gray-100 text-gray-600 hover:bg-gray-200"
-              >
-                {tag}
-              </Badge>
-            ))}
-            {tags.length > 3 && (
-              <span className="text-xs text-gray-400">+{tags.length - 3}</span>
-            )}
-          </div>
-        );
-      },
-    },
-    {
       accessorKey: "saved_at",
       header: "Date Saved",
       cell: ({ row }) => {
@@ -159,6 +127,18 @@ export default function SavedResultsClient() {
         const result = row.original;
         return (
           <div className="flex items-center justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs bg-white text-gray-700 border-gray-200 hover:bg-gray-50 shadow-none"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleView(result);
+              }}
+            >
+              View
+            </Button>
+
             <Button
               variant="ghost"
               size="icon"
@@ -254,6 +234,12 @@ export default function SavedResultsClient() {
           className="cursor-pointer hover:bg-gray-50/50"
         />
       </div>
+
+      <SavedResultDetailsSheet
+        open={isSheetOpen}
+        onOpenChange={setIsSheetOpen}
+        result={selectedResult}
+      />
     </div>
   );
 }
