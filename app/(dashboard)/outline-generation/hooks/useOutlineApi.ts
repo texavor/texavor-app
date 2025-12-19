@@ -28,6 +28,7 @@ export interface GenerateOutlineRequest {
   topic: string;
   tone?: string;
   target_audience?: string;
+  article_id?: string;
 }
 
 export const useOutlineApi = () => {

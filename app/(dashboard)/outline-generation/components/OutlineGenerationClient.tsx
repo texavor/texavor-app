@@ -45,17 +45,13 @@ function OutlineGenerationContent() {
 
   // Load outline from URL ID or Topic
   useEffect(() => {
-    if (outlineId && savedOutlines.data) {
-      const found = savedOutlines.data.find((o) => o.id === outlineId);
-      if (found) {
-        setCurrentOutline(found);
-        setEditorKey((prev) => prev + 1);
-        setView("editor");
-      }
+    if (outlineId) {
+      // Redirect to the new dynamic route
+      window.location.href = `/outline-generation/${outlineId}`;
     } else if (topicParam) {
       setPrefilledTopic(decodeURIComponent(topicParam));
     }
-  }, [outlineId, topicParam, savedOutlines.data]);
+  }, [outlineId, topicParam]);
 
   const handleGenerate = (data: { topic: string }) => {
     setPrefilledTopic(data.topic);

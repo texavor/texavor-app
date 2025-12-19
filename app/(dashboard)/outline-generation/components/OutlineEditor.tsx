@@ -41,6 +41,8 @@ interface OutlineEditorProps {
   onSave: (data: OutlineData) => void;
   onChange?: (data: OutlineData) => void;
   isSaving: boolean;
+  isEditMode?: boolean;
+  linkedArticle?: any;
 }
 
 interface SortableItemProps {
@@ -164,6 +166,8 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
   onSave,
   onChange,
   isSaving,
+  isEditMode = false,
+  linkedArticle,
 }) => {
   const router = useRouter();
   const { blogs } = useAppStore();
@@ -374,24 +378,45 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
               ) : (
                 <Save className="mr-2 h-4 w-4" />
               )}
-              {isSaving ? "Saving..." : showSavedMessage ? "Saved!" : "Save"}
+              {isSaving
+                ? isEditMode
+                  ? "Updating..."
+                  : "Saving..."
+                : showSavedMessage
+                ? isEditMode
+                  ? "Updated!"
+                  : "Saved!"
+                : isEditMode
+                ? "Update"
+                : "Save"}
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => createArticleMutation.mutate()}
-              disabled={createArticleMutation.isPending}
-              className="border-[#104127] text-[#104127] hover:bg-[#EAF9F2] min-w-[140px]"
-              title="Create Article from Outline"
-            >
-              {createArticleMutation.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
+            {isEditMode && linkedArticle ? (
+              <Button
+                variant="outline"
+                onClick={() => router.push(`/article/${linkedArticle.id}`)}
+                className="border-[#104127] text-[#104127] hover:bg-[#EAF9F2] min-w-[140px]"
+              >
                 <FileEdit className="mr-2 h-4 w-4" />
-              )}
-              {createArticleMutation.isPending
-                ? "Creating..."
-                : "Create Article"}
-            </Button>
+                Return to Article
+              </Button>
+            ) : !isEditMode ? (
+              <Button
+                variant="outline"
+                onClick={() => createArticleMutation.mutate()}
+                disabled={createArticleMutation.isPending}
+                className="border-[#104127] text-[#104127] hover:bg-[#EAF9F2] min-w-[140px]"
+                title="Create Article from Outline"
+              >
+                {createArticleMutation.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <FileEdit className="mr-2 h-4 w-4" />
+                )}
+                {createArticleMutation.isPending
+                  ? "Creating..."
+                  : "Create Article"}
+              </Button>
+            ) : null}
           </div>
         </div>
 

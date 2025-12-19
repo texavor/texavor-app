@@ -33,6 +33,7 @@ export default function CreateArticlePage() {
   const [articleId, setArticleId] = useState({ id: existingId });
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [isThumbnailDialogOpen, setIsThumbnailDialogOpen] = useState(false);
+  const [savedResultId, setSavedResultId] = useState<string | null>(null);
 
   // Reset settings on unmount
   useEffect(() => {
@@ -74,6 +75,7 @@ export default function CreateArticlePage() {
       setContent(fetchedArticle.content || "");
       setThumbnailUrl(fetchedArticle.thumbnail_url || null);
       setArticleId(fetchedArticle);
+      setSavedResultId(fetchedArticle.saved_result_id || null);
       isInitialLoadDone.current = true;
 
       // Initialize store if not already initialized
@@ -135,15 +137,31 @@ export default function CreateArticlePage() {
     queryFn: async () => {
       if (existingId === "new") return null;
 
-      const res = await axiosInstance.get(
-        `/api/v1/blogs/${blogs?.id}/articles/${existingId}/article_analyses`
-      );
-      if (!res?.data) return null;
-      return res.data;
+      try {
+        const res = await axiosInstance.get(
+          `/api/v1/blogs/${blogs?.id}/articles/${existingId}/article_analyses`
+        );
+        if (!res?.data) return null;
+        return res.data;
+      } catch (error: any) {
+        // If analysis not found (404), return null instead of throwing
+        if (error?.response?.status === 404) {
+          return null;
+        }
+        throw error;
+      }
     },
     enabled: !!existingId && !!blogs?.id && existingId !== "new",
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: (failureCount, error: any) => {
+      // Don't retry on 404 errors (analysis not found)
+      if (error?.response?.status === 404) {
+        return false;
+      }
+      // Retry up to 2 times for other errors
+      return failureCount < 2;
+    },
   });
 
   useEffect(() => {
@@ -151,6 +169,26 @@ export default function CreateArticlePage() {
       setInsights(fetchedInsights);
     }
   }, [fetchedInsights]);
+
+  // Fetch saved_result if article has saved_result_id
+  const { data: fetchedSavedResult } = useQuery({
+    queryKey: ["savedResult", savedResultId, blogs?.id],
+    queryFn: async () => {
+      if (!savedResultId) return null;
+
+      try {
+        const res = await axiosInstance.get(
+          `/api/v1/blogs/${blogs?.id}/saved_results/${savedResultId}`
+        );
+        return res?.data?.data || res?.data;
+      } catch (error: any) {
+        console.error("Error fetching saved result:", error);
+        return null;
+      }
+    },
+    enabled: !!savedResultId && !!blogs?.id,
+    refetchOnWindowFocus: false,
+  });
 
   const createMutation = useMutation({
     mutationFn: async (payload: { title: string; content: string }) => {
@@ -349,6 +387,9 @@ export default function CreateArticlePage() {
               isAnalyzing={isAnalyzing}
               onAnalyzeClick={handleAnalyzeClick}
               insights={insights}
+              savedResult={fetchedSavedResult}
+              articleTitle={title}
+              articleId={existingId !== "new" ? existingId : undefined}
             />
           </div>
         )}
