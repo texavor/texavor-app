@@ -9,7 +9,7 @@ import "../app/dracula.css";
 import { useAppStore } from "@/store/appStore";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
-import { EditorBubbleMenu } from "./EditorBubbleMenu";
+import { CustomToolbar } from "./CustomToolbar";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
@@ -380,7 +380,8 @@ const Editor = ({
         zenMode ? "sticky top-0 h-[calc(100vh-10px)]" : "h-[calc(100vh-100px)]"
       } rounded-xl bg-white font-inter flex flex-col relative group`}
     >
-      {editor && <EditorBubbleMenu editor={editor} title={title} />}
+      {/* Custom Floating Toolbar - appears on text selection */}
+      <CustomToolbar editor={editor} title={title} />
 
       {/* Top Right Controls (Zen, Settings) */}
       <div

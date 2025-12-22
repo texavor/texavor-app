@@ -142,7 +142,7 @@ export function ImageGenerationDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-4 py-4 overflow-y-auto max-h-[60vh] no-scrollbar">
           <div className="grid gap-2">
             <Label htmlFor="prompt">Prompt</Label>
             <Textarea

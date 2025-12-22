@@ -160,18 +160,34 @@ const SidebarItem = ({
     );
   }
 
+  // When sidebar is closed, wrap in Tooltip
+  if (!isSideOpen) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Link
+            href={href}
+            target={external ? "_blank" : undefined}
+            rel={external ? "noopener noreferrer" : undefined}
+          >
+            {button}
+          </Link>
+        </TooltipTrigger>
+        <TooltipContent side="right">
+          <p>{title}</p>
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  // When sidebar is open, no Tooltip needed
   return (
     <Link
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
     >
-      <Tooltip>
-        <TooltipTrigger asChild>{button}</TooltipTrigger>
-        <TooltipContent side="right">
-          <p>{title}</p>
-        </TooltipContent>
-      </Tooltip>
+      {button}
     </Link>
   );
 };

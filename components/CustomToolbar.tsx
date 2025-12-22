@@ -1,24 +1,17 @@
 "use client";
 
-import { BubbleMenu, Editor } from "@tiptap/react";
+import { Editor } from "@tiptap/react";
 import {
   Bold,
   Italic,
   Link as LinkIcon,
-  List,
-  ListOrdered,
   Heading2,
-  Quote,
   Code,
-  Codepen,
   Sparkles,
-  Wand2,
-  Image as ImageIcon,
 } from "lucide-react";
 import { Button } from "./ui/button";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { LinkDialog } from "./LinkDialog";
-import { ImageDialog } from "./ImageDialog";
 import { ImageGenerationDialog } from "./ImageGenerationDialog";
 import {
   Tooltip,
@@ -27,17 +20,62 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-type EditorBubbleMenuProps = {
-  editor: Editor;
+type CustomToolbarProps = {
+  editor: Editor | null;
   title: string;
 };
 
-export const EditorBubbleMenu = ({ editor, title }: EditorBubbleMenuProps) => {
+export const CustomToolbar = ({ editor, title }: CustomToolbarProps) => {
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
-  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [isGenDialogOpen, setIsGenDialogOpen] = useState(false);
   const [initialPrompt, setInitialPrompt] = useState("");
   const [initialStyle, setInitialStyle] = useState("natural");
+  const [isVisible, setIsVisible] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const toolbarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!editor) return;
+
+    const updateToolbar = () => {
+      const { from, to, empty } = editor.state.selection;
+
+      // Hide toolbar if no text is selected
+      if (empty) {
+        setIsVisible(false);
+        return;
+      }
+
+      // Get the DOM coordinates of the selection
+      const { view } = editor;
+      const start = view.coordsAtPos(from);
+      const end = view.coordsAtPos(to);
+
+      // Calculate toolbar position (centered above selection)
+      const centerX = (start.left + end.right) / 2;
+      const toolbarWidth = toolbarRef.current?.offsetWidth || 0;
+
+      setPosition({
+        top: start.top - 60, // Position above the selection
+        left: centerX - toolbarWidth / 2, // Center horizontally
+      });
+      setIsVisible(true);
+    };
+
+    // Update on selection change
+    editor.on("selectionUpdate", updateToolbar);
+    editor.on("update", updateToolbar);
+
+    // Initial update
+    updateToolbar();
+
+    return () => {
+      editor.off("selectionUpdate", updateToolbar);
+      editor.off("update", updateToolbar);
+    };
+  }, [editor]);
+
+  if (!editor || !isVisible) return null;
 
   const onSetLink = (url: string) => {
     if (url) {
@@ -56,7 +94,6 @@ export const EditorBubbleMenu = ({ editor, title }: EditorBubbleMenuProps) => {
     if (url) {
       const { empty, to } = editor.state.selection;
       if (!empty) {
-        // Insert after selection
         editor
           .chain()
           .focus()
@@ -67,17 +104,6 @@ export const EditorBubbleMenu = ({ editor, title }: EditorBubbleMenuProps) => {
         editor.chain().focus().setImage({ src: url }).run();
       }
     }
-  };
-
-  const onMagicThumbnail = () => {
-    const content = editor.getText();
-    const summary = content.split("\n").slice(1, 4).join(" ").trim();
-
-    const magicPrompt = `A creative thumbnail for an article titled "${title}". Context: ${summary}`;
-
-    setInitialPrompt(magicPrompt);
-    setInitialStyle("thumbnail");
-    setIsGenDialogOpen(true);
   };
 
   const items = [
@@ -134,66 +160,33 @@ export const EditorBubbleMenu = ({ editor, title }: EditorBubbleMenuProps) => {
     },
   ];
 
-  // Modified AI items to be icon-only and trigger the dialog
   const aiItems = [
     {
       name: "Generate Image",
       command: () => {
-        // Get selected text for prompt
         const { from, to } = editor.state.selection;
         const text = editor.state.doc.textBetween(from, to, " ");
         if (text) {
-          setInitialPrompt(`Generate with the context: ${text}`);
-          setInitialStyle("natural"); // Default style for inline images
+          setInitialPrompt(`${text}`);
+          setInitialStyle("natural");
         }
-
         setIsGenDialogOpen(true);
-        // Blur the editor to hide the bubble menu
-        editor.commands.blur();
       },
-      isActive: false,
       icon: <Sparkles className="w-4 h-4 text-purple-500" />,
       tooltip: "Generate Image with AI",
     },
   ];
 
-  if (isLinkDialogOpen || isGenDialogOpen) {
-    return (
-      <>
-        <LinkDialog
-          isOpen={isLinkDialogOpen}
-          onClose={() => setIsLinkDialogOpen(false)}
-          onSetLink={onSetLink}
-          initialUrl={editor.getAttributes("link").href}
-        />
-
-        <ImageGenerationDialog
-          isOpen={isGenDialogOpen}
-          onClose={() => {
-            setIsGenDialogOpen(false);
-            setInitialPrompt("");
-            setInitialStyle("natural");
-          }}
-          onInsert={onSetImage}
-          initialPrompt={initialPrompt}
-          initialStyle={initialStyle}
-        />
-      </>
-    );
-  }
-
   return (
     <>
-      <BubbleMenu
-        editor={editor}
-        tippyOptions={{ duration: 100 }}
-        shouldShow={({ editor }) => {
-          // Don't show if editor is being destroyed
-          if (!editor || editor.isDestroyed) return false;
-          // Only show when text is selected
-          return !editor.state.selection.empty;
+      {/* Floating Toolbar */}
+      <div
+        ref={toolbarRef}
+        className="fixed z-50 flex items-center gap-1 p-2 bg-white rounded-lg shadow-lg border border-gray-200 animate-in fade-in duration-200"
+        style={{
+          top: `${position.top}px`,
+          left: `${position.left}px`,
         }}
-        className="flex items-center gap-1 p-2 bg-white rounded-lg shadow-lg border border-gray-200"
       >
         <TooltipProvider>
           {items.map((item) => (
@@ -214,9 +207,8 @@ export const EditorBubbleMenu = ({ editor, title }: EditorBubbleMenuProps) => {
             </Tooltip>
           ))}
 
-          <div className="w-px h-6 bg-gray-200 mx-1" />
+          <div className="w-px h-6 bg-gray-300 mx-1" />
 
-          {/* Changed to map aiItems similarly to items (icon only) */}
           {aiItems.map((item) => (
             <Tooltip key={item.name}>
               <TooltipTrigger asChild>
@@ -235,7 +227,7 @@ export const EditorBubbleMenu = ({ editor, title }: EditorBubbleMenuProps) => {
             </Tooltip>
           ))}
         </TooltipProvider>
-      </BubbleMenu>
+      </div>
 
       <LinkDialog
         isOpen={isLinkDialogOpen}

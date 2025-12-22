@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import Editor from "@/components/Editor";
-import InsightsPanel from "./InsightsPanel";
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useRouter, useParams } from "next/navigation";
 import { axiosInstance } from "@/lib/axiosInstace";
@@ -15,7 +15,21 @@ import {
 import ArticleDetailsSheet from "@/components/ArticleDetailsSheet";
 import { ThumbnailUploadDialog } from "@/components/ThumbnailUploadDialog";
 
+// Dynamic imports with SSR disabled to prevent hydration mismatches
+const Editor = dynamic(() => import("@/components/Editor"), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[80vh] w-full rounded-md" />,
+});
+
+const InsightsPanel = dynamic(() => import("./InsightsPanel"), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[80vh] w-full rounded-md" />,
+});
+
 export default function CreateArticlePage() {
+  // CRITICAL: Prevent ANY server-side rendering - MUST be first hooks
+  const [mounted, setMounted] = useState(false);
+
   const router = useRouter();
   const params = useParams();
   const { blogs, zenMode, toggleZenMode } = useAppStore();
@@ -28,12 +42,26 @@ export default function CreateArticlePage() {
 
   const existingId = params?.article_id as string;
 
+  // All state hooks MUST be called before any early returns
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [articleId, setArticleId] = useState({ id: existingId });
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [isThumbnailDialogOpen, setIsThumbnailDialogOpen] = useState(false);
   const [savedResultId, setSavedResultId] = useState<string | null>(null);
+  const [showMetrics, setShowMetrics] = useState(true);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [insights, setInsights] = useState(null);
+  const [isDetailsSheetOpen, setIsDetailsSheetOpen] = useState(false);
+
+  // Refs must also be called before early returns
+  const isInitialLoadDone = useRef(false);
+  const isCreatingRef = useRef(false);
+
+  // Set mounted state
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Reset settings on unmount
   useEffect(() => {
@@ -44,9 +72,6 @@ export default function CreateArticlePage() {
 
   const debouncedTitle = useDebounce(title, 500);
   const debouncedContent = useDebounce(content, 500);
-
-  // Prevent autosave from firing before initial fetch completes
-  const isInitialLoadDone = useRef(false);
 
   const { data: fetchedArticle, isLoading } = useQuery({
     queryKey: ["article", existingId, blogs?.id],
@@ -233,20 +258,12 @@ export default function CreateArticlePage() {
     onSuccess: (res, variables) => {
       // Merge the updated fields into the local state
       setArticleId((prev: any) => ({ ...prev, ...variables }));
-      // Also update store if backend returns fresh data, but be careful not to overwrite unrelated user edits if we were doing granular updates.
-      // However, on 'Save' from sheet, we are sending everything, so updating store with result is fine.
+      // Also update store if backend returns fresh data
       if (res?.data) {
         setArticleId((prev: any) => ({ ...prev, ...res.data }));
-        // We could re-initialize or create an update action, but for now user wants persistence of *unsaved* changes.
-        // Once saved, we can optionally sync back "confirmed" data.
-        // initializeArticleSettings({ ...settingsFormData, ...res.data });
-        // Actually, let's leave it. If user saves, store has the data.
       }
     },
   });
-
-  // Ref to track if we are currently creating a new article to prevent duplicates
-  const isCreatingRef = useRef(false);
 
   useEffect(() => {
     // Only block if we are expecting a specific existing article to load and it hasn't loaded yet
@@ -280,31 +297,6 @@ export default function CreateArticlePage() {
 
     performAutoSave();
   }, [debouncedTitle, debouncedContent]);
-
-  // Sync title/content to store
-  useEffect(() => {
-    // use setFormData from store to update title/content so Sheet has latest
-    // But we need to be careful of loops. Store updates -> ?
-    // Ideally, page.tsx owns title/content, store owns metadata.
-    // But store has title/content in ArticleDetails too.
-    // Let's just update store when these change.
-    // We need to import setFormData from store.
-  }, [title, content]);
-  // Wait, I can't put hooks inside effects. I'll do this in the component body.
-
-  // Implementation in the replacement block below is simplified to just Init/Reset logic requested.
-
-  const [showMetrics, setShowMetrics] = useState(true);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [insights, setInsights] = useState(null);
-  const [isDetailsSheetOpen, setIsDetailsSheetOpen] = useState(false);
-
-  // Hydration fix: Ensure zenMode is only applied after mount to match server HTML
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-  const safeZenMode = mounted && zenMode;
 
   const handleThumbnailSuccess = (url: string) => {
     setThumbnailUrl(url);
@@ -374,13 +366,25 @@ export default function CreateArticlePage() {
     }
   };
 
+  // Show loading state until mounted on client
+  if (!mounted) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading editor...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative">
       <div className="flex justify-between gap-2">
         {/* LEFT — Editor */}
         <div
           className={`${
-            showMetrics && !safeZenMode ? "w-8/12" : "w-full"
+            showMetrics && !zenMode ? "w-8/12" : "w-full"
           } space-y-4 transition-all duration-300`}
         >
           <Editor
@@ -401,7 +405,7 @@ export default function CreateArticlePage() {
         </div>
 
         {/* RIGHT — Insights Panel */}
-        {!safeZenMode && showMetrics && (
+        {!zenMode && showMetrics && (
           <div className="w-4/12 transition-all duration-300 sticky top-0">
             <InsightsPanel
               showMetrics={showMetrics}
@@ -420,9 +424,6 @@ export default function CreateArticlePage() {
       <ArticleDetailsSheet
         open={isDetailsSheetOpen}
         onOpenChange={setIsDetailsSheetOpen}
-        // Passing data to sheet is now redundant for state, but maybe useful if sheet needs to know about unsaved changes?
-        // We will pass the data from Page State just in case, but Sheet ignores it for initialization.
-        // Actually, better to pass undefined or remove prop from usage.
         onSave={(data) => {
           updateMutation.mutate(data);
           setIsDetailsSheetOpen(false);
