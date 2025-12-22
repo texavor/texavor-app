@@ -53,6 +53,9 @@ export function ThumbnailUploadDialog({
 
   // AI Generation fields
   const [customPrompt, setCustomPrompt] = useState("");
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(
+    null
+  );
 
   // Fetch selected thumbnail style
   const { data: stylesData } = useQuery<{
@@ -72,35 +75,6 @@ export function ThumbnailUploadDialog({
   const selectedStyle = stylesData?.styles?.find(
     (s) => s.id === stylesData.selected_style_id
   );
-
-  // Upload mutation - now uses decoupled flow
-  const uploadMutation = useMutation({
-    mutationFn: async (file: File) => {
-      // Step 1: Upload image to /api/v1/images and get URL
-      const imageUrl = await uploadImage(file);
-
-      // Step 2: Update article with the thumbnail_url
-      const response = await axiosInstance.patch(
-        `/api/v1/blogs/${blogs?.id}/articles/${articleId}`,
-        {
-          article: {
-            thumbnail_url: imageUrl,
-          },
-        }
-      );
-
-      return response.data;
-    },
-    onSuccess: (data) => {
-      if (data?.thumbnail_url) {
-        onSuccess(data.thumbnail_url);
-        handleClose();
-      }
-    },
-    onError: (error: any) => {
-      setError(error?.response?.data?.error || "Failed to upload thumbnail");
-    },
-  });
 
   // Generate mutation - using /generations endpoint like Toolbar.tsx
   const generateMutation = useMutation({
@@ -138,8 +112,8 @@ export function ThumbnailUploadDialog({
     onSuccess: (data) => {
       if (data?.url) {
         setPreviewUrl(data.url);
-        // Now upload the generated image as thumbnail
-        uploadGeneratedImage(data.url);
+        setGeneratedImageUrl(data.url);
+        // Don't upload immediately - wait for user to click "Save Cover"
       }
     },
     onError: (error: any) => {
@@ -147,9 +121,22 @@ export function ThumbnailUploadDialog({
     },
   });
 
-  // Upload generated image to article
-  const uploadGeneratedImage = async (imageUrl: string) => {
-    try {
+  // Save cover mutation - handles both file uploads and AI-generated images
+  const saveCoverMutation = useMutation({
+    mutationFn: async () => {
+      let imageUrl: string;
+
+      if (selectedFile) {
+        // Upload file and get URL
+        imageUrl = await uploadImage(selectedFile);
+      } else if (generatedImageUrl) {
+        // Use the AI-generated image URL
+        imageUrl = generatedImageUrl;
+      } else {
+        throw new Error("No image to save");
+      }
+
+      // Update article with the thumbnail_url
       const response = await axiosInstance.patch(
         `/api/v1/blogs/${blogs?.id}/articles/${articleId}`,
         {
@@ -159,14 +146,18 @@ export function ThumbnailUploadDialog({
         }
       );
 
-      if (response.data?.thumbnail_url) {
-        onSuccess(response.data.thumbnail_url);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      if (data?.thumbnail_url) {
+        onSuccess(data.thumbnail_url);
         handleClose();
       }
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       setError(error?.response?.data?.error || "Failed to save thumbnail");
-    }
-  };
+    },
+  });
 
   const validateFile = (file: File): boolean => {
     const validTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
@@ -223,9 +214,9 @@ export function ThumbnailUploadDialog({
     }
   };
 
-  const handleUpload = () => {
-    if (selectedFile) {
-      uploadMutation.mutate(selectedFile);
+  const handleSaveCover = () => {
+    if (selectedFile || generatedImageUrl) {
+      saveCoverMutation.mutate();
     }
   };
 
@@ -258,6 +249,7 @@ export function ThumbnailUploadDialog({
   const handleClose = () => {
     setSelectedFile(null);
     setPreviewUrl(null);
+    setGeneratedImageUrl(null);
     setError(null);
     setIsDragging(false);
     setCustomPrompt("");
@@ -267,6 +259,7 @@ export function ThumbnailUploadDialog({
   const handleRemovePreview = () => {
     setSelectedFile(null);
     setPreviewUrl(null);
+    setGeneratedImageUrl(null);
     setError(null);
   };
 
@@ -431,13 +424,16 @@ export function ThumbnailUploadDialog({
             Cancel
           </Button>
           <Button
-            onClick={handleUpload}
-            disabled={!selectedFile || uploadMutation.isPending}
+            onClick={handleSaveCover}
+            disabled={
+              (!selectedFile && !generatedImageUrl) ||
+              saveCoverMutation.isPending
+            }
           >
-            {uploadMutation.isPending ? (
+            {saveCoverMutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Uploading...
+                Saving...
               </>
             ) : (
               "Save Cover"

@@ -82,7 +82,7 @@ const SideBarOptionSettings = [
   {
     icon: <ImageIcon className="h-4 w-4" />,
     title: "Thumbnail Styles",
-    href: "/settings/thumbnail-styles",
+    href: "/thumbnail-styles",
   },
   {
     icon: <Settings className="h-4 w-4" />,
@@ -133,27 +133,41 @@ const SidebarItem = ({
   external,
   isActive,
 }: SidebarItemProps) => {
+  const button = (
+    <Button
+      variant={isActive ? "secondary" : "ghost"}
+      className={`flex gap-2 cursor-pointer w-full ${
+        isSideOpen ? "justify-start" : "justify-center"
+      } ${isActive ? "bg-secondary" : ""}`}
+    >
+      {icon}
+      {isSideOpen && <p className="font-poppins font-base">{title}</p>}
+      {external && isSideOpen && (
+        <ExternalLink className="size-3 stroke-2 text-black ml-auto" />
+      )}
+    </Button>
+  );
+
+  if (isSideOpen) {
+    return (
+      <Link
+        href={href}
+        target={external ? "_blank" : undefined}
+        rel={external ? "noopener noreferrer" : undefined}
+      >
+        {button}
+      </Link>
+    );
+  }
+
   return (
     <Link
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
     >
-      <Tooltip open={isSideOpen ? false : undefined}>
-        <TooltipTrigger asChild>
-          <Button
-            variant={isActive ? "secondary" : "ghost"}
-            className={`flex gap-2 cursor-pointer w-full ${
-              isSideOpen ? "justify-start" : "justify-center"
-            } ${isActive ? "bg-secondary" : ""}`}
-          >
-            {icon}
-            {isSideOpen && <p className="font-poppins font-base">{title}</p>}
-            {external && isSideOpen && (
-              <ExternalLink className="size-3 stroke-2 text-black ml-auto" />
-            )}
-          </Button>
-        </TooltipTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>{button}</TooltipTrigger>
         <TooltipContent side="right">
           <p>{title}</p>
         </TooltipContent>

@@ -114,6 +114,8 @@ axiosInstance.interceptors.response.use(
           flattenErrors(data.errors) || flattenErrors(data.status?.errors);
         if (flattened) {
           message = flattened;
+        } else if (data.error) {
+          message = data.error;
         } else if (data.message) {
           message = data.message;
         } else if (data.status?.message) {

@@ -245,6 +245,9 @@ export default function CreateArticlePage() {
     },
   });
 
+  // Ref to track if we are currently creating a new article to prevent duplicates
+  const isCreatingRef = useRef(false);
+
   useEffect(() => {
     // Only block if we are expecting a specific existing article to load and it hasn't loaded yet
     if (existingId && existingId !== "new" && !isInitialLoadDone.current)
@@ -257,13 +260,25 @@ export default function CreateArticlePage() {
     // Check if we have a real ID (from DB) or if it's still 'new' or undefined
     const isNewArticle = !articleId?.id || articleId.id === "new";
 
-    // When autosaving content/title, we should also safeguard the settings?
-    // No, settings save manually via Sheet. Autosave is just title/content.
+    // If it's a new article and we are already creating one, skip
+    if (isNewArticle && isCreatingRef.current) return;
 
-    // However, we should sync title/content changes to the store so the sheet sees them?
-    // The sheet reads from Store. If we change title here, we should update Store?
-    // Yes, 'metadata' in store like 'title' should be in sync.
-    // Let's add an effect to sync title/content to store.
+    // If it's a new article, mark as creating
+    if (isNewArticle) {
+      isCreatingRef.current = true;
+    }
+
+    const performAutoSave = async () => {
+      try {
+        await handleManualSave();
+      } finally {
+        if (isNewArticle) {
+          isCreatingRef.current = false;
+        }
+      }
+    };
+
+    performAutoSave();
   }, [debouncedTitle, debouncedContent]);
 
   // Sync title/content to store
@@ -283,6 +298,13 @@ export default function CreateArticlePage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [insights, setInsights] = useState(null);
   const [isDetailsSheetOpen, setIsDetailsSheetOpen] = useState(false);
+
+  // Hydration fix: Ensure zenMode is only applied after mount to match server HTML
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  const safeZenMode = mounted && zenMode;
 
   const handleThumbnailSuccess = (url: string) => {
     setThumbnailUrl(url);
@@ -358,7 +380,7 @@ export default function CreateArticlePage() {
         {/* LEFT — Editor */}
         <div
           className={`${
-            showMetrics && !zenMode ? "w-8/12" : "w-full"
+            showMetrics && !safeZenMode ? "w-8/12" : "w-full"
           } space-y-4 transition-all duration-300`}
         >
           <Editor
@@ -379,7 +401,7 @@ export default function CreateArticlePage() {
         </div>
 
         {/* RIGHT — Insights Panel */}
-        {!zenMode && showMetrics && (
+        {!safeZenMode && showMetrics && (
           <div className="w-4/12 transition-all duration-300 sticky top-0">
             <InsightsPanel
               showMetrics={showMetrics}

@@ -54,7 +54,18 @@ export const EditorBubbleMenu = ({ editor, title }: EditorBubbleMenuProps) => {
 
   const onSetImage = (url: string) => {
     if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
+      const { empty, to } = editor.state.selection;
+      if (!empty) {
+        // Insert after selection
+        editor
+          .chain()
+          .focus()
+          .setTextSelection(to)
+          .insertContent({ type: "image", attrs: { src: url } })
+          .run();
+      } else {
+        editor.chain().focus().setImage({ src: url }).run();
+      }
     }
   };
 
@@ -128,15 +139,48 @@ export const EditorBubbleMenu = ({ editor, title }: EditorBubbleMenuProps) => {
     {
       name: "Generate Image",
       command: () => {
+        // Get selected text for prompt
+        const { from, to } = editor.state.selection;
+        const text = editor.state.doc.textBetween(from, to, " ");
+        if (text) {
+          setInitialPrompt(`Generate with the context: ${text}`);
+          setInitialStyle("natural"); // Default style for inline images
+        }
+
         setIsGenDialogOpen(true);
         // Blur the editor to hide the bubble menu
         editor.commands.blur();
       },
       isActive: false,
       icon: <Sparkles className="w-4 h-4 text-purple-500" />,
-      tooltip: "Generate Image",
+      tooltip: "Generate Image with AI",
     },
   ];
+
+  if (isLinkDialogOpen || isGenDialogOpen) {
+    return (
+      <>
+        <LinkDialog
+          isOpen={isLinkDialogOpen}
+          onClose={() => setIsLinkDialogOpen(false)}
+          onSetLink={onSetLink}
+          initialUrl={editor.getAttributes("link").href}
+        />
+
+        <ImageGenerationDialog
+          isOpen={isGenDialogOpen}
+          onClose={() => {
+            setIsGenDialogOpen(false);
+            setInitialPrompt("");
+            setInitialStyle("natural");
+          }}
+          onInsert={onSetImage}
+          initialPrompt={initialPrompt}
+          initialStyle={initialStyle}
+        />
+      </>
+    );
+  }
 
   return (
     <>

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Sparkles, Settings2, Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axiosInstace";
@@ -20,14 +20,15 @@ interface ThumbnailStyle {
   colors: string[];
   variation_type: "minimal" | "full";
   text_placement: string;
-  icon_style: string;
+  icon_style?: string;
+  visual_elements?: string[];
   preview_url: string;
 }
 
 export default function ThumbnailStylesPage() {
   const { blogs } = useAppStore();
   const queryClient = useQueryClient();
-  const [filter, setFilter] = useState<"all" | "minimal" | "full">("all");
+
   const [width, setWidth] = useState(1024);
   const [height, setHeight] = useState(416);
   const [isPolling, setIsPolling] = useState(false);
@@ -45,6 +46,9 @@ export default function ThumbnailStylesPage() {
       return response.data;
     },
     enabled: !!blogs?.id,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Poll for status
@@ -79,7 +83,6 @@ export default function ThumbnailStylesPage() {
       queryClient.invalidateQueries({
         queryKey: ["thumbnailStyles", blogs?.id],
       });
-      toast.success("Thumbnail styles generated successfully!");
     } else if (status === "failed") {
       setIsPolling(false);
       toast.error(message || "Failed to generate styles");
@@ -134,7 +137,6 @@ export default function ThumbnailStylesPage() {
       queryClient.invalidateQueries({
         queryKey: ["thumbnailStyles", blogs?.id],
       });
-      toast.success("Style selected successfully");
     },
   });
 
@@ -181,10 +183,6 @@ export default function ThumbnailStylesPage() {
   const selectedStyleId = data?.selected_style_id;
   const selectedStyle = styles.find((s) => s.id === selectedStyleId);
 
-  const filteredStyles = styles.filter(
-    (style) => filter === "all" || style.variation_type === filter
-  );
-
   const isAnalyzing = analyzeMutation.isPending || isPolling;
 
   return (
@@ -214,7 +212,7 @@ export default function ThumbnailStylesPage() {
 
       {/* Current Selection */}
       {selectedStyle && (
-        <div className="bg-white rounded-lg border p-6">
+        <div className="bg-white rounded-lg p-6">
           <div className="flex items-center gap-2 mb-4">
             <Settings2 className="h-5 w-5" />
             <h2 className="text-xl font-semibold">Current Selection</h2>
@@ -224,7 +222,7 @@ export default function ThumbnailStylesPage() {
               <img
                 src={selectedStyle.preview_url}
                 alt={selectedStyle.name}
-                className="w-full rounded-lg border"
+                className="w-full rounded-lg"
               />
             </div>
             <div className="md:col-span-2 space-y-3">
@@ -251,7 +249,7 @@ export default function ThumbnailStylesPage() {
                 {selectedStyle.colors.map((color, idx) => (
                   <div
                     key={idx}
-                    className="w-10 h-10 rounded border border-gray-200"
+                    className="w-10 h-10 rounded"
                     style={{ backgroundColor: color }}
                     title={color}
                   />
@@ -259,7 +257,12 @@ export default function ThumbnailStylesPage() {
               </div>
               <div className="text-sm text-gray-600 space-y-1">
                 <div>📍 Text Placement: {selectedStyle.text_placement}</div>
-                <div>🎨 Icon Style: {selectedStyle.icon_style}</div>
+                <div>
+                  🎨 Icon Style:{" "}
+                  {selectedStyle.icon_style ||
+                    selectedStyle.visual_elements?.join(", ") ||
+                    "N/A"}
+                </div>
               </div>
             </div>
           </div>
@@ -267,7 +270,7 @@ export default function ThumbnailStylesPage() {
       )}
 
       {/* Dimension Settings */}
-      <div className="bg-white rounded-lg border p-6">
+      <div className="bg-white rounded-lg p-6">
         <h2 className="text-xl font-semibold mb-4">Thumbnail Dimensions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
@@ -313,9 +316,9 @@ export default function ThumbnailStylesPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPreset(1280, 720)}
+                onClick={() => setPreset(1280, 736)}
               >
-                YouTube (1280x720)
+                YouTube (1280x736)
               </Button>
               <Button
                 variant="outline"
@@ -327,9 +330,9 @@ export default function ThumbnailStylesPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPreset(1200, 630)}
+                onClick={() => setPreset(1216, 640)}
               >
-                Social (1200x630)
+                Social (1216x640)
               </Button>
               <Button
                 variant="outline"
@@ -347,8 +350,8 @@ export default function ThumbnailStylesPage() {
       </div>
 
       {/* All Styles */}
-      <div className="bg-white rounded-lg border p-6">
-        <h2 className="text-xl font-semibold mb-4">All Thumbnail Styles</h2>
+      <div className="space-y-4 pb-4">
+        <h2 className="text-xl font-semibold">All Thumbnail Styles</h2>
 
         {isLoading ? (
           <div className="text-center py-12 text-gray-500">
@@ -379,30 +382,9 @@ export default function ThumbnailStylesPage() {
           </div>
         ) : (
           <>
-            {/* Filter Tabs */}
-            <Tabs
-              value={filter}
-              onValueChange={(v) => setFilter(v as any)}
-              className="mb-6"
-            >
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="all">
-                  All Styles ({styles.length})
-                </TabsTrigger>
-                <TabsTrigger value="minimal">
-                  🔒 Minimal (
-                  {styles.filter((s) => s.variation_type === "minimal").length})
-                </TabsTrigger>
-                <TabsTrigger value="full">
-                  🎨 Full (
-                  {styles.filter((s) => s.variation_type === "full").length})
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-
             {/* Styles Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredStyles.map((style) => (
+              {styles.map((style) => (
                 <ThumbnailStyleCard
                   key={style.id}
                   style={style}

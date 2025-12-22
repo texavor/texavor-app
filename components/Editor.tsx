@@ -65,6 +65,11 @@ const Editor = ({
 }: EditorProps) => {
   const { zenMode, toggleZenMode } = useAppStore();
   const [isExportOpen, setIsExportOpen] = React.useState(false);
+  const [mounted, setMounted] = React.useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Keyboard shortcut for save (Ctrl+S / Cmd+S)
   useEffect(() => {
@@ -303,6 +308,9 @@ const Editor = ({
       attributes: {
         class:
           "prose dark:prose-invert max-w-none focus:outline-none min-h-[200px] prose-headings:font-bold prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl text-black prose-p:text-black prose-headings:text-black",
+        spellcheck: "false",
+        "data-gramm": "false", // Disable Grammarly
+        translate: "no", // Disable translation
       },
     },
     onUpdate: ({ editor }) => {
@@ -315,18 +323,22 @@ const Editor = ({
   useEffect(() => {
     if (!editor) return;
 
+    // Don't overwrite if the editor is focused (user is typing)
+    if (editor.isFocused) return;
+
     const current = editor.storage.markdown.getMarkdown();
-    if (value !== current) {
-      editor.commands.setContent(value || "");
+    // Only update if content is genuinely different (avoid whitespace loops)
+    if (value && value.trim() !== current.trim()) {
+      editor.commands.setContent(value);
     }
   }, [value, editor]);
 
-  // Loading Skeleton View
-  if (isLoading) {
+  // Loading Skeleton State (also shown during hydration to prevent mismatches)
+  if (!mounted || isLoading) {
     return (
       <div
         className={`${
-          zenMode
+          mounted && zenMode
             ? "sticky top-0 h-[calc(100vh-10px)]"
             : "h-[calc(100vh-100px)]"
         } rounded-xl bg-white font-inter flex flex-col relative group p-6 space-y-8`}
@@ -518,7 +530,10 @@ const Editor = ({
           />
         </div>
 
-        <div className="px-6 pb-10 max-w-4xl mx-auto w-full flex-grow">
+        <div
+          className="px-6 pb-10 max-w-4xl mx-auto w-full flex-grow"
+          suppressHydrationWarning
+        >
           <EditorContent editor={editor} />
         </div>
       </div>

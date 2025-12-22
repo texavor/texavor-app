@@ -11,7 +11,8 @@ interface ThumbnailStyle {
   colors: string[];
   variation_type: "minimal" | "full";
   text_placement: string;
-  icon_style: string;
+  icon_style?: string;
+  visual_elements?: string[];
   preview_url: string;
 }
 
@@ -28,8 +29,8 @@ export function ThumbnailStyleCard({
 }: ThumbnailStyleCardProps) {
   return (
     <div
-      className={`border rounded-lg overflow-hidden transition-all ${
-        isSelected ? "ring-2 ring-primary shadow-lg" : "hover:shadow-md"
+      className={`rounded-lg overflow-hidden transition-all ${
+        isSelected ? "bg-primary/5" : "bg-white"
       }`}
     >
       {/* Preview Image */}
@@ -85,7 +86,10 @@ export function ThumbnailStyleCard({
           </div>
           <div className="flex items-center gap-1">
             <span>🎨</span>
-            <span>Icon: {style.icon_style}</span>
+            <span>
+              Icon:{" "}
+              {style.icon_style || style.visual_elements?.join(", ") || "N/A"}
+            </span>
           </div>
         </div>
 
