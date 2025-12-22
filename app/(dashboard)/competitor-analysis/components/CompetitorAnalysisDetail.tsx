@@ -33,6 +33,8 @@ export default function CompetitorAnalysisDetail({
     seo_analysis,
     topics_identified,
     keywords_found,
+    content_quality_score,
+    seo_score,
     overall_score,
   } = analysis;
 
@@ -48,10 +50,101 @@ export default function CompetitorAnalysisDetail({
               <div
                 className={cn(
                   "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
-                  "bg-blue-100"
+                  (content_quality_score || 0) >= 70
+                    ? "bg-green-100"
+                    : (content_quality_score || 0) >= 40
+                    ? "bg-orange-100"
+                    : "bg-red-100"
                 )}
               >
-                <div className={cn("w-6 h-6", "text-blue-600")}>
+                <div
+                  className={cn(
+                    "w-6 h-6",
+                    (content_quality_score || 0) >= 70
+                      ? "text-green-600"
+                      : (content_quality_score || 0) >= 40
+                      ? "text-orange-600"
+                      : "text-red-600"
+                  )}
+                >
+                  <FileText className="w-full h-full" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-[#7A7A7A] font-poppins">
+                  Content Score
+                </p>
+                <h3 className="text-2xl font-semibold text-[#0A2918] font-poppins">
+                  {content_quality_score
+                    ? content_quality_score.toFixed(1)
+                    : "N/A"}
+                </h3>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-none p-2">
+          <CardContent className="flex items-start justify-between p-0">
+            <div className="flex gap-4 items-center">
+              <div
+                className={cn(
+                  "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
+                  (seo_score || 0) >= 70
+                    ? "bg-green-100"
+                    : (seo_score || 0) >= 40
+                    ? "bg-orange-100"
+                    : "bg-red-100"
+                )}
+              >
+                <div
+                  className={cn(
+                    "w-6 h-6",
+                    (seo_score || 0) >= 70
+                      ? "text-green-600"
+                      : (seo_score || 0) >= 40
+                      ? "text-orange-600"
+                      : "text-red-600"
+                  )}
+                >
+                  <Globe className="w-full h-full" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-[#7A7A7A] font-poppins">
+                  SEO Score
+                </p>
+                <h3 className="text-2xl font-semibold text-[#0A2918] font-poppins">
+                  {seo_score ? seo_score.toFixed(1) : "N/A"}
+                </h3>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-none p-2">
+          <CardContent className="flex items-start justify-between p-0">
+            <div className="flex gap-4 items-center">
+              <div
+                className={cn(
+                  "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
+                  (overall_score || 0) >= 70
+                    ? "bg-blue-100"
+                    : (overall_score || 0) >= 40
+                    ? "bg-orange-100"
+                    : "bg-red-100"
+                )}
+              >
+                <div
+                  className={cn(
+                    "w-6 h-6",
+                    (overall_score || 0) >= 70
+                      ? "text-blue-600"
+                      : (overall_score || 0) >= 40
+                      ? "text-orange-600"
+                      : "text-red-600"
+                  )}
+                >
                   <TrendingUp className="w-full h-full" />
                 </div>
               </div>
@@ -91,60 +184,10 @@ export default function CompetitorAnalysisDetail({
             </div>
           </CardContent>
         </Card>
-
-        <Card className="border-none shadow-none p-2">
-          <CardContent className="flex items-start justify-between p-0">
-            <div className="flex gap-4 items-center">
-              <div
-                className={cn(
-                  "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
-                  "bg-purple-100"
-                )}
-              >
-                <div className={cn("w-6 h-6", "text-purple-600")}>
-                  <LayoutTemplate className="w-full h-full" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-[#7A7A7A] font-poppins">
-                  Topics
-                </p>
-                <h3 className="text-2xl font-semibold text-[#0A2918] font-poppins">
-                  {topics_identified.total_unique_topics}
-                </h3>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-none p-2">
-          <CardContent className="flex items-start justify-between p-0">
-            <div className="flex gap-4 items-center">
-              <div
-                className={cn(
-                  "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
-                  "bg-orange-100"
-                )}
-              >
-                <div className={cn("w-6 h-6", "text-orange-600")}>
-                  <Hash className="w-full h-full" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-[#7A7A7A] font-poppins">
-                  Keywords
-                </p>
-                <h3 className="text-2xl font-semibold text-[#0A2918] font-poppins">
-                  {keywords_found.total_keywords}
-                </h3>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Custom Tabs */}
-      <div className="flex space-x-2 p-1 rounded-xl bg-white border h-12 items-center w-fit">
+      <div className="flex space-x-2 p-1 rounded-xl bg-white h-12 items-center w-fit">
         <Button
           variant={activeTab === "content" ? "default" : "outline"}
           onClick={() => setActiveTab("content")}
@@ -178,7 +221,7 @@ export default function CompetitorAnalysisDetail({
       {/* Tab Content */}
       {activeTab === "content" && (
         <div className="space-y-4">
-          <div className="rounded-md border bg-white">
+          <div className="rounded-md">
             <CustomTable
               columns={articleColumns}
               data={content_analysis.recent_articles || []}
@@ -196,7 +239,7 @@ export default function CompetitorAnalysisDetail({
 
           <div className="grid gap-6 md:grid-cols-3">
             {/* Publishing Frequency - Takes up 1 column */}
-            <Card className="border-none shadow-sm bg-white h-full">
+            <Card className="border-none shadow-none bg-white h-full">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base font-semibold text-gray-900">
                   Publishing Frequency
@@ -298,7 +341,7 @@ export default function CompetitorAnalysisDetail({
             </Card>
 
             {/* Content Types - Takes up 2 columns */}
-            <Card className="border-none shadow-sm bg-white md:col-span-2 h-full">
+            <Card className="border-none shadow-none bg-white md:col-span-2 h-full">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base font-semibold text-gray-900">
                   Content Types Distribution
@@ -346,18 +389,18 @@ export default function CompetitorAnalysisDetail({
 
       {activeTab === "seo" && (
         <div className="space-y-4">
-          <Card>
+          <Card className="border-none shadow-none">
             <CardHeader>
               <CardTitle>SEO Metrics</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <div className="space-y-2">
                   <span className="text-sm font-medium text-muted-foreground">
                     Domain Authority
                   </span>
                   <div className="text-2xl font-bold">
-                    {seo_analysis.domain_authority || "N/A"}
+                    {seo_analysis.domain_authority ?? "N/A"}
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -365,7 +408,15 @@ export default function CompetitorAnalysisDetail({
                     Backlinks
                   </span>
                   <div className="text-2xl font-bold">
-                    {seo_analysis.backlinks || "N/A"}
+                    {seo_analysis.backlinks?.toLocaleString() || "0"}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Referring Domains
+                  </span>
+                  <div className="text-2xl font-bold">
+                    {seo_analysis.referring_domains?.toLocaleString() || "0"}
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -373,16 +424,29 @@ export default function CompetitorAnalysisDetail({
                     Organic Keywords
                   </span>
                   <div className="text-2xl font-bold">
-                    {seo_analysis.organic_keywords || "N/A"}
+                    {seo_analysis.organic_keywords?.toLocaleString() || "0"}
                   </div>
                 </div>
                 <div className="space-y-2">
                   <span className="text-sm font-medium text-muted-foreground">
-                    Traffic Estimate
+                    Organic Traffic
                   </span>
                   <div className="text-2xl font-bold">
-                    {seo_analysis.traffic_estimate || "N/A"}
+                    {seo_analysis.organic_traffic?.toLocaleString() || "0"}
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Last Updated
+                  </span>
+                  <div className="text-sm font-medium">
+                    {new Date(seo_analysis.last_refreshed).toLocaleDateString()}
+                  </div>
+                  {seo_analysis.cached && (
+                    <span className="text-xs text-muted-foreground">
+                      Cached
+                    </span>
+                  )}
                 </div>
               </div>
               {seo_analysis.note && (
@@ -398,7 +462,7 @@ export default function CompetitorAnalysisDetail({
       {activeTab === "topics" && (
         <div className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            <Card>
+            <Card className="border-none shadow-none">
               <CardHeader>
                 <CardTitle>Top Topics</CardTitle>
               </CardHeader>
@@ -422,7 +486,7 @@ export default function CompetitorAnalysisDetail({
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-none shadow-none">
               <CardHeader>
                 <CardTitle>Top Keywords</CardTitle>
               </CardHeader>

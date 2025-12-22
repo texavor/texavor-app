@@ -166,7 +166,7 @@ const DashboardPage = () => {
                       <span className="text-xs text-gray-500 font-medium w-16 text-right">
                         {item?.time_ago}
                       </span>
-                      {item?.source !== "fetched" &&
+                      {/* {item?.source !== "fetched" &&
                         item?.status !== "published" && (
                           <Button
                             variant="ghost"
@@ -178,7 +178,7 @@ const DashboardPage = () => {
                           >
                             <FileEdit className="w-3 h-3" />
                           </Button>
-                        )}
+                        )} */}
                     </div>
                   </div>
                 ))}

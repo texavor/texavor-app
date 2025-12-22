@@ -48,6 +48,7 @@ export default function CompetitorDetailPage() {
   );
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
+  const [isPollingNewAnalysis, setIsPollingNewAnalysis] = useState(false);
   const [limits, setLimits] = useState<AnalysisLimit | null>(null);
 
   useEffect(() => {
@@ -69,9 +70,12 @@ export default function CompetitorDetailPage() {
       if (data.analyses.length > 0 && !selectedAnalysisId) {
         setSelectedAnalysisId(data.analyses[0].id);
       }
+
+      return data; // Return data for use in polling
     } catch (error) {
       console.error("Failed to load competitor data:", error);
       router.push("/competitor-analysis");
+      return null;
     } finally {
       if (!silent) setLoading(false);
     }
@@ -84,19 +88,18 @@ export default function CompetitorDetailPage() {
       const data = await competitorApi.analyze(blogs.id, competitor.id);
       toast.success("Analysis started successfully!");
 
-      // Select the new analysis if available
-      if (data.analysis?.id) {
-        setSelectedAnalysisId(data.analysis.id);
-        // Manually set loading to true to show skeleton immediately
-        setLoadingAnalysis(true);
-      }
+      // Start polling for analysis status
+      pollForNewAnalysis();
+
+      // Refresh limits
+      const limitsData = await competitorApi.getLimits(blogs.id, competitor.id);
+      setLimits(limitsData);
     } catch (error: any) {
       console.error("Failed to start analysis:", error);
       if (error.response?.status === 429) {
         toast.error(
           error.response.data.message || "Weekly analysis limit reached."
         );
-        // Update limits state from error response if available, or just re-fetch
         if (error.response.data.limit !== undefined) {
           setLimits({
             limit: error.response.data.limit,
@@ -104,8 +107,6 @@ export default function CompetitorDetailPage() {
             reset_at: error.response.data.reset_at,
             can_analyze: false,
           });
-        } else {
-          loadData(true); // Re-fetch to be safe
         }
       } else {
         toast.error("Failed to start analysis. Please try again.");
@@ -113,6 +114,79 @@ export default function CompetitorDetailPage() {
     } finally {
       setAnalyzing(false);
     }
+  };
+
+  // Poll for new analysis creation
+  const pollForNewAnalysis = async () => {
+    if (!competitor) return;
+
+    setIsPollingNewAnalysis(true);
+
+    let attempts = 0;
+    const maxAttempts = 60; // 3 minutes max (60 * 3 seconds)
+    let timeoutId: NodeJS.Timeout;
+
+    const checkStatus = async () => {
+      try {
+        attempts++;
+
+        // Use analysis_status endpoint to check if analysis is complete
+        const statusData = await competitorApi.getAnalysisStatus(
+          blogs.id,
+          competitor.id
+        );
+
+        const status = statusData.analysis_status;
+
+        // Check if analysis is complete
+        if (
+          status === "completed" ||
+          (status as any) === "success" ||
+          status === "failed"
+        ) {
+          // Analysis is done, reload all data and auto-select latest
+          setIsPollingNewAnalysis(false);
+          setLoadingAnalysis(true);
+
+          const reloadedData = await loadData(true);
+
+          // Auto-select the latest analysis (first in the list)
+          if (reloadedData?.analyses && reloadedData.analyses.length > 0) {
+            const latestAnalysis = reloadedData.analyses[0];
+            setSelectedAnalysisId(latestAnalysis.id);
+          }
+
+          if (status === "completed" || (status as any) === "success") {
+            toast.success("Analysis completed successfully!");
+          } else if (status === "failed") {
+            toast.error("Analysis failed. Please try again.");
+          }
+
+          return; // Stop polling
+        }
+
+        // If still analyzing, continue polling
+        if (attempts < maxAttempts) {
+          timeoutId = setTimeout(checkStatus, 3000);
+        } else {
+          setIsPollingNewAnalysis(false);
+          toast.error(
+            "Analysis is taking longer than expected. Please refresh the page."
+          );
+        }
+      } catch (error) {
+        console.error("Failed to poll for new analysis:", error);
+        // Retry on error
+        if (attempts < maxAttempts) {
+          timeoutId = setTimeout(checkStatus, 3000);
+        } else {
+          setIsPollingNewAnalysis(false);
+        }
+      }
+    };
+
+    // Start checking after a short delay
+    timeoutId = setTimeout(checkStatus, 2000);
   };
 
   const [fullAnalysis, setFullAnalysis] = useState<Analysis | null>(null);
@@ -194,6 +268,9 @@ export default function CompetitorDetailPage() {
     if (!analysis) return null;
 
     if (analysis.analysis_status) {
+      if ((analysis.analysis_status as any) === "success") {
+        return "completed";
+      }
       return analysis.analysis_status;
     }
 
@@ -232,21 +309,12 @@ export default function CompetitorDetailPage() {
 
   return (
     <div className="space-y-6 pb-4">
-      {/* Back Navigation */}
-      <Link
-        href="/competitor-analysis"
-        className="inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors group"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
-        Back to Competitors
-      </Link>
-
       {/* Profile Card */}
-      <div className="bg-white rounded-[32px] p-2 shadow-sm border border-gray-100">
+      <div className="bg-white rounded-xl p-2 border-none shadow-none">
         <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start md:items-center">
           {/* Favicon Image */}
           <div className="shrink-0">
-            <div className="w-24 h-24 md:w-32 md:h-32 rounded-3xl bg-gray-50 border border-gray-100 p-4 flex items-center justify-center overflow-hidden">
+            <div className="w-24 h-24 md:w-32 md:h-32 rounded-xl bg-gray-50 border-none p-4 flex items-center justify-center overflow-hidden">
               <img
                 src={`https://www.google.com/s2/favicons?domain=${competitor.website_url}&sz=128`}
                 alt={`${competitor.name} icon`}
@@ -263,10 +331,14 @@ export default function CompetitorDetailPage() {
                   {competitor.name}
                 </h1>
                 <CheckCircle2 className="w-6 h-6 text-green-500 fill-green-50" />
-                {getAnalysisStatus(fullAnalysis) && (
+                {(isPollingNewAnalysis || getAnalysisStatus(fullAnalysis)) && (
                   <div className="ml-2">
                     <AnalysisStatusBadge
-                      status={getAnalysisStatus(fullAnalysis)!}
+                      status={
+                        isPollingNewAnalysis
+                          ? "analyzing"
+                          : getAnalysisStatus(fullAnalysis)!
+                      }
                     />
                   </div>
                 )}
@@ -312,7 +384,7 @@ export default function CompetitorDetailPage() {
                           analyzing || (limits ? !limits.can_analyze : false)
                         }
                         size="lg"
-                        className="rounded-full px-8 shadow-sm hover:shadow-md transition-all"
+                        className="rounded-full px-8 border-none shadow-none transition-all"
                       >
                         <RefreshCw
                           className={`mr-2 h-4 w-4 ${
@@ -364,7 +436,7 @@ export default function CompetitorDetailPage() {
         )}
 
       {/* Analysis History Selector */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-xl border bg-card">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-xl bg-card">
         <span className="text-sm font-medium text-muted-foreground">
           Analysis History:
         </span>
@@ -420,7 +492,7 @@ export default function CompetitorDetailPage() {
       ) : fullAnalysis ? (
         <CompetitorAnalysisDetail analysis={fullAnalysis} />
       ) : (
-        <div className="text-center py-16 rounded-xl border-2 border-dashed bg-muted/10">
+        <div className="text-center py-16 rounded-xl bg-muted/10">
           <div className="mx-auto max-w-md space-y-3">
             <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center">
               <BarChart className="w-6 h-6 text-muted-foreground" />

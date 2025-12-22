@@ -8,7 +8,7 @@ export const CompetitorDetailSkeleton = () => {
       <Skeleton className="h-4 w-32 bg-[#f9f4f0]" />
 
       {/* Profile Card Skeleton */}
-      <div className="bg-white rounded-[32px] p-6 md:p-8 shadow-sm border border-gray-100">
+      <div className="bg-white rounded-[32px] p-6 md:p-8">
         <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start md:items-center">
           {/* Favicon Image Skeleton */}
           <div className="shrink-0">
@@ -64,7 +64,7 @@ export const CompetitorDetailSkeleton = () => {
       </div>
 
       {/* Tabs Skeleton */}
-      <div className="flex space-x-2 p-1 rounded-xl bg-white border h-12 items-center w-fit">
+      <div className="flex space-x-2 p-1 rounded-xl bg-white h-12 items-center w-fit">
         <Skeleton className="h-9 w-24 rounded-md bg-[#f9f4f0]" />
         <Skeleton className="h-9 w-24 rounded-md bg-[#f9f4f0]" />
         <Skeleton className="h-9 w-32 rounded-md bg-[#f9f4f0]" />
@@ -72,7 +72,7 @@ export const CompetitorDetailSkeleton = () => {
 
       {/* Tab Content Skeleton (Recent Articles Table) */}
       <div className="space-y-4">
-        <div className="rounded-md border bg-white p-4">
+        <div className="rounded-md bg-white p-4">
           <div className="space-y-4">
             {/* Table Header */}
             <div className="flex justify-between pb-4 border-b">

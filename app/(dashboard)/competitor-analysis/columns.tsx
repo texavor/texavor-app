@@ -10,6 +10,7 @@ import {
   Trash2,
   ArrowRight,
   ExternalLink,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -71,7 +72,8 @@ const SortableHeader = ({
 export const createColumns = (
   onAnalyze: (competitorId: string) => void,
   onDelete: (competitorId: string) => void,
-  analyzingIds: Set<string>
+  analyzingIds: Set<string>,
+  router: any
 ): ColumnDef<Competitor>[] => [
   {
     accessorKey: "name",
@@ -168,13 +170,15 @@ export const createColumns = (
         {
           id: "view_details",
           name: "View Details",
+          icon: <Eye className="mr-2 h-4 w-4" />,
           action: () => {
-            window.location.href = `/competitor-analysis/${competitor.id}`;
+            router.push(`/competitor-analysis/${competitor.id}`);
           },
         },
         {
           id: "analyze",
           name: isAnalyzing ? "Analyzing..." : "Run Analysis",
+          icon: <RefreshCw className="mr-2 h-4 w-4" />,
           action: () => {
             if (!isAnalyzing) {
               onAnalyze(competitor.id);
@@ -185,6 +189,7 @@ export const createColumns = (
         {
           id: "delete",
           name: "Delete",
+          icon: <Trash2 className="mr-2 h-4 w-4" />,
           action: () => onDelete(competitor.id),
           className: "text-red-600 focus:text-red-600",
         },

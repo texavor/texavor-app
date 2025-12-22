@@ -96,12 +96,21 @@ export interface ContentLength {
 }
 
 export interface SeoAnalysis {
+  cached: boolean;
   domain: string;
-  domain_authority?: number;
-  backlinks?: number;
-  organic_keywords?: number;
-  traffic_estimate?: number;
+  root_domain: string;
+  original_domain: string;
+  data_source: string;
   analyzed_at: string;
+  last_refreshed: string;
+  next_refresh: string;
+  domain_authority: number | null;
+  domain_rank: number | null;
+  backlinks: number;
+  referring_domains: number;
+  organic_keywords: number;
+  organic_traffic: number;
+  top_keywords: any[];
   note?: string;
   error?: string;
 }
@@ -180,6 +189,14 @@ export const competitorApi = {
   async analyze(blogId: string, competitorId: string) {
     const response = await axiosInstance.post(
       `/api/v1/blogs/${blogId}/competitors/${competitorId}/analyze`
+    );
+    return response.data;
+  },
+
+  // Get analysis status (for polling)
+  async getAnalysisStatus(blogId: string, competitorId: string) {
+    const response = await axiosInstance.get(
+      `/api/v1/blogs/${blogId}/competitors/${competitorId}/analysis_status`
     );
     return response.data;
   },
