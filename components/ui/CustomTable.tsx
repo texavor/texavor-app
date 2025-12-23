@@ -103,9 +103,9 @@ export function CustomTable<TData, TValue>({
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
                     onClick={() => onClick(row?.original)}
-                    className={
+                    className={`cursor-pointer hover:bg-gray-50 transition-colors ${
                       getRowClassName ? getRowClassName(row.original) : ""
-                    }
+                    }`}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell

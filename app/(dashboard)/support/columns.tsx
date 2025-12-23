@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { ViewTicketDialog } from "./ViewTicketDialog";
+import { TicketDetailSheet } from "./TicketDetailSheet";
 
 export type Ticket = {
   id: string;
@@ -109,10 +109,10 @@ export const columns: ColumnDef<Ticket>[] = [
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <ViewTicketDialog
+          <TicketDetailSheet
             open={viewOpen}
             onOpenChange={setViewOpen}
-            ticket={ticket}
+            ticketId={ticket.id}
           />
         </>
       );

@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axiosInstace";
 import { useAppStore } from "@/store/appStore";
@@ -22,15 +21,27 @@ export const useCreateSupportTicket = () => {
   const { blogs } = useAppStore();
 
   return useMutation({
-    mutationFn: (data: {
-      subject: string;
-      message: string;
-      priority: string;
-      category: string;
-    }) => {
+    mutationFn: (data: any) => {
+      const formData = new FormData();
+      formData.append("support_ticket[subject]", data.subject);
+      formData.append("support_ticket[message]", data.message);
+      formData.append("support_ticket[priority]", data.priority);
+      formData.append("support_ticket[category]", data.category);
+
+      if (data.attachments && data.attachments.length > 0) {
+        Array.from(data.attachments).forEach((file: any) => {
+          formData.append("support_ticket[attachments][]", file);
+        });
+      }
+
       return axiosInstance.post(
         `/api/v1/blogs/${blogs?.id}/support_tickets`,
-        { support_ticket: data }
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
     },
     onSuccess: () => {

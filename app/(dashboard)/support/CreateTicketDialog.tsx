@@ -46,6 +46,7 @@ export const CreateTicketDialog: React.FC<CreateTicketDialogProps> = ({
   const [category, setCategory] = React.useState("");
   const [priorityOpen, setPriorityOpen] = React.useState(false);
   const [categoryOpen, setCategoryOpen] = React.useState(false);
+  const [attachments, setAttachments] = React.useState<FileList | null>(null);
 
   const { mutate: createTicket, isPending } = useCreateSupportTicket();
 
@@ -55,7 +56,7 @@ export const CreateTicketDialog: React.FC<CreateTicketDialogProps> = ({
       return;
     }
     createTicket(
-      { subject, message, priority, category },
+      { subject, message, priority, category, attachments },
       {
         onSuccess: () => {
           onOpenChange(false);
@@ -64,6 +65,7 @@ export const CreateTicketDialog: React.FC<CreateTicketDialogProps> = ({
           setMessage("");
           setPriority("");
           setCategory("");
+          setAttachments(null);
         },
       }
     );
@@ -162,6 +164,22 @@ export const CreateTicketDialog: React.FC<CreateTicketDialogProps> = ({
                 }
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="attachments" className="text-sm font-medium">
+              Attachments
+            </Label>
+            <Input
+              id="attachments"
+              type="file"
+              multiple
+              className="cursor-pointer"
+              onChange={(e) => setAttachments(e.target.files)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Upload screenshots or error logs (optional)
+            </p>
           </div>
         </div>
 
