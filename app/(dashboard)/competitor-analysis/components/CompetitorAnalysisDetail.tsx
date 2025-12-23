@@ -229,12 +229,6 @@ export default function CompetitorAnalysisDetail({
               className="border-none"
               onClick={(row: Article) => window.open(row.url, "_blank")}
             />
-            {(!content_analysis.recent_articles ||
-              content_analysis.recent_articles.length === 0) && (
-              <p className="text-muted-foreground text-center py-8">
-                No recent articles found.
-              </p>
-            )}
           </div>
 
           <div className="grid gap-6 md:grid-cols-3">

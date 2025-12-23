@@ -19,7 +19,7 @@ export const SettingCard = ({
 }: SettingCardProps) => {
   return (
     <Link href={href}>
-      <Card className="p-6 hover:shadow-lg transition-all duration-200 cursor-pointer group border-none bg-white h-full">
+      <Card className="p-6 transition-all duration-200 cursor-pointer group border-none shadow-none bg-white h-full">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="w-12 h-12 rounded-full bg-[#104127]/10 flex items-center justify-center mb-4 group-hover:bg-[#104127]/20 transition-colors">

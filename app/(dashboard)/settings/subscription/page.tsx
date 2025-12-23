@@ -1,6 +1,5 @@
 "use client";
 
-import { SettingHeader } from "../components/SettingHeader";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,10 +38,14 @@ export default function SubscriptionPage() {
   if (isLoading) {
     return (
       <div>
-        <SettingHeader
-          title="Subscription"
-          description="Manage your subscription and billing"
-        />
+        <div className="mb-6">
+          <h1 className="text-2xl font-poppins font-semibold text-[#0A2918] mb-2">
+            Subscription
+          </h1>
+          <p className="font-inter text-gray-600">
+            Manage your subscription and billing
+          </p>
+        </div>
         <div className="space-y-6 max-w-3xl">
           <Card className="p-6 border-none">
             <Skeleton className="h-8 w-48 bg-[#f9f4f0] mb-4" />
@@ -85,10 +88,14 @@ export default function SubscriptionPage() {
 
   return (
     <div>
-      <SettingHeader
-        title="Subscription"
-        description="Manage your subscription and billing"
-      />
+      <div className="mb-6">
+        <h1 className="text-2xl font-poppins font-semibold text-[#0A2918] mb-2">
+          Subscription
+        </h1>
+        <p className="font-inter text-gray-600">
+          Manage your subscription and billing
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
         {/* Left Column: Subscription Details & Alerts */}

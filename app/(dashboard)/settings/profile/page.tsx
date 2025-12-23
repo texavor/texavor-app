@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { SettingHeader } from "../components/SettingHeader";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -29,7 +28,6 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
-    email: "",
   });
 
   // Update form when profile loads
@@ -38,7 +36,6 @@ export default function ProfilePage() {
       setFormData({
         first_name: profile.first_name || "",
         last_name: profile.last_name || "",
-        email: profile.email || "",
       });
     }
   }, [profile]);
@@ -55,7 +52,11 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <div>
-        <SettingHeader title="My Profile" />
+        <div className="mb-6">
+          <h1 className="text-2xl font-poppins font-semibold text-[#0A2918] mb-2">
+            My Profile
+          </h1>
+        </div>
         <div className="space-y-6">
           <Card className="p-6 border-none">
             <div className="flex items-center gap-4">
@@ -79,7 +80,11 @@ export default function ProfilePage() {
 
   return (
     <div>
-      <SettingHeader title="My Profile" />
+      <div className="mb-6">
+        <h1 className="text-2xl font-poppins font-semibold text-[#0A2918] mb-2">
+          My Profile
+        </h1>
+      </div>
 
       <div className="space-y-6">
         {/* Profile Header Card */}
@@ -196,19 +201,6 @@ export default function ProfilePage() {
                     placeholder="Khaleira"
                   />
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  placeholder="info@binary-fusion.com"
-                />
               </div>
             </div>
             <DialogFooter>

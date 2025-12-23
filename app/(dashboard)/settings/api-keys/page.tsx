@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { SettingHeader } from "../components/SettingHeader";
 import { Button } from "@/components/ui/button";
 import { CustomTable } from "@/components/ui/CustomTable";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -42,10 +41,14 @@ export default function ApiKeysPage() {
   if (isLoading) {
     return (
       <div>
-        <SettingHeader
-          title="API Keys"
-          description="Create and manage your API access keys"
-        />
+        <div className="mb-6">
+          <h1 className="text-2xl font-poppins font-semibold text-[#0A2918] mb-2">
+            API Keys
+          </h1>
+          <p className="font-inter text-gray-600">
+            Create and manage your API access keys
+          </p>
+        </div>
         <div className="flex justify-end mb-6">
           <Skeleton className="h-10 w-32 bg-[#f9f4f0]" />
         </div>
@@ -62,10 +65,14 @@ export default function ApiKeysPage() {
 
   return (
     <div>
-      <SettingHeader
-        title="API Keys"
-        description="Create and manage your API access keys"
-      />
+      <div className="mb-6">
+        <h1 className="text-2xl font-poppins font-semibold text-[#0A2918] mb-2">
+          API Keys
+        </h1>
+        <p className="font-inter text-gray-600">
+          Create and manage your API access keys
+        </p>
+      </div>
 
       <div className="flex justify-end mb-6">
         <Button

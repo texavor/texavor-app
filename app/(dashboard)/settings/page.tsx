@@ -41,13 +41,13 @@ const settingsCategories = [
     icon: <Globe className="h-6 w-6" />,
     href: "/settings/blog-settings",
   },
-  {
-    id: "thumbnail-styles",
-    title: "Thumbnail Styles",
-    description: "Manage your blog's visual identity and thumbnail templates",
-    icon: <Palette className="h-6 w-6" />,
-    href: "/settings/thumbnail-styles",
-  },
+  // {
+  //   id: "thumbnail-styles",
+  //   title: "Thumbnail Styles",
+  //   description: "Manage your blog's visual identity and thumbnail templates",
+  //   icon: <Palette className="h-6 w-6" />,
+  //   href: "/settings/thumbnail-styles",
+  // },
   {
     id: "authors",
     title: "Authors",
@@ -81,15 +81,6 @@ const settingsCategories = [
 export default function SettingsPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-poppins font-semibold text-[#0A2918] mb-2">
-          Settings
-        </h1>
-        <p className="font-inter text-gray-600">
-          Manage your account settings and preferences
-        </p>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {settingsCategories.map((category) => (
           <SettingCard key={category.id} {...category} />

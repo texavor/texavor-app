@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useIntegrationsApi } from "@/app/(dashboard)/integrations/hooks/useIntegrationsApi";
 import { Author } from "@/lib/api/authors";
-import { SettingHeader } from "../components/SettingHeader";
 
 export default function AuthorsSettingsPage() {
   const { blogs } = useAppStore();
@@ -45,32 +44,39 @@ export default function AuthorsSettingsPage() {
 
   return (
     <div>
-      <SettingHeader
-        title="Authors"
-        description="Manage authors for your blog posts"
-      >
-        <div className="flex items-center gap-2">
-          {connectedIntegrations.map((integration) => (
-            <ImportAuthorsButton
-              key={integration.id}
-              blogId={blogs.id}
-              integrationId={integration.integration_id!}
-              integrationName={integration.name}
-              onSuccess={handleSuccess}
-            />
-          ))}
-          <Button
-            onClick={() => {
-              setEditingAuthor(null);
-              setIsCreateOpen(true);
-            }}
-            className="bg-[#104127] hover:bg-[#0A2918]"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Author
-          </Button>
+      <div className="mb-6">
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-poppins font-semibold text-[#0A2918] mb-2">
+              Authors
+            </h1>
+            <p className="font-inter text-gray-600">
+              Manage authors for your blog posts
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {connectedIntegrations.map((integration) => (
+              <ImportAuthorsButton
+                key={integration.id}
+                blogId={blogs.id}
+                integrationId={integration.integration_id!}
+                integrationName={integration.name}
+                onSuccess={handleSuccess}
+              />
+            ))}
+            <Button
+              onClick={() => {
+                setEditingAuthor(null);
+                setIsCreateOpen(true);
+              }}
+              className="bg-[#104127] hover:bg-[#0A2918]"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Author
+            </Button>
+          </div>
         </div>
-      </SettingHeader>
+      </div>
 
       <div className="mt-6">
         <AuthorsList

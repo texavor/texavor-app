@@ -1,6 +1,5 @@
 "use client";
 
-import { SettingHeader } from "../components/SettingHeader";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -42,10 +41,14 @@ export default function PreferencesPage() {
   if (isLoading) {
     return (
       <div>
-        <SettingHeader
-          title="Preferences"
-          description="Customize notifications and UI preferences"
-        />
+        <div className="mb-6">
+          <h1 className="text-2xl font-poppins font-semibold text-[#0A2918] mb-2">
+            Preferences
+          </h1>
+          <p className="font-inter text-gray-600">
+            Customize notifications and UI preferences
+          </p>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="p-6 border-none">
             <Skeleton className="h-6 w-48 bg-[#f9f4f0] mb-4" />
@@ -69,10 +72,14 @@ export default function PreferencesPage() {
 
   return (
     <div>
-      <SettingHeader
-        title="Preferences"
-        description="Customize notifications and UI preferences"
-      />
+      <div className="mb-6">
+        <h1 className="text-2xl font-poppins font-semibold text-[#0A2918] mb-2">
+          Preferences
+        </h1>
+        <p className="font-inter text-gray-600">
+          Customize notifications and UI preferences
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Email Notifications */}

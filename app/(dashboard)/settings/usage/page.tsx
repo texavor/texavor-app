@@ -1,6 +1,5 @@
 "use client";
 
-import { SettingHeader } from "../components/SettingHeader";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetUsage } from "../hooks/useUsageApi";
@@ -25,10 +24,14 @@ export default function UsagePage() {
   if (isLoading) {
     return (
       <div>
-        <SettingHeader
-          title="Usage & Statistics"
-          description="View your usage metrics and limits"
-        />
+        <div className="mb-6">
+          <h1 className="text-2xl font-poppins font-semibold text-[#0A2918] mb-2">
+            Usage & Statistics
+          </h1>
+          <p className="font-inter text-gray-600">
+            View your usage metrics and limits
+          </p>
+        </div>
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5].map((i) => (
@@ -103,10 +106,14 @@ export default function UsagePage() {
 
   return (
     <div>
-      <SettingHeader
-        title="Usage & Statistics"
-        description="View your usage metrics and limits"
-      />
+      <div className="mb-6">
+        <h1 className="text-2xl font-poppins font-semibold text-[#0A2918] mb-2">
+          Usage & Statistics
+        </h1>
+        <p className="font-inter text-gray-600">
+          View your usage metrics and limits
+        </p>
+      </div>
 
       <div className="space-y-8">
         {/* Current Month Usage */}
