@@ -63,7 +63,9 @@ axiosInstance.interceptors.response.use(
       response &&
       response?.status === 401 &&
       typeof window !== "undefined" &&
-      window.location.pathname !== "/login"
+      window.location.pathname !== "/login" &&
+      response?.config?.method === "get" &&
+      !response?.config?.url?.includes("integration")
     ) {
       try {
         await axios.post("/api/logout");

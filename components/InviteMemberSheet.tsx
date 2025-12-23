@@ -23,6 +23,7 @@ import {
 import { axiosInstance } from "@/lib/axiosInstace";
 import { toast } from "sonner";
 import { Loader2, Mail, Shield } from "lucide-react";
+import { RolePermissionsTable } from "@/components/RolePermissionsTable";
 
 interface InviteMemberSheetProps {
   open: boolean;
@@ -120,14 +121,12 @@ export default function InviteMemberSheet({
                 className="font-inter"
               />
             </div>
-
             <div className="space-y-1.5">
               <Label htmlFor="role" className="text-foreground/80 font-inter">
                 Role
               </Label>
               <Select value={role} onValueChange={setRole}>
                 <SelectTrigger className="font-inter w-full h-10">
-                  {/* Manually render selected value to show only title, not description */}
                   <span className="text-sm">
                     {role
                       ? role.charAt(0).toUpperCase() + role.slice(1)
@@ -140,18 +139,12 @@ export default function InviteMemberSheet({
                       <span className="font-medium font-poppins text-sm">
                         Admin
                       </span>
-                      <span className="text-[11px] text-muted-foreground font-inter">
-                        Full access to manage team and billing
-                      </span>
                     </div>
                   </SelectItem>
                   <SelectItem value="editor">
                     <div className="flex flex-col items-start py-1">
                       <span className="font-medium font-poppins text-sm">
                         Editor
-                      </span>
-                      <span className="text-[11px] text-muted-foreground font-inter">
-                        Can create and edit all blogs
                       </span>
                     </div>
                   </SelectItem>
@@ -160,9 +153,6 @@ export default function InviteMemberSheet({
                       <span className="font-medium font-poppins text-sm">
                         Writer
                       </span>
-                      <span className="text-[11px] text-muted-foreground font-inter">
-                        Can create and edit their own articles
-                      </span>
                     </div>
                   </SelectItem>
                   <SelectItem value="viewer">
@@ -170,25 +160,22 @@ export default function InviteMemberSheet({
                       <span className="font-medium font-poppins text-sm">
                         Viewer
                       </span>
-                      <span className="text-[11px] text-muted-foreground font-inter">
-                        Can view content but cannot edit
-                      </span>
                     </div>
                   </SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
+            {/* Dynamic Permissions Table */}
+            <RolePermissionsTable role={role} />
             <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 flex gap-2 items-start mt-2">
               <Shield className="w-4 h-4 text-blue-700 mt-0.5 shrink-0" />
               <div>
                 <p className="text-xs text-blue-800 font-inter font-semibold mb-1">
-                  Role Permissions
+                  Note
                 </p>
                 <p className="text-xs text-blue-700 font-inter leading-relaxed">
                   Members will receive an email invitation. They must accept it
-                  to join the team. Role changes will apply immediately after
-                  acceptance.
+                  to join the team.
                 </p>
               </div>
             </div>

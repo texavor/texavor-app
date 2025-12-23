@@ -39,23 +39,20 @@ interface Invitation {
   expires_at: string;
 }
 
+import { useTeamRoles } from "@/app/(dashboard)/team/hooks/useTeamRoles";
+
 export default function TeamMemberList({ teamId }: { teamId: string }) {
   const { user } = useAppStore();
   const queryClient = useQueryClient();
 
-  // Fetch Members
-  const { data: members = [], isLoading: membersLoading } = useQuery<Member[]>({
-    queryKey: ["team-members", teamId],
-    queryFn: async () => {
-      const response = await axiosInstance.get(
-        `/api/v1/teams/${teamId}/members`
-      );
-      return response.data;
-    },
-    enabled: !!teamId,
-  });
+  // Use the hook for members and permissions
+  const {
+    members,
+    isLoading: membersLoading,
+    canRemoveMember,
+  } = useTeamRoles(teamId);
 
-  // Fetch Invitations
+  // Fetch Invitations (keep local as it's specific to this component's full view)
   const { data: invitations = [], isLoading: invitationsLoading } = useQuery<
     Invitation[]
   >({
@@ -164,8 +161,10 @@ export default function TeamMemberList({ teamId }: { teamId: string }) {
       header: "",
       cell: ({ row }) => {
         const member = row.original;
-        // Only show actions if not self (usually) or if admin checking others
-        if (user?.id === member.user.id) return null;
+        // Hide actions if:
+        // 1. It's the current user (can't remove self this way usually, or handled separately)
+        // 2. The current user doesn't have permission to remove members
+        if (user?.id === member.user.id || !canRemoveMember) return null;
 
         return (
           <div className="flex justify-end">
@@ -229,45 +228,43 @@ export default function TeamMemberList({ teamId }: { teamId: string }) {
     {
       id: "actions",
       header: "",
-      cell: ({ row }) => (
-        <div className="flex justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={() => resendInvitation(row.original.id)}
-              >
-                <Mail className="mr-2 h-4 w-4" />
-                Resend Invitation
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-red-600 cursor-pointer"
-                onClick={() => revokeInvitation(row.original.id)}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Revoke Invitation
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      ),
+      cell: ({ row }) => {
+        // Also restrict invitation actions
+        if (!canRemoveMember) return null;
+
+        return (
+          <div className="flex justify-end">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => resendInvitation(row.original.id)}
+                >
+                  <Mail className="mr-2 h-4 w-4" />
+                  Resend Invitation
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-red-600 cursor-pointer"
+                  onClick={() => revokeInvitation(row.original.id)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Revoke Invitation
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        );
+      },
     },
   ];
 
-  if (membersLoading && !members.length) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-16 w-full" />
-        ))}
-      </div>
-    );
-  }
+  // Note: Loading state is handled by the parent's skeleton,
+  // but we can keep a check here just in case this component is used elsewhere
 
   return (
     <div className="space-y-8">

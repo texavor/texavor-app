@@ -73,11 +73,28 @@ const ROUTE_ICONS: Record<string, React.ReactNode> = {
   "/docs": <TableOfContents className="h-4 w-4" />,
 };
 
+import { usePermissions } from "@/hooks/usePermissions";
+
 const Topbar = () => {
   const router = useRouter();
   const pathname = usePathname();
   const { clear, user, mainLoading, blogs } = useAppStore();
   const { data: usage, isLoading: isLoadingUsage } = useGetUsage(blogs?.id);
+  const { role } = usePermissions();
+
+  // ... (keep getPageTitle, getBreadcrumbs, handleLogout)
+
+  // In the return JSX, replace user email part:
+  /*
+                <div className="flex flex-col">
+                <p className="font-poppins text-sm font-medium">
+                  {user?.first_name || "User"} {user?.last_name || ""}
+                </p>
+                <p className="text-xs text-gray-500 max-w-[260px] truncate capitalize">
+                  {role || "Viewer"}
+                </p>
+              </div>
+  */
 
   // Get dynamic page title based on current pathname
   const getPageTitle = (path: string) => {
@@ -275,8 +292,8 @@ const Topbar = () => {
                 <p className="font-poppins text-sm font-medium">
                   {user?.first_name || "User"} {user?.last_name || ""}
                 </p>
-                <p className="text-xs text-gray-500 max-w-[260px] truncate">
-                  {user?.email || "m@example.com"}
+                <p className="text-xs text-gray-500 max-w-[260px] truncate capitalize">
+                  {role || "Viewer"}
                 </p>
               </div>
             </div>

@@ -13,6 +13,7 @@ import { ARTICLE_STATUS_COLORS } from "@/lib/constants";
 
 import { CustomTable } from "@/components/ui/CustomTable";
 import { Button } from "@/components/ui/button";
+import { usePermissions } from "@/hooks/usePermissions";
 import CustomPagination from "@/components/ui/CustomPagination";
 import CalendarView from "@/components/CalendarView";
 import CustomDropdown from "@/components/ui/CustomDropdown";
@@ -85,6 +86,7 @@ const ArticlePageContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { blogs } = useAppStore();
+  const { role } = usePermissions();
 
   // --- State from URL ---
   const platform = (searchParams.get("platform") as Platform) || "all";
@@ -260,12 +262,14 @@ const ArticlePageContent = () => {
           </div>
         </div>
 
-        <Link href="/article/new">
-          <Button className="h-9 font-inter gap-2 shadow-sm">
-            <Plus className="h-4 w-4" />
-            Create Article
-          </Button>
-        </Link>
+        {role !== "viewer" && (
+          <Link href="/article/new">
+            <Button className="h-9 font-inter gap-2 shadow-sm">
+              <Plus className="h-4 w-4" />
+              Create Article
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Content */}

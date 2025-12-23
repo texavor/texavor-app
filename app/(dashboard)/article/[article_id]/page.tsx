@@ -14,6 +14,7 @@ import {
 } from "@/store/articleSettingsStore";
 import ArticleDetailsSheet from "@/components/ArticleDetailsSheet";
 import { ThumbnailUploadDialog } from "@/components/ThumbnailUploadDialog";
+import { usePermissions } from "@/hooks/usePermissions";
 
 // Dynamic imports with SSR disabled to prevent hydration mismatches
 const Editor = dynamic(() => import("@/components/Editor"), {
@@ -40,6 +41,9 @@ export default function CreateArticlePage() {
     formData: settingsFormData,
   } = useArticleSettingsStore();
 
+  const { role } = usePermissions();
+  const isViewer = role === "viewer";
+
   const existingId = params?.article_id as string;
 
   // All state hooks MUST be called before any early returns
@@ -62,6 +66,13 @@ export default function CreateArticlePage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Redirect viewer if trying to create new article
+  useEffect(() => {
+    if (isViewer && existingId === "new") {
+      router.push("/article");
+    }
+  }, [isViewer, existingId, router]);
 
   // Reset settings on unmount
   useEffect(() => {
@@ -401,6 +412,7 @@ export default function CreateArticlePage() {
             showMetrics={showMetrics}
             onToggleMetrics={toggleMetricsVisibility}
             isLoading={isLoading && existingId !== "new"}
+            readOnly={isViewer}
           />
         </div>
 

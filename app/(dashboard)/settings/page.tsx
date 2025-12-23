@@ -78,11 +78,31 @@ const settingsCategories = [
   },
 ];
 
+import { usePermissions } from "@/hooks/usePermissions";
+
 export default function SettingsPage() {
+  const { role, billing, settings } = usePermissions();
+
+  const filteredCategories = settingsCategories.filter((category) => {
+    switch (category.id) {
+      case "subscription":
+        return billing;
+      case "authors":
+        // Visible to Owner, Admin, Editor (View only for editor)
+        // Hidden for Writer, Viewer
+        return role !== "writer" && role !== "viewer";
+      case "blog-settings":
+        return settings;
+      default:
+        // Profile, Password, Usage are visible to all (or at least all internal users)
+        return true;
+    }
+  });
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {settingsCategories.map((category) => (
+        {filteredCategories.map((category) => (
           <SettingCard key={category.id} {...category} />
         ))}
       </div>

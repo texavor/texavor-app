@@ -12,7 +12,9 @@ import {
   ExternalLink,
   Pencil,
   Trash2,
+  Eye,
 } from "lucide-react";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import CustomDropdown from "@/components/ui/CustomDropdown";
@@ -200,6 +202,9 @@ export const columns: ColumnDef<Article, any>[] = [
         }
       };
 
+      const { role } = usePermissions();
+      const isViewer = role === "viewer";
+
       const actions = [];
 
       // View Live Article - Only if published + has URL
@@ -212,23 +217,29 @@ export const columns: ColumnDef<Article, any>[] = [
         });
       }
 
-      // Edit - Only for internal articles
+      // Edit/View - Only for internal articles
       if (!isFetched) {
         actions.push({
-          id: "edit",
-          name: "Edit Article",
-          icon: <Pencil className="h-4 w-4 text-gray-500" />,
+          id: isViewer ? "view" : "edit",
+          name: isViewer ? "View Article" : "Edit Article",
+          icon: isViewer ? (
+            <Eye className="h-4 w-4 text-gray-500" />
+          ) : (
+            <Pencil className="h-4 w-4 text-gray-500" />
+          ),
           action: () => (window.location.href = `/article/${article.id}`),
         });
       }
 
-      // Delete (Always available)
-      actions.push({
-        id: "delete",
-        name: "Delete",
-        icon: <Trash2 className="h-4 w-4 text-red-500" />,
-        action: handleDelete,
-      });
+      // Delete (Hide for Viewers)
+      if (!isViewer) {
+        actions.push({
+          id: "delete",
+          name: "Delete",
+          icon: <Trash2 className="h-4 w-4 text-red-500" />,
+          action: handleDelete,
+        });
+      }
 
       return (
         <CustomDropdown

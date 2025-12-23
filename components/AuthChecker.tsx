@@ -15,7 +15,14 @@ interface AuthData {
 const AuthChecker = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const { setUser, setBlogs, setMainLoading } = useAppStore();
+  const {
+    setUser,
+    setBlogs,
+    setMainLoading,
+    setTeams,
+    setCurrentTeam,
+    currentTeam,
+  } = useAppStore();
 
   const excluded = [
     "/login",
@@ -47,7 +54,35 @@ const AuthChecker = () => {
     enabled: isSuccess && !!data, // Only fetch after auth check succeeds
   });
 
-  // ✅ ADDED: This useEffect handles the "onSuccess" logic
+  // ✅ ADDED: Fetch Teams globally so RBAC works everywhere
+
+  const { data: teamsData } = useQuery({
+    queryKey: ["teams", data?.blogs?.[0]?.id],
+    queryFn: async () => {
+      const blogId = data?.blogs?.[0]?.id;
+      if (!blogId) return [];
+      const response = await axiosInstance.get(`/api/v1/blogs/${blogId}/teams`);
+      return response.data; // Expecting array of teams
+    },
+    enabled: isSuccess && !!data?.blogs?.[0]?.id,
+  });
+
+  // ✅ ADDED: Sync teams to store globally
+  useEffect(() => {
+    if (teamsData && teamsData.length > 0) {
+      setTeams(teamsData);
+      // Determine which team to select
+      // If none selected, or selected one is not in the new list, pick the first one
+      if (
+        !currentTeam ||
+        !teamsData.find((t: any) => t.id === currentTeam.id)
+      ) {
+        setCurrentTeam(teamsData[0]);
+      }
+    }
+  }, [teamsData, currentTeam, setTeams, setCurrentTeam]);
+
+  // ✅ ADDED: This useEffect handles the "onSuccess" logic (User & Blog)
   useEffect(() => {
     if (isSuccess && data) {
       setUser(data.user);
@@ -95,7 +130,7 @@ const AuthChecker = () => {
     }
   }, [isSuccess, data, subscriptionData, setUser, setBlogs, router, pathname]);
 
-  // ✅ ADDED: This useEffect handles the "onError" logic
+  // Handle logout on error
   useEffect(() => {
     if (isError) {
       const logout = async () => {
@@ -105,7 +140,7 @@ const AuthChecker = () => {
     }
   }, [isError]);
 
-  // This effect remains the same
+  // Loading state
   useEffect(() => {
     setMainLoading(isFetching);
   }, [isFetching, setMainLoading]);

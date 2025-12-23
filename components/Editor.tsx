@@ -46,6 +46,7 @@ type EditorProps = {
   showMetrics?: boolean;
   onToggleMetrics?: () => void;
   isLoading?: boolean;
+  readOnly?: boolean;
 };
 
 const Editor = ({
@@ -62,6 +63,7 @@ const Editor = ({
   showMetrics,
   onToggleMetrics,
   isLoading,
+  readOnly = false,
 }: EditorProps) => {
   const { zenMode, toggleZenMode } = useAppStore();
   const [isExportOpen, setIsExportOpen] = React.useState(false);
@@ -73,6 +75,7 @@ const Editor = ({
 
   // Keyboard shortcut for save (Ctrl+S / Cmd+S)
   useEffect(() => {
+    if (readOnly) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
@@ -84,7 +87,7 @@ const Editor = ({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onSave]);
+  }, [onSave, readOnly]);
   const [isGeneratingPDF, setIsGeneratingPDF] = React.useState(false);
 
   const handleExport = async (option: any) => {
@@ -313,11 +316,19 @@ const Editor = ({
         translate: "no", // Disable translation
       },
     },
+    editable: !readOnly,
     onUpdate: ({ editor }) => {
       const md = editor.storage.markdown.getMarkdown();
       onChange(md);
     },
   });
+
+  // Sync readOnly state → editor
+  useEffect(() => {
+    if (editor) {
+      editor.setEditable(!readOnly);
+    }
+  }, [editor, readOnly]);
 
   // Sync external value → editor
   useEffect(() => {
@@ -389,38 +400,42 @@ const Editor = ({
           zenMode ? "fixed top-7 left-0" : "absolute top-4 left-0"
         }`}
       >
-        {/* Left Side: Add/Change Cover */}
-        <div>
-          <Button
-            onClick={onAddCover}
-            variant="ghost"
-            size="sm"
-            className="bg-white shadow-sm hover:bg-gray-100 border border-gray-100 text-gray-600 gap-2"
-          >
-            <ImageIcon className="h-4 w-4" />
-            <span className="hidden sm:inline">
-              {thumbnailUrl ? "Change Cover" : "Add Cover"}
-            </span>
-          </Button>
-        </div>
+        {/* Left Side: Add/Change Cover - Hide if readOnly */}
+        {!readOnly && (
+          <div>
+            <Button
+              onClick={onAddCover}
+              variant="ghost"
+              size="sm"
+              className="bg-white shadow-sm hover:bg-gray-100 border border-gray-100 text-gray-600 gap-2"
+            >
+              <ImageIcon className="h-4 w-4" />
+              <span className="hidden sm:inline">
+                {thumbnailUrl ? "Change Cover" : "Add Cover"}
+              </span>
+            </Button>
+          </div>
+        )}
 
         {/* Right Side: Controls */}
         <div className="flex gap-2">
-          {/* Save Button */}
-          <Button
-            onClick={onSave}
-            disabled={isSaving || !onSave}
-            variant="ghost"
-            size="icon"
-            className="bg-white shadow-sm hover:bg-gray-100 border border-gray-100"
-            title="Save (Ctrl+S / Cmd+S)"
-          >
-            {isSaving ? (
-              <Loader2 className="h-4 w-4 text-gray-600 animate-spin" />
-            ) : (
-              <Save className="h-4 w-4 text-gray-600" />
-            )}
-          </Button>
+          {/* Save Button - Hide if readOnly */}
+          {!readOnly && (
+            <Button
+              onClick={onSave}
+              disabled={isSaving || !onSave}
+              variant="ghost"
+              size="icon"
+              className="bg-white shadow-sm hover:bg-gray-100 border border-gray-100"
+              title="Save (Ctrl+S / Cmd+S)"
+            >
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 text-gray-600 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 text-gray-600" />
+              )}
+            </Button>
+          )}
 
           {/* Metrics Toggle */}
           <Button
@@ -469,15 +484,17 @@ const Editor = ({
             )}
           </Button>
 
-          <Button
-            onClick={onSettingsClick}
-            variant="ghost"
-            size="icon"
-            className="bg-white shadow-sm hover:bg-gray-100 border border-gray-100"
-            title="Article Details"
-          >
-            <Settings className="h-4 w-4 text-gray-600" />
-          </Button>
+          {!readOnly && (
+            <Button
+              onClick={onSettingsClick}
+              variant="ghost"
+              size="icon"
+              className="bg-white shadow-sm hover:bg-gray-100 border border-gray-100"
+              title="Article Details"
+            >
+              <Settings className="h-4 w-4 text-gray-600" />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -520,8 +537,9 @@ const Editor = ({
             placeholder="Article Title..."
             value={title}
             onChange={(e) => onTitleChange?.(e.target.value)}
+            disabled={readOnly}
             rows={1}
-            className="border-none font-poppins text-5xl font-bold bg-transparent resize-none focus:ring-0 shadow-none focus-visible:ring-[0px] p-0 overflow-hidden text-gray-900 placeholder:text-gray-500"
+            className="border-none font-poppins text-5xl font-bold bg-transparent resize-none focus:ring-0 shadow-none focus-visible:ring-[0px] p-0 overflow-hidden text-gray-900 placeholder:text-gray-500 disabled:opacity-100 disabled:cursor-default"
             style={{ height: "auto" }}
             onInput={(e) => {
               const target = e.target as HTMLTextAreaElement;

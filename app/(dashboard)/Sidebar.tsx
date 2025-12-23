@@ -34,6 +34,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAppStore } from "@/store/appStore";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const SideBarOption = [
   {
@@ -199,6 +200,8 @@ const AppSidebar = () => {
   const router = useRouter();
   const pathname = usePathname();
 
+  const { role, research_tools, settings } = usePermissions();
+
   // Initialize from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem("sidebar-open");
@@ -217,13 +220,6 @@ const AppSidebar = () => {
 
   const handleLogout = async () => {
     try {
-      // Use axiosInstance to send headers if available
-      // Note: We import axiosInstance from lib, so we need to update imports or just add headers manually here
-      // But since we are importing axios directly on line 30, let's fix that import first or just use axios with headers.
-      // Actually, let's just use axiosInstance if possible, but I need to see imports.
-      // existing import is `import axios from "axios";`
-      // I will assume I can change line 30 in a separate edit or just use axios with manual header.
-
       const token = localStorage.getItem("auth_token");
       await axios.post(
         "/api/logout",
@@ -250,6 +246,43 @@ const AppSidebar = () => {
       window.location.href = "/login";
     }
   };
+
+  // Filter Main Options
+  const filteredMainOptions = SideBarOption.filter((opt) => {
+    // Research tools
+    if (
+      [
+        "/keyword-research",
+        "/topic-generation",
+        "/outline-generation",
+        "/competitor-analysis",
+      ].includes(opt.href)
+    ) {
+      return research_tools;
+    }
+    // Saved page - hide for viewers as they can't save
+    if (opt.href === "/saved" && role === "viewer") {
+      return false;
+    }
+
+    return true;
+  });
+
+  // Filter Settings Options
+  const filteredSettingsOptions = SideBarOptionSettings.filter((opt) => {
+    // Team - Visible to everyone except Writer and Viewer
+    // (Editor has view-only access, so they should see it)
+    if (opt.href === "/team") {
+      return role !== "writer" && role !== "viewer";
+    }
+    // Other settings - restricted by 'settings' permission
+    if (
+      ["/integrations", "/thumbnail-styles", "/settings"].includes(opt.href)
+    ) {
+      return settings;
+    }
+    return true;
+  });
 
   return (
     <div
@@ -315,7 +348,7 @@ const AppSidebar = () => {
       {/* --- MAIN NAVIGATION --- */}
       <div className="bg-white p-2 rounded-xl w-full flex-grow overflow-y-auto overflow-x-hidden">
         <div className="space-y-1 flex flex-col pb-2">
-          {SideBarOption.map((sidebar) => (
+          {filteredMainOptions.map((sidebar) => (
             <SidebarItem
               key={sidebar.title}
               {...sidebar}
@@ -328,22 +361,28 @@ const AppSidebar = () => {
           ))}
         </div>
 
+        {/* Separator after Main Options - Always visible if there are main options (which is always true) */}
         <div className="border-b-[1px] px-2" />
 
-        <div className="space-y-1 flex flex-col py-2">
-          {SideBarOptionSettings.map((sidebar) => (
-            <SidebarItem
-              key={sidebar.title}
-              {...sidebar}
-              isSideOpen={isSideOpen}
-              isActive={
-                pathname === sidebar.href ||
-                pathname.startsWith(`${sidebar.href}/`)
-              }
-            />
-          ))}
-        </div>
-        <div className="border-b-[1px] px-2" />
+        {/* Settings Group - Only render if there are settings options */}
+        {filteredSettingsOptions.length > 0 && (
+          <>
+            <div className="space-y-1 flex flex-col py-2">
+              {filteredSettingsOptions.map((sidebar) => (
+                <SidebarItem
+                  key={sidebar.title}
+                  {...sidebar}
+                  isSideOpen={isSideOpen}
+                  isActive={
+                    pathname === sidebar.href ||
+                    pathname.startsWith(`${sidebar.href}/`)
+                  }
+                />
+              ))}
+            </div>
+            <div className="border-b-[1px] px-2" />
+          </>
+        )}
 
         <div className="space-y-1 flex flex-col pt-2">
           {SideBarOptionExternal?.map((sidebar) => (
