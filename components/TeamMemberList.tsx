@@ -46,11 +46,9 @@ export default function TeamMemberList({ teamId }: { teamId: string }) {
   const queryClient = useQueryClient();
 
   // Use the hook for members and permissions
-  const {
-    members,
-    isLoading: membersLoading,
-    canRemoveMember,
-  } = useTeamRoles(teamId);
+  const { members, isLoading: membersLoading, can } = useTeamRoles(teamId);
+
+  const canRemoveMember = can("manage_team");
 
   // Fetch Invitations (keep local as it's specific to this component's full view)
   const { data: invitations = [], isLoading: invitationsLoading } = useQuery<

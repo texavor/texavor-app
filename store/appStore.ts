@@ -13,8 +13,10 @@ interface AppState {
   clear: () => void;
   teams: any[];
   currentTeam: any | null;
+  teamMembers: any[];
   setTeams: (teams: any[]) => void;
   setCurrentTeam: (team: any) => void;
+  setTeamMembers: (members: any[]) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -31,6 +33,8 @@ export const useAppStore = create<AppState>((set) => ({
   toggleZenMode: () => set((state) => ({ zenMode: !state.zenMode })),
   setTeams: (teams) => set({ teams }),
   setCurrentTeam: (currentTeam) => set({ currentTeam }),
+  teamMembers: [],
+  setTeamMembers: (teamMembers) => set({ teamMembers }),
   clear: () =>
     set({
       user: null,
@@ -38,5 +42,6 @@ export const useAppStore = create<AppState>((set) => ({
       zenMode: false,
       teams: [],
       currentTeam: null,
+      teamMembers: [],
     }),
 }));

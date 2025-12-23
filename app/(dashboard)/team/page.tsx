@@ -50,7 +50,7 @@ export default function TeamSettingsPage() {
   });
 
   // Get permissions
-  const { canInvite } = useTeamRoles(currentTeam?.id);
+  const { can } = useTeamRoles(currentTeam?.id);
 
   // Sync teams to store and set default
   useEffect(() => {
@@ -112,7 +112,7 @@ export default function TeamSettingsPage() {
           {isLoading ? (
             <Skeleton className="h-10 w-32 rounded-md" />
           ) : (
-            canInvite && (
+            can("manage_team") && (
               <Button
                 onClick={() => {
                   if (!currentTeam) {

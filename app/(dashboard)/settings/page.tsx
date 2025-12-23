@@ -84,18 +84,28 @@ export default function SettingsPage() {
   const { role, billing, settings } = usePermissions();
 
   const filteredCategories = settingsCategories.filter((category) => {
+    // Owner and Admin see everything (except maybe some specific logic if needed)
+    if (role === "owner" || role === "admin") return true;
+
+    // For other roles (Editor, Writer, Viewer), strictly control visibility
+    // User requested "editor password and below should not be there"
+    // This implies they should only see "Profile" if "Password" is the second item.
+
     switch (category.id) {
-      case "subscription":
-        return billing;
-      case "authors":
-        // Visible to Owner, Admin, Editor (View only for editor)
-        // Hidden for Writer, Viewer
-        return role !== "writer" && role !== "viewer";
+      case "profile":
+        return true; // Everyone sees profile
+      case "password":
+        return false; // Hidden for non-admins
       case "blog-settings":
-        return settings;
+        return false; // Hidden for non-admins
+      case "authors":
+        return false; // Hidden for non-admins
+      case "usage":
+        return false; // Hidden for non-admins
+      case "subscription":
+        return false; // Hidden for non-admins
       default:
-        // Profile, Password, Usage are visible to all (or at least all internal users)
-        return true;
+        return false;
     }
   });
 

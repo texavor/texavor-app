@@ -50,10 +50,26 @@ function AcceptInviteContent() {
         }, 2000);
       } catch (error: any) {
         console.error("Accept failed", error);
+
+        // Handle "Already accepted" or "Already member" gracefully
+        const errorMsg = error.response?.data?.error || "";
+        const isAlreadyMember =
+          errorMsg.toLowerCase().includes("already") ||
+          errorMsg.toLowerCase().includes("member") ||
+          error.response?.status === 422;
+
+        if (isAlreadyMember) {
+          setStatus("success");
+          setMessage("You are already a member of this team!");
+          setTimeout(() => {
+            router.push("/dashboard");
+          }, 2000);
+          return;
+        }
+
         setStatus("error");
         setMessage(
-          error.response?.data?.error ||
-            "Failed to accept invitation. It may have expired."
+          errorMsg || "Failed to accept invitation. It may have expired."
         );
 
         if (error.response?.status === 401 && error.response?.data?.redirect) {

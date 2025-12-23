@@ -67,6 +67,43 @@ const AuthChecker = () => {
     enabled: isSuccess && !!data?.blogs?.[0]?.id,
   });
 
+  // ✅ ADDED: Fetch Team Members globally for RBAC
+  const { data: membersData } = useQuery({
+    queryKey: ["team-members-global", currentTeam?.id],
+    queryFn: async () => {
+      if (!currentTeam?.id)
+        return { members: [], meta: { current_user_permissions: [] } };
+      try {
+        const response = await axiosInstance.get(
+          `/api/v1/teams/${currentTeam.id}/members`
+        );
+        // Handle migration period where API might return array or object
+        if (Array.isArray(response.data)) {
+          return {
+            members: response.data,
+            meta: { current_user_permissions: [] },
+          };
+        }
+        return response.data;
+      } catch (error) {
+        return { members: [], meta: { current_user_permissions: [] } };
+      }
+    },
+    enabled: !!currentTeam?.id,
+    // Keep it fresh but avoid constant refetches if not needed.
+    // User asked for "call once the app loaded".
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Sync team members to store
+  const { setTeamMembers } = useAppStore();
+  useEffect(() => {
+    if (membersData) {
+      setTeamMembers(membersData.members);
+      // We could also store permissions here if we add them to the store
+    }
+  }, [membersData, setTeamMembers]);
+
   // ✅ ADDED: Sync teams to store globally
   useEffect(() => {
     if (teamsData && teamsData.length > 0) {

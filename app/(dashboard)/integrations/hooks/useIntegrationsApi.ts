@@ -3,6 +3,7 @@ import { axiosInstance } from "@/lib/axiosInstace";
 import { useAppStore } from "@/store/appStore";
 import { Platform } from "@/app/onboarding/hooks/useOnboardingApi";
 import { toast } from "sonner";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export interface Integration {
   id: string;
@@ -30,6 +31,7 @@ export const useIntegrationsApi = () => {
   });
 
   // 2. List Connected Integrations (Actually returns all platforms with connection status)
+  const { role } = usePermissions();
   const getIntegrations = useQuery({
     queryKey: ["integrations", blogs?.id],
     queryFn: async () => {
@@ -40,7 +42,7 @@ export const useIntegrationsApi = () => {
       const integrations = response.data.integrations || [];
       return integrations as Platform[];
     },
-    enabled: !!blogs?.id,
+    enabled: !!blogs?.id && role !== "viewer" && role !== "writer",
   });
 
   // 3. Connect Integration

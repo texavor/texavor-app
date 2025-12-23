@@ -123,6 +123,11 @@ const Topbar = () => {
     const isDeep = segments.length > 1;
 
     return segments.map((segment, index) => {
+      // Skip "view" segment in breadcrumbs for cleaner navigation
+      if (segment === "view" && segments[index - 1] === "article") {
+        return null;
+      }
+
       const path = `/${segments.slice(0, index + 1).join("/")}`;
       const isLast = index === segments.length - 1;
       const isFirst = index === 0;
@@ -146,7 +151,18 @@ const Topbar = () => {
                   variant="ghost"
                   size="sm"
                   className="h-auto p-1 px-2 text-black hover:text-gray-700 font-medium font-poppins"
-                  onClick={() => router.push(path)}
+                  onClick={() => {
+                    const isArticleId =
+                      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
+                        segment
+                      );
+
+                    if (role === "viewer" && isArticleId) {
+                      router.push(`/article/view/${segment}`);
+                    } else {
+                      router.push(path);
+                    }
+                  }}
                 >
                   {icon}
                 </Button>

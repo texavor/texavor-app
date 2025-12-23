@@ -68,9 +68,15 @@ export default function CreateArticlePage() {
   }, []);
 
   // Redirect viewer if trying to create new article
+  // Redirect viewer if trying to create new article or access editor
   useEffect(() => {
-    if (isViewer && existingId === "new") {
-      router.push("/article");
+    if (isViewer) {
+      if (existingId === "new") {
+        router.push("/article");
+      } else if (existingId) {
+        // Redirect to view-only page for existing articles
+        router.push(`/article/view/${existingId}`);
+      }
     }
   }, [isViewer, existingId, router]);
 
@@ -99,7 +105,7 @@ export default function CreateArticlePage() {
       if (!res?.data) return null;
       return res.data;
     },
-    enabled: !!existingId && !!blogs?.id && existingId !== "new",
+    enabled: !!existingId && !!blogs?.id && existingId !== "new" && !isViewer,
     refetchOnWindowFocus: false,
   });
 
@@ -187,7 +193,7 @@ export default function CreateArticlePage() {
         throw error;
       }
     },
-    enabled: !!existingId && !!blogs?.id && existingId !== "new",
+    enabled: !!existingId && !!blogs?.id && existingId !== "new" && !isViewer,
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: (failureCount, error: any) => {
@@ -222,7 +228,7 @@ export default function CreateArticlePage() {
         return null;
       }
     },
-    enabled: !!savedResultId && !!blogs?.id,
+    enabled: !!savedResultId && !!blogs?.id && !isViewer,
     refetchOnWindowFocus: false,
   });
 

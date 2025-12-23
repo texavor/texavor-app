@@ -1,6 +1,7 @@
 "use client";
 import { axiosInstance } from "@/lib/axiosInstace";
 import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getStatusColor } from "@/lib/constants";
 
@@ -187,6 +188,7 @@ export const columns: ColumnDef<Article, any>[] = [
       const article = row.original;
       const [open, setOpen] = useState(false);
       const queryClient = useQueryClient();
+      const router = useRouter();
       const isFetched = article.source === "fetched";
 
       const handleDelete = async () => {
@@ -227,7 +229,13 @@ export const columns: ColumnDef<Article, any>[] = [
           ) : (
             <Pencil className="h-4 w-4 text-gray-500" />
           ),
-          action: () => (window.location.href = `/article/${article.id}`),
+          action: () => {
+            if (isViewer) {
+              router.push(`/article/view/${article.id}`);
+            } else {
+              router.push(`/article/${article.id}`);
+            }
+          },
         });
       }
 
