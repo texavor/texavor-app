@@ -68,6 +68,8 @@ export interface Usage {
     keyword_limit: number;
     integrations_used: number;
     integrations_limit: number;
+    image_generations: number;
+    image_generations_limit: number;
   };
   all_time: {
     total_articles: number;

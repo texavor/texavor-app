@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Target,
   Users,
+  Image,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -178,6 +179,7 @@ const Topbar = () => {
               <Skeleton className="h-8 w-24 bg-[#f9f4f0]" />
               <Skeleton className="h-8 w-24 bg-[#f9f4f0]" />
               <Skeleton className="h-8 w-24 bg-[#f9f4f0]" />
+              <Skeleton className="h-8 w-24 bg-[#f9f4f0]" />
             </div>
           ) : (
             <>
@@ -225,6 +227,22 @@ const Topbar = () => {
                     {usage?.current_month?.topics_limit === -1
                       ? "∞"
                       : usage?.current_month?.topics_limit || 0}
+                  </p>
+                </div>
+              </div>
+
+              {/* Images */}
+              <div className="flex items-center gap-2">
+                <Image className="size-5 text-pink-600" />
+                <div className="flex flex-col">
+                  <p className="text-xs font-medium text-[#0A2918] font-poppins leading-tight">
+                    Images
+                  </p>
+                  <p className="font-poppins text-xs font-medium font-inter leading-tight">
+                    {usage?.current_month?.image_generations || 0} /{" "}
+                    {usage?.current_month?.image_generations_limit === -1
+                      ? "∞"
+                      : usage?.current_month?.image_generations_limit || 0}
                   </p>
                 </div>
               </div>

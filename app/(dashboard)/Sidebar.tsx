@@ -140,7 +140,7 @@ const SidebarItem = ({
         isSideOpen ? "justify-start" : "justify-center"
       } ${isActive ? "bg-secondary" : ""}`}
     >
-      {icon}
+      <div className={isActive ? "text-[#104127]" : ""}>{icon}</div>
       {isSideOpen && <p className="font-poppins font-base">{title}</p>}
       {external && isSideOpen && (
         <ExternalLink className="size-3 stroke-2 text-black ml-auto" />

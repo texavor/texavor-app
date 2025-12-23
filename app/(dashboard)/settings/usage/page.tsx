@@ -13,6 +13,7 @@ import {
   TrendingUp,
   FileCheck,
   Puzzle,
+  Image,
 } from "lucide-react";
 
 import { useAppStore } from "@/store/appStore";
@@ -73,7 +74,7 @@ export default function UsagePage() {
     const percentage = limit === -1 ? 0 : Math.min(used / limit, 1);
 
     return (
-      <Card className="p-6 border-none shadow-sm flex flex-col justify-between h-full">
+      <Card className="p-6 border-none shadow-none flex flex-col justify-between h-full">
         <div>
           <div className="flex items-center gap-4 mb-4">
             <div
@@ -166,6 +167,15 @@ export default function UsagePage() {
               used={currentMonth?.integrations_used || 0}
               limit={currentMonth?.integrations_limit || 0}
             />
+
+            <UsageCard
+              icon={Image}
+              bgClass="bg-pink-100"
+              colorClass="text-pink-600"
+              label="Image Generations"
+              used={currentMonth?.image_generations || 0}
+              limit={currentMonth?.image_generations_limit || 0}
+            />
           </div>
         </div>
 
@@ -175,7 +185,7 @@ export default function UsagePage() {
             All-Time Statistics
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="p-6 border-none shadow-sm">
+            <Card className="p-6 border-none shadow-none">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
                   <FileCheck className="h-6 w-6 text-indigo-600" />
@@ -191,7 +201,7 @@ export default function UsagePage() {
               </div>
             </Card>
 
-            <Card className="p-6 border-none shadow-sm">
+            <Card className="p-6 border-none shadow-none">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-pink-100 flex items-center justify-center">
                   <TrendingUp className="h-6 w-6 text-pink-600" />
@@ -207,7 +217,7 @@ export default function UsagePage() {
               </div>
             </Card>
 
-            <Card className="p-6 border-none shadow-sm">
+            <Card className="p-6 border-none shadow-none">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center">
                   <ListTree className="h-6 w-6 text-teal-600" />

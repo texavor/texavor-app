@@ -350,7 +350,7 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto pb-10">
+    <div className="space-y-6 w-full pb-10">
       {/* Header / Meta Info */}
       <div className="bg-white p-6 rounded-xl shadow-none border-none space-y-4">
         <div className="space-y-3">
