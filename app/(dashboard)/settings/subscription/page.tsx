@@ -5,14 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ScoreMeter } from "@/components/ScoreMeter";
-import {
-  useGetSubscription,
-  useCreateCustomerPortal,
-} from "../hooks/useSubscriptionApi";
+import { useGetSubscription } from "../hooks/useSubscriptionApi";
 import { useGetUsage } from "../hooks/useUsageApi";
-import { redirectToCustomerPortal } from "@/lib/stripe";
 import { useRouter } from "next/navigation";
-import { Calendar, CreditCard } from "lucide-react";
+import { Calendar, CreditCard, XCircle, RefreshCw } from "lucide-react";
+import { CancelSubscriptionDialog } from "./CancelSubscriptionDialog";
+import { ReactivateSubscriptionDialog } from "./ReactivateSubscriptionDialog";
+import { useState } from "react";
 
 import { useAppStore } from "@/store/appStore";
 
@@ -22,18 +21,9 @@ export default function SubscriptionPage() {
     useGetSubscription(blogs?.id);
   const { data: usageData, isLoading: isUsageLoading } = useGetUsage(blogs?.id);
   const isLoading = isSubLoading || isUsageLoading;
-  const { mutateAsync: createCustomerPortal, isPending: isPortalLoading } =
-    useCreateCustomerPortal();
   const router = useRouter();
-
-  const handleManageSubscription = async () => {
-    await redirectToCustomerPortal(
-      {
-        returnUrl: window.location.href,
-      },
-      createCustomerPortal
-    );
-  };
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showReactivateDialog, setShowReactivateDialog] = useState(false);
 
   if (isLoading) {
     return (
@@ -101,7 +91,7 @@ export default function SubscriptionPage() {
         {/* Left Column: Subscription Details & Alerts */}
         <div className="space-y-6">
           {/* Current Subscription */}
-          <Card className="p-6 border-none shadow-sm">
+          <Card className="p-6 border-none shadow-none">
             <h3 className="font-poppins font-semibold text-lg text-[#0A2918] mb-4">
               Current Subscription
             </h3>
@@ -137,7 +127,9 @@ export default function SubscriptionPage() {
                 <div className="flex items-center gap-2 text-sm text-gray-700">
                   <Calendar className="w-4 h-4" />
                   <span className="font-inter">
-                    {subscription.status === "trialing"
+                    {subscription.subscription_details.cancel_at_period_end
+                      ? "Subscription ends on "
+                      : subscription.status === "trialing"
                       ? "Trial ends on "
                       : "Renews on "}
                     {new Date(
@@ -150,10 +142,22 @@ export default function SubscriptionPage() {
                   </span>
                 </div>
                 {subscription.subscription_details.cancel_at_period_end && (
-                  <p className="text-sm text-orange-600 font-medium">
-                    Your subscription will be canceled at the end of the current
-                    period.
-                  </p>
+                  <div className="flex items-start gap-2 p-3 bg-orange-50 border border-orange-200 rounded-md">
+                    <XCircle className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                    <div className="space-y-1">
+                      <p className="text-sm text-orange-900 font-semibold">
+                        Subscription Canceled
+                      </p>
+                      <p className="text-sm text-orange-700">
+                        Your subscription will end on{" "}
+                        {new Date(
+                          subscription.subscription_details.current_period_end
+                        ).toLocaleDateString()}
+                        . You'll be downgraded to the free trial plan after this
+                        date.
+                      </p>
+                    </div>
+                  </div>
                 )}
               </div>
             )}
@@ -176,20 +180,32 @@ export default function SubscriptionPage() {
                   Upgrade Now
                 </Button>
               ) : (
-                <Button
-                  onClick={handleManageSubscription}
-                  disabled={isPortalLoading}
-                  variant="outline"
-                >
-                  {isPortalLoading ? "Loading..." : "Manage Subscription"}
-                </Button>
+                <>
+                  {subscription?.subscription_details?.cancel_at_period_end ? (
+                    <Button
+                      onClick={() => setShowReactivateDialog(true)}
+                      className="bg-[#0A2918] hover:bg-[#0A2918]/90"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Reactivate Subscription
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => setShowCancelDialog(true)}
+                      variant="outline"
+                      className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 shadow-none"
+                    >
+                      Cancel Subscription
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           </Card>
 
           {/* Upgrade CTA for Trial Users */}
           {subscription?.tier === "trial" && (
-            <Card className="p-6 border-2 border-[#0A2918] bg-gradient-to-br from-[#0A2918]/5 to-transparent shadow-sm">
+            <Card className="p-6 border-2 border-[#0A2918] bg-gradient-to-br from-[#0A2918]/5 to-transparent shadow-none">
               <h3 className="font-poppins font-semibold text-lg text-[#0A2918] mb-2">
                 Unlock More Features
               </h3>
@@ -209,7 +225,7 @@ export default function SubscriptionPage() {
           {/* Suggested Upgrade */}
           {subscription?.suggested_upgrade_tier &&
             subscription.tier !== "business" && (
-              <Card className="p-6 border-2 border-orange-200 bg-orange-50/50 shadow-sm">
+              <Card className="p-6 border-2 border-orange-200 bg-orange-50/50 shadow-none">
                 <h3 className="font-poppins font-semibold text-lg text-orange-900 mb-2">
                   Consider Upgrading
                 </h3>
@@ -233,7 +249,7 @@ export default function SubscriptionPage() {
         {/* Right Column: Usage Limits & All Time Stats */}
         <div className="space-y-6">
           {/* Usage This Month */}
-          <Card className="p-6 border-none shadow-sm">
+          <Card className="p-6 border-none shadow-none">
             <h3 className="font-poppins font-semibold text-lg text-[#0A2918] mb-4">
               Usage This Month
             </h3>
@@ -357,7 +373,7 @@ export default function SubscriptionPage() {
           </Card>
 
           {/* All Time Stats */}
-          <Card className="p-6 border-none shadow-sm">
+          <Card className="p-6 border-none shadow-none">
             <h3 className="font-poppins font-semibold text-lg text-[#0A2918] mb-4">
               All Time Stats
             </h3>
@@ -390,6 +406,26 @@ export default function SubscriptionPage() {
           </Card>
         </div>
       </div>
+
+      {/* Cancel Subscription Dialog */}
+      <CancelSubscriptionDialog
+        open={showCancelDialog}
+        onOpenChange={setShowCancelDialog}
+        blogId={blogs?.id}
+        currentPeriodEnd={
+          subscription?.subscription_details?.current_period_end
+        }
+      />
+
+      {/* Reactivate Subscription Dialog */}
+      <ReactivateSubscriptionDialog
+        open={showReactivateDialog}
+        onOpenChange={setShowReactivateDialog}
+        blogId={blogs?.id}
+        currentPeriodEnd={
+          subscription?.subscription_details?.current_period_end
+        }
+      />
     </div>
   );
 }

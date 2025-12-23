@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axiosInstace";
 import { Subscription } from "../types";
 
@@ -54,6 +54,42 @@ export const useCreateCustomerPortal = () => {
         }
       );
       return response.data;
+    },
+  });
+};
+
+// Cancel subscription at period end
+export const useCancelSubscription = (blogId?: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const response = await axiosInstance.post(
+        "/api/v1/stripe/subscriptions/cancel"
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      // Invalidate subscription query to refetch updated data
+      queryClient.invalidateQueries({ queryKey: ["subscription", blogId] });
+    },
+  });
+};
+
+// Reactivate canceled subscription
+export const useReactivateSubscription = (blogId?: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const response = await axiosInstance.post(
+        "/api/v1/stripe/subscriptions/reactivate"
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      // Invalidate subscription query to refetch updated data
+      queryClient.invalidateQueries({ queryKey: ["subscription", blogId] });
     },
   });
 };
