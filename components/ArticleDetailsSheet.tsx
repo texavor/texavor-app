@@ -49,7 +49,6 @@ import {
   useArticleSettingsStore,
   ArticleDetails,
 } from "@/store/articleSettingsStore";
-
 interface ArticleDetailsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -93,6 +92,11 @@ export default function ArticleDetailsSheet({
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [selectedIntegration, setSelectedIntegration] = useState<any>(null);
   const [authors, setAuthors] = useState<Author[]>([]);
+
+  // Platform-specific settings state
+  const [platformSettingsDialogOpen, setPlatformSettingsDialogOpen] =
+    useState(false);
+  const [currentPlatform, setCurrentPlatform] = useState<any>(null);
 
   // Fetch authors
   useEffect(() => {
@@ -147,10 +151,13 @@ export default function ArticleDetailsSheet({
           finalData.published_at = new Date().toISOString();
       } else {
         finalData.published_at = null;
-        if (!finalData.scheduled_at)
+        if (!finalData.scheduled_at) {
           finalData.scheduled_at = new Date().toISOString();
+        }
+        // formData.scheduled_at is already in UTC ISO format from onChange handler
       }
     }
+    // formData.scheduled_at is already in UTC ISO format, no conversion needed
 
     onSave(finalData);
   };
@@ -163,8 +170,15 @@ export default function ArticleDetailsSheet({
   };
 
   const handlePlatformSettingsClick = (integration: any) => {
-    setSelectedIntegration(integration);
-    setSettingsDialogOpen(true);
+    // Check if it's dev.to platform
+    if (integration.platform === "devto") {
+      setCurrentPlatform(integration);
+      setPlatformSettingsDialogOpen(true);
+    } else {
+      // For other platforms, use the generic settings dialog
+      setSelectedIntegration(integration);
+      setSettingsDialogOpen(true);
+    }
   };
 
   const handleSavePlatformSettings = (settings: Record<string, any>) => {
@@ -178,6 +192,15 @@ export default function ArticleDetailsSheet({
       }));
     }
     setSettingsDialogOpen(false);
+  };
+
+  const handleSaveDevtoSettings = (settings: any) => {
+    if (currentPlatform) {
+      setPlatformSettings((prev) => ({
+        ...prev,
+        devto: settings,
+      }));
+    }
   };
 
   // Mock options for dropdowns
@@ -420,13 +443,39 @@ export default function ArticleDetailsSheet({
                     value={
                       formData.scheduled_at
                         ? (() => {
-                            const date = new Date(formData.scheduled_at);
-                            const offsetMs =
-                              date.getTimezoneOffset() * 60 * 1000;
-                            const localDate = new Date(
-                              date.getTime() - offsetMs
-                            );
-                            return localDate.toISOString().slice(0, 16);
+                            // If it's already in local format (no 'Z' or timezone), use as-is
+                            // Otherwise convert UTC to local for display
+                            const dateStr = formData.scheduled_at;
+                            if (
+                              dateStr.includes("Z") ||
+                              dateStr.includes("+") ||
+                              (dateStr.includes("T") && dateStr.length > 19)
+                            ) {
+                              // Backend sends UTC like "2025-12-24T15:49:00.000Z"
+                              // new Date() parses this as UTC and stores internally
+                              // getFullYear(), getMonth(), etc. return values in LOCAL timezone
+                              const date = new Date(dateStr);
+
+                              const year = date.getFullYear();
+                              const month = String(
+                                date.getMonth() + 1
+                              ).padStart(2, "0");
+                              const day = String(date.getDate()).padStart(
+                                2,
+                                "0"
+                              );
+                              const hours = String(date.getHours()).padStart(
+                                2,
+                                "0"
+                              );
+                              const minutes = String(
+                                date.getMinutes()
+                              ).padStart(2, "0");
+
+                              return `${year}-${month}-${day}T${hours}:${minutes}`;
+                            }
+                            // Already in local format, just return it
+                            return dateStr.slice(0, 16);
                           })()
                         : ""
                     }
@@ -436,8 +485,10 @@ export default function ArticleDetailsSheet({
                         handleDateChange("scheduled_at", "");
                         return;
                       }
-                      const date = new Date(localValue);
-                      const utcIsoString = date.toISOString();
+                      // Convert local datetime to UTC immediately before storing
+                      // This ensures formData always contains UTC ISO strings
+                      const localDate = new Date(localValue);
+                      const utcIsoString = localDate.toISOString();
                       handleDateChange("scheduled_at", utcIsoString);
                     }}
                   />

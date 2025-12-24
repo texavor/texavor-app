@@ -44,8 +44,13 @@ export const usePublicationsApi = (
       return res.data.publications || [];
     },
     enabled: !!blogId && !!articleId && articleId !== "new" && isEnabled,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false, // Don't refetch when component mounts if data exists
+    staleTime: 30000, // Consider data fresh for 30 seconds
     refetchInterval: (query) => {
-      // Poll every 5 seconds if there are publishing or pending publications
+      // Only poll if enabled and there are publishing or pending publications
+      if (!isEnabled) return false;
+
       const hasActivePublications = query.state.data?.some(
         (p: Publication) => p.status === "publishing" || p.status === "pending"
       );

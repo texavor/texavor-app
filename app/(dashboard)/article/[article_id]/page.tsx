@@ -41,7 +41,7 @@ export default function CreateArticlePage() {
     formData: settingsFormData,
   } = useArticleSettingsStore();
 
-  const { role } = usePermissions();
+  const { role, isLoadingPermissions } = usePermissions();
   const isViewer = role === "viewer";
 
   const existingId = params?.article_id as string;
@@ -61,15 +61,21 @@ export default function CreateArticlePage() {
   // Refs must also be called before early returns
   const isInitialLoadDone = useRef(false);
   const isCreatingRef = useRef(false);
+  // Track original fetched content to prevent unnecessary saves
+  const fetchedTitleRef = useRef<string>("");
+  const fetchedContentRef = useRef<string>("");
 
   // Set mounted state
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Redirect viewer if trying to create new article
   // Redirect viewer if trying to create new article or access editor
+  // IMPORTANT: Only redirect after permissions are loaded to avoid race condition
   useEffect(() => {
+    // Don't redirect until permissions are loaded
+    if (isLoadingPermissions) return;
+
     if (isViewer) {
       if (existingId === "new") {
         router.push("/article");
@@ -78,7 +84,7 @@ export default function CreateArticlePage() {
         router.push(`/article/view/${existingId}`);
       }
     }
-  }, [isViewer, existingId, router]);
+  }, [isViewer, existingId, router, isLoadingPermissions]);
 
   // Reset settings on unmount
   useEffect(() => {
@@ -113,11 +119,18 @@ export default function CreateArticlePage() {
     if (fetchedArticle) {
       // Only update state if data has changed significantly or if it's initial load.
       // Since we disabled refetchOnWindowFocus, this mainly runs on navigation (ID change).
-      setTitle(fetchedArticle.title || "");
-      setContent(fetchedArticle.content || "");
+      const fetchedTitle = fetchedArticle.title || "";
+      const fetchedContent = fetchedArticle.content || "";
+
+      setTitle(fetchedTitle);
+      setContent(fetchedContent);
       setThumbnailUrl(fetchedArticle.thumbnail_url || null);
       setArticleId(fetchedArticle);
       setSavedResultId(fetchedArticle.saved_result_id || null);
+
+      // Store the original fetched values to compare against later
+      fetchedTitleRef.current = fetchedTitle;
+      fetchedContentRef.current = fetchedContent;
       isInitialLoadDone.current = true;
 
       // Initialize store if not already initialized
@@ -297,6 +310,19 @@ export default function CreateArticlePage() {
     // If it's a new article and we are already creating one, skip
     if (isNewArticle && isCreatingRef.current) return;
 
+    // For existing articles, check if content has actually changed from fetched version
+    if (!isNewArticle) {
+      const titleChanged = debouncedTitle !== fetchedTitleRef.current;
+      const contentChanged = debouncedContent !== fetchedContentRef.current;
+
+      // Don't save if nothing has changed
+      if (!titleChanged && !contentChanged) return;
+
+      // Update the refs to the new values after we decide to save
+      fetchedTitleRef.current = debouncedTitle;
+      fetchedContentRef.current = debouncedContent;
+    }
+
     // If it's a new article, mark as creating
     if (isNewArticle) {
       isCreatingRef.current = true;
@@ -386,11 +412,11 @@ export default function CreateArticlePage() {
   // Show loading state until mounted on client
   if (!mounted) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading editor...</p>
-        </div>
+      <div className="p-6 space-y-4">
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-8 w-3/4" />
+        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-32 w-full" />
       </div>
     );
   }

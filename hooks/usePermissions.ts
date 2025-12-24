@@ -96,14 +96,24 @@ export const ROLE_PERMISSIONS: Record<
 export const usePermissions = () => {
   const { currentTeam } = useAppStore();
   // We reuse the existing logic to find the role in the current team
-  const { currentUserRole } = useTeamRoles(currentTeam?.id);
+  const { currentUserRole, isLoading } = useTeamRoles(currentTeam?.id);
 
-  const role = (currentUserRole as Role) || "viewer"; // Default to viewer if unknown
-  const permissions = ROLE_PERMISSIONS[role];
+  // Consider permissions as loading if:
+  // 1. currentTeam is not loaded yet, OR
+  // 2. useTeamRoles is still loading, OR
+  // 3. currentUserRole is not yet determined
+  const isLoadingPermissions = !currentTeam || isLoading || !currentUserRole;
+
+  // Don't default to viewer while loading - only use viewer as fallback when fully loaded
+  const role = currentUserRole as Role;
+  const permissions = role
+    ? ROLE_PERMISSIONS[role]
+    : ROLE_PERMISSIONS["viewer"];
 
   return {
     role,
     permissions,
+    isLoadingPermissions,
     ...permissions.features,
   };
 };
