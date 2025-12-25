@@ -395,7 +395,7 @@ export default function CreateArticlePage() {
     if (isNewArticle) {
       // Create new article
       await createMutation.mutateAsync({
-        title: title || "",
+        title: title || "Untitled",
         content: content || "",
       });
     } else {
@@ -468,6 +468,8 @@ export default function CreateArticlePage() {
       <ArticleDetailsSheet
         open={isDetailsSheetOpen}
         onOpenChange={setIsDetailsSheetOpen}
+        currentTitle={title}
+        currentContent={content}
         onSave={(data) => {
           updateMutation.mutate(data);
           setIsDetailsSheetOpen(false);

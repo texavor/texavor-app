@@ -35,7 +35,7 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({
         <img
           src={platform.logo_url}
           alt={`${platform.name} logo`}
-          className="h-8 w-8 object-contain"
+          className="h-10 w-10 object-contain"
         />
       );
     }
@@ -68,7 +68,7 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({
     >
       <CardHeader className="flex flex-row items-start gap-4 space-y-0 pb-2">
         <div
-          className={`p-2 rounded-lg ${
+          className={`rounded-lg overflow-hidden ${
             isConnected
               ? "bg-white shadow-sm border border-emerald-100"
               : "bg-gray-50"

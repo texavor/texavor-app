@@ -24,6 +24,15 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const PLATFORM_IMAGES: Record<string, string> = {
+  devto: "/integration/devto.png",
+  hashnode: "/integration/hashnode.png",
+  medium: "/integration/medium.png",
+  shopify: "/integration/shopify.png",
+  webflow: "/integration/webflow.png",
+  wordpress: "/integration/wordpress.png",
+};
+
 export default function IntegrationsPage() {
   const {
     getPlatforms,
@@ -80,7 +89,17 @@ export default function IntegrationsPage() {
   }
 
   // Get all platforms from integrations API
-  const allPlatforms = getIntegrations.data || [];
+  const rawPlatforms = getIntegrations.data || [];
+
+  const allPlatforms = rawPlatforms.map((p) => {
+    const key = (p.platform || p.id).toLowerCase();
+    const localImage = PLATFORM_IMAGES[key];
+
+    if (localImage) {
+      return { ...p, logo_url: localImage };
+    }
+    return p;
+  });
 
   return (
     <div className="space-y-8 pb-4">

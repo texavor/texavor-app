@@ -498,39 +498,50 @@ export default function ArticleDetailsSheet({
                 <div className="space-y-2">
                   <Label className="text-foreground/80">Cross-Post To</Label>
                   <div className="space-y-2 rounded-md border p-3">
-                    {connectedIntegrations.map((platform) => (
-                      <div
-                        key={platform.id}
-                        className="flex items-center justify-between gap-2"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`crosspost-${platform.id}`}
-                            checked={formData.article_publications.includes(
-                              platform.id
-                            )}
-                            onCheckedChange={() =>
-                              handleCrossPostChange(platform.id)
-                            }
-                          />
-                          <Label
-                            htmlFor={`crosspost-${platform.id}`}
-                            className="font-normal cursor-pointer"
-                          >
-                            {platform.name}
-                          </Label>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handlePlatformSettingsClick(platform)}
-                          className="h-7 px-2"
-                          title="Configure platform settings"
+                    {connectedIntegrations.map((platform) => {
+                      // Check if platform is selected OR has existing publications
+                      const isSelected = formData.article_publications.includes(
+                        platform.id
+                      );
+                      const hasPublication = publications?.some(
+                        (pub) => pub.integration_id === platform.id
+                      );
+                      const isChecked = isSelected || hasPublication;
+
+                      return (
+                        <div
+                          key={platform.id}
+                          className="flex items-center justify-between gap-2"
                         >
-                          <Settings2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    ))}
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`crosspost-${platform.id}`}
+                              checked={isChecked}
+                              onCheckedChange={() =>
+                                handleCrossPostChange(platform.id)
+                              }
+                            />
+                            <Label
+                              htmlFor={`crosspost-${platform.id}`}
+                              className="font-normal cursor-pointer"
+                            >
+                              {platform.name}
+                            </Label>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              handlePlatformSettingsClick(platform)
+                            }
+                            className="h-7 px-2"
+                            title="Configure platform settings"
+                          >
+                            <Settings2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      );
+                    })}
                   </div>
                   <p className="text-xs text-gray-500">
                     Click <Settings2 className="h-3 w-3 inline" /> to customize
