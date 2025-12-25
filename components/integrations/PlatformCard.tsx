@@ -30,6 +30,21 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({
   // Helper to render icon based on platform.icon string
   const renderIcon = () => {
     console.log(platform.logo_url);
+
+    // For custom webhooks, use static webhook icon
+    if (
+      platform.id === "custom_webhook" ||
+      platform.platform === "custom_webhook"
+    ) {
+      return (
+        <img
+          src="/integration/webhook.png"
+          alt={`${platform.name} logo`}
+          className="h-10 w-10 object-contain"
+        />
+      );
+    }
+
     if (platform.logo_url) {
       return (
         <img
@@ -44,12 +59,6 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({
       case "rss":
         return <Rss className="h-8 w-8 text-orange-500" />;
       case "api":
-        if (
-          platform.id === "custom_webhook" ||
-          platform.platform === "custom_webhook"
-        ) {
-          return <PlugZap className="h-8 w-8 text-purple-500" />;
-        }
         return <Globe className="h-8 w-8 text-blue-500" />;
       default:
         return <LinkIcon className="h-8 w-8 text-gray-500" />;
@@ -60,17 +69,15 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({
 
   return (
     <Card
-      className={`flex flex-col justify-between h-full transition-all ${
-        isConnected
-          ? "border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50/30 shadow-sm"
-          : "hover:shadow-md border-gray-200"
+      className={`flex flex-col justify-between h-full border-none shadow-none transition-all ${
+        isConnected ? "bg-emerald-100" : ""
       }`}
     >
       <CardHeader className="flex flex-row items-start gap-4 space-y-0 pb-2">
         <div
           className={`rounded-lg overflow-hidden ${
             isConnected
-              ? "bg-white shadow-sm border border-emerald-100"
+              ? "bg-white shadonw-none border border-emerald-100"
               : "bg-gray-50"
           }`}
         >
@@ -114,7 +121,7 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({
         <Button
           className={`w-full font-medium font-inter ${
             isConnected
-              ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+              ? "bg-emerald-600 hover:bg-emerald-700 text-white shadonw-none"
               : "bg-[#104127] hover:bg-[#0A2918] text-white"
           }`}
           onClick={() => onConnect(platform)}

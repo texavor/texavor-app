@@ -31,6 +31,7 @@ const PLATFORM_IMAGES: Record<string, string> = {
   shopify: "/integration/shopify.png",
   webflow: "/integration/webflow.png",
   wordpress: "/integration/wordpress.png",
+  custom_webhook: "/integration/webhook.png",
 };
 
 export default function IntegrationsPage() {
@@ -123,7 +124,7 @@ export default function IntegrationsPage() {
             (p) => p.platform === "custom_webhook" || p.id === "custom_webhook"
           ).length < 5 && (
             <Card
-              className="flex flex-col justify-center items-center h-full min-h-[200px] border-gray-200 hover:shadow-md transition-all cursor-pointer group bg-white"
+              className="flex flex-col justify-center items-center h-full min-h-[200px] border-none shadow-none cursor-pointer group bg-white"
               onClick={() => {
                 const dummy: Platform = {
                   id: "custom_webhook",

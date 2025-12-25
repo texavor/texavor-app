@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import PublicationStatusCard from "./PublicationStatusCard";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
@@ -28,6 +28,7 @@ interface PublicationStatusListProps {
   isLoading?: boolean;
   onRetry: (publicationId: string) => void;
   onRefresh?: () => void;
+  onUnpublish?: (integrationId: string) => void;
   retryingId?: string;
 }
 
@@ -38,10 +39,44 @@ export default function PublicationStatusList({
   isLoading = false,
   onRetry,
   onRefresh,
+  onUnpublish,
   retryingId,
 }: PublicationStatusListProps) {
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [isExpanded, setIsExpanded] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Debounce timer ref
+  const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounced refresh handler (500ms)
+  const handleRefresh = useCallback(() => {
+    if (!onRefresh) return;
+
+    // Clear any existing timer
+    if (refreshTimerRef.current) {
+      clearTimeout(refreshTimerRef.current);
+    }
+
+    // Set refreshing state
+    setIsRefreshing(true);
+
+    // Debounce the actual refresh call
+    refreshTimerRef.current = setTimeout(() => {
+      onRefresh();
+      setIsRefreshing(false);
+      refreshTimerRef.current = null;
+    }, 500);
+  }, [onRefresh]);
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current);
+      }
+    };
+  }, []);
 
   // Filter publications
   const filteredPublications =
@@ -85,26 +120,33 @@ export default function PublicationStatusList({
     <div className="space-y-4">
       {/* Header with Stats */}
       <div className="flex items-center justify-between">
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900"
-        >
-          {isExpanded ? (
-            <ChevronUp className="h-4 w-4" />
-          ) : (
-            <ChevronDown className="h-4 w-4" />
-          )}
-          Publications ({publications.length})
-        </button>
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-poppins font-medium text-[#0A2918] uppercase tracking-wider">
+            Publication Status
+          </h3>
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-gray-500 hover:text-gray-900"
+          >
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </button>
+        </div>
 
         {onRefresh && (
           <Button
             variant="ghost"
             size="sm"
-            onClick={onRefresh}
-            className="h-8 px-2"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="h-7 px-2"
           >
-            <RefreshCw className="h-3.5 w-3.5" />
+            <RefreshCw
+              className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin")}
+            />
           </Button>
         )}
       </div>
@@ -194,6 +236,7 @@ export default function PublicationStatusList({
                   key={publication.id}
                   publication={publication}
                   onRetry={onRetry}
+                  onUnpublish={onUnpublish}
                   isRetrying={retryingId === publication.id}
                 />
               ))

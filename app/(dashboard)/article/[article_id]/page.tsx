@@ -49,6 +49,7 @@ export default function CreateArticlePage() {
   // All state hooks MUST be called before any early returns
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [contentHtml, setContentHtml] = useState("");
   const [articleId, setArticleId] = useState({ id: existingId });
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [isThumbnailDialogOpen, setIsThumbnailDialogOpen] = useState(false);
@@ -246,10 +247,19 @@ export default function CreateArticlePage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (payload: { title: string; content: string }) => {
+    mutationFn: async (payload: {
+      title: string;
+      content: string;
+      content_html?: string;
+    }) => {
       const res = await axiosInstance.post(
         `/api/v1/blogs/${blogs.id}/articles`,
-        { title: payload?.title, content: payload?.content, source: "texavor" }
+        {
+          title: payload?.title,
+          content: payload?.content,
+          content_html: payload?.content_html,
+          source: "texavor",
+        }
       );
       return res.data;
     },
@@ -397,6 +407,7 @@ export default function CreateArticlePage() {
       await createMutation.mutateAsync({
         title: title || "Untitled",
         content: content || "",
+        content_html: contentHtml || "",
       });
     } else {
       // Update existing article
@@ -404,6 +415,7 @@ export default function CreateArticlePage() {
         article: {
           title: title || "",
           content: content || "",
+          content_html: contentHtml || "",
         },
       });
     }
@@ -432,7 +444,10 @@ export default function CreateArticlePage() {
         >
           <Editor
             value={content}
-            onChange={setContent}
+            onChange={(md, html) => {
+              setContent(md);
+              if (html) setContentHtml(html);
+            }}
             title={title}
             onTitleChange={setTitle}
             thumbnailUrl={thumbnailUrl}
@@ -459,7 +474,11 @@ export default function CreateArticlePage() {
               insights={insights}
               savedResult={fetchedSavedResult}
               articleTitle={title}
-              articleId={existingId !== "new" ? existingId : undefined}
+              articleId={
+                articleId?.id && articleId.id !== "new"
+                  ? articleId.id
+                  : undefined
+              }
             />
           </div>
         )}

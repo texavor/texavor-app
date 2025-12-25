@@ -1,0 +1,337 @@
+# Article Content HTML API Guide
+
+## Overview
+
+Articles now support storing both **Markdown** (for editing) and **pre-rendered HTML** (for publishing) to ensure accurate rendering across all publishing platforms (Shopify, Webflow, Medium, Dev.to, Hashnode).
+
+## Why Content HTML?
+
+**Problem:** Backend Markdown-to-HTML conversion was causing formatting issues on platforms like Shopify and Webflow due to:
+
+- Malformed HTML mixed with Markdown
+- Liquid template tags
+- Incomplete image tags
+- Different rendering engines
+
+**Solution:** Send pre-rendered HTML directly from your TipTap editor, ensuring WYSIWYG accuracy.
+
+---
+
+## Article Schema
+
+### Fields
+
+| Field          | Type     | Required | Description                                    |
+| -------------- | -------- | -------- | ---------------------------------------------- |
+| `content`      | `string` | Yes      | Markdown/raw content for editing in the editor |
+| `content_html` | `string` | No       | Pre-rendered HTML for publishing platforms     |
+
+### Publishing Behavior
+
+- **When `content_html` is present**: Used for Shopify, Webflow
+- **When `content_html` is missing**: Falls back to `content` field
+- **Medium, Dev.to, Hashnode**: Use `content` directly (they handle Markdown)
+
+---
+
+## API Usage
+
+### Creating an Article
+
+**Endpoint:**
+
+```
+POST /api/v1/blogs/:blog_id/articles
+```
+
+**Headers:**
+
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+**Request Body:**
+
+```json
+{
+  "article": {
+    "title": "Why Developers Love Dark Theme",
+    "content": "### Introduction\n\nAccording to a survey...",
+    "content_html": "<h3>Introduction</h3><p>According to a survey...</p>",
+    "slug": "why-developers-love-dark-theme",
+    "author_id": "uuid",
+    "tags": ["programming", "ux"],
+    "categories": ["Development", "UI/UX"],
+    "seo_title": "Why Developers Love Dark Theme - Complete Guide",
+    "seo_description": "Discover the reasons why 70% of developers prefer dark theme...",
+    "status": "draft",
+    "article_publications": ["devto", "shopify", "webflow"]
+  }
+}
+```
+
+**Response:**
+
+```json
+{
+  "id": "uuid",
+  "title": "Why Developers Love Dark Theme",
+  "content": "### Introduction\n\n...",
+  "content_html": "<h3>Introduction</h3>...",
+  "slug": "why-developers-love-dark-theme",
+  ...
+}
+```
+
+---
+
+### Updating an Article
+
+**Endpoint:**
+
+```
+PATCH /api/v1/blogs/:blog_id/articles/:id
+```
+
+**Request Body:**
+
+```json
+{
+  "article": {
+    "content": "### Updated Introduction\n\n...",
+    "content_html": "<h3>Updated Introduction</h3><p>...</p>"
+  }
+}
+```
+
+---
+
+## Frontend Implementation
+
+### React/TypeScript Example
+
+```typescript
+import { Editor } from "@tiptap/react";
+
+interface ArticleFormData {
+  title: string;
+  content: string;
+  content_html: string;
+  // ... other fields
+}
+
+// When saving article from TipTap editor
+const saveArticle = async (editor: Editor) => {
+  const markdown = editor.storage.markdown.getMarkdown(); // Get Markdown
+  const html = editor.getHTML(); // Get HTML
+
+  const payload: ArticleFormData = {
+    title: "Article Title",
+    content: markdown, // For editing
+    content_html: html, // For publishing
+    tags: ["tag1", "tag2"],
+    // ... other fields
+  };
+
+  const response = await fetch(`/api/v1/blogs/${blogId}/articles`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ article: payload }),
+  });
+
+  return response.json();
+};
+```
+
+### TipTap HTML Extraction
+
+```typescript
+import { useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { Markdown } from "tiptap-markdown";
+
+const editor = useEditor({
+  extensions: [
+    StarterKit,
+    Markdown, // For Markdown support
+  ],
+  content: "<p>Hello World!</p>",
+});
+
+// Get both formats
+const markdown = editor.storage.markdown.getMarkdown();
+const html = editor.getHTML();
+```
+
+---
+
+## Platform-Specific Behavior
+
+### Shopify & Webflow
+
+- **Uses:** `content_html`
+- **Format:** Clean HTML from TipTap
+- **Why:** These platforms require valid HTML and don't support Markdown
+
+### Medium
+
+- **Uses:** `content` (Markdown)
+- **Format:** Markdown or HTML (both supported)
+- **Why:** Medium has its own rendering engine
+
+### Dev.to & Hashnode
+
+- **Uses:** `content` (Markdown)
+- **Format:** Markdown preferred
+- **Why:** These platforms are Markdown-native
+
+---
+
+## HTML Cleaning Best Practices
+
+### What to Send
+
+✅ **DO:**
+
+- Send clean HTML from TipTap's `getHTML()`
+- Include semantic HTML tags (`<h1>`, `<p>`, `<ul>`, etc.)
+- Use proper image tags with full URLs
+- Include `alt` attributes on images
+
+❌ **DON'T:**
+
+- Include Liquid template tags (`{% %}`)
+- Use `<center>` or other deprecated HTML
+- Include incomplete/malformed tags
+- Use localhost URLs for images
+
+### Example: Clean HTML Output
+
+```html
+<h3>Introduction</h3>
+<p>According to a survey, 70% of software engineers prefer dark theme...</p>
+<img src="https://example.com/image.jpg" alt="Dark theme example" />
+<ul>
+  <li>Soothing to eyes</li>
+  <li>Better concentration</li>
+</ul>
+```
+
+---
+
+## Error Handling
+
+### Missing `content_html`
+
+If `content_html` is not provided, the system will:
+
+1. Use `content` field as fallback
+2. Log a warning for Shopify/Webflow
+3. Content may not render correctly on those platforms
+
+### Invalid HTML
+
+- Submit valid HTML from TipTap
+- Avoid manual HTML editing
+- Test with all target platforms
+
+---
+
+## Migration Guide
+
+### For Existing Articles
+
+Existing articles without `content_html` will:
+
+1. Continue to work (fallback to `content`)
+2. May have rendering issues on Shopify/Webflow
+3. Should be re-saved with `content_html` for best results
+
+### Updating Old Articles
+
+```typescript
+// Re-save existing article with content_html
+const updateExistingArticle = async (articleId: string, editor: Editor) => {
+  const payload = {
+    content_html: editor.getHTML(), // Add HTML version
+  };
+
+  await fetch(`/api/v1/blogs/${blogId}/articles/${articleId}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ article: payload }),
+  });
+};
+```
+
+---
+
+## Testing
+
+### Verify Both Fields
+
+```typescript
+// When creating article
+const article = await createArticle(data);
+
+console.assert(article.content !== null, "Content should be present");
+console.assert(article.content_html !== null, "Content HTML should be present");
+console.assert(article.content.includes("###"), "Content should be Markdown");
+console.assert(
+  article.content_html.includes("<h3>"),
+  "HTML should have proper tags"
+);
+```
+
+### Platform-Specific Testing
+
+1. **Create article with both fields**
+2. **Publish to Shopify** - Verify HTML renders correctly
+3. **Publish to Webflow** - Verify HTML renders correctly
+4. **Publish to Dev.to** - Verify Markdown renders correctly
+
+---
+
+## Troubleshooting
+
+### Shopify/Webflow Shows Raw HTML
+
+**Problem:** HTML is displayed as text instead of being rendered
+
+**Solution:** Ensure you're sending `content_html`, not `content` alone
+
+### Formatting Lost on Publish
+
+**Problem:** Bold, italics, headings don't appear
+
+**Solution:** Check that `content_html` contains proper HTML tags
+
+### Images Not Displaying
+
+**Problem:** Images show as broken
+
+**Solution:**
+
+- Use absolute URLs (not relative)
+- Avoid localhost URLs
+- Ensure images are publicly accessible
+
+---
+
+## Summary
+
+| Action                     | Required Fields            | Optional Fields        |
+| -------------------------- | -------------------------- | ---------------------- |
+| Create Article             | `title`, `content`         | `content_html`         |
+| Update Article             | Any field to update        | All fields optional    |
+| Publish to Shopify/Webflow | `content_html` recommended | `content` as fallback  |
+| Publish to Dev.to/Hashnode | `content`                  | `content_html` ignored |
+
+**Best Practice:** Always send both `content` and `content_html` for maximum compatibility across all platforms.

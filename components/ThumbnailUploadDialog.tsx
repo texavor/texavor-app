@@ -350,10 +350,9 @@ export function ThumbnailUploadDialog({
               <div className="flex items-center justify-between">
                 <Label htmlFor="prompt">Custom Prompt (Optional)</Label>
                 <Button
-                  variant="outline"
                   size="sm"
                   onClick={handleMagicPrompt}
-                  className="text-xs"
+                  className="bg-[#104127] hover:bg-[#0A2918] text-white text-xs"
                 >
                   <Wand2 className="h-3 w-3 mr-1" />
                   Magic Prompt

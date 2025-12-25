@@ -34,7 +34,7 @@ import { Skeleton } from "@/components/ui/skeleton";
  */
 type EditorProps = {
   value: string;
-  onChange: (value: string) => void;
+  onChange: (value: string, html?: string) => void;
   title: string;
   onTitleChange?: (value: string) => void;
   thumbnailUrl?: string | null;
@@ -319,7 +319,8 @@ const Editor = ({
     editable: !readOnly,
     onUpdate: ({ editor }) => {
       const md = editor.storage.markdown.getMarkdown();
-      onChange(md);
+      const html = editor.getHTML();
+      onChange(md, html);
     },
   });
 

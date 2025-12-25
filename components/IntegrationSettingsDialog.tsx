@@ -75,6 +75,13 @@ const platformSettings: Record<
       description: "Shopify blog ID",
     },
     {
+      key: "shop_domain",
+      label: "Shop Domain",
+      type: "text",
+      placeholder: "your-shop.myshopify.com",
+      description: "Your Shopify store domain",
+    },
+    {
       key: "blog_handle",
       label: "Blog Handle",
       type: "text",

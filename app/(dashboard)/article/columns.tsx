@@ -105,7 +105,7 @@ export const columns: ColumnDef<Article, any>[] = [
       const categories = row.getValue("categories") as string[];
       return (
         <div className="flex flex-wrap gap-2">
-          {categories.slice(0, 2).map((category) => (
+          {categories.slice(0, 1).map((category) => (
             <Badge
               key={category}
               variant="secondary"

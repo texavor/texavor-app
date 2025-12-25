@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Sheet,
   SheetContent,
@@ -91,6 +91,58 @@ export default function ConnectIntegrationSheet({
     { key: string; value: string }[]
   >([]);
 
+  // Shopify blog selection state
+  const [shopifyBlogs, setShopifyBlogs] = useState<
+    { id: string; title: string; handle: string }[]
+  >([]);
+  const [selectedBlogId, setSelectedBlogId] = useState<string>("");
+  const [isFetchingBlogs, setIsFetchingBlogs] = useState(false);
+
+  // Fetch Shopify blogs when connected and needs blog selection
+  useEffect(() => {
+    if (platform?.id === "shopify" && platform.is_connected) {
+      // Check if blog selection is needed
+      if (platform.settings?.needs_blog_selection) {
+        fetchShopifyBlogs();
+      } else if (platform.settings?.blog_id) {
+        // Already has a blog selected
+        setSelectedBlogId(platform.settings.blog_id);
+      }
+    }
+  }, [platform]);
+
+  const fetchShopifyBlogs = async () => {
+    if (!platform?.integration_id) return;
+
+    setIsFetchingBlogs(true);
+    try {
+      const blogId = (window as any).blogs?.id; // Get from store or context
+      const response = await fetch(
+        `/api/v1/blogs/${blogId}/integrations/${platform.integration_id}/shopify/blogs`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to fetch blogs");
+
+      const data = await response.json();
+      setShopifyBlogs(data.blogs || []);
+
+      // Auto-select if only one blog
+      if (data.auto_selected && data.blogs?.length === 1) {
+        setSelectedBlogId(data.blogs[0].id);
+      }
+    } catch (error) {
+      console.error("Error fetching Shopify blogs:", error);
+      toast.error("Failed to load Shopify blogs");
+    } finally {
+      setIsFetchingBlogs(false);
+    }
+  };
+
   // Reset form when platform changes and load existing settings if connected
   useEffect(() => {
     if (!platform) {
@@ -164,6 +216,7 @@ export default function ConnectIntegrationSheet({
           }
           if (platform.settings.blog_id) {
             newFormData.blog_id = platform.settings.blog_id;
+            setSelectedBlogId(platform.settings.blog_id);
           }
           if (platform.settings.blog_handle) {
             newFormData.blog_handle = platform.settings.blog_handle;
@@ -233,7 +286,59 @@ export default function ConnectIntegrationSheet({
     e.preventDefault();
     if (!platform) return;
 
-    // Special handling for Shopify OAuth
+    // For Shopify blog selection (when editing existing integration with blog selector)
+    if (
+      platform.id === "shopify" &&
+      platform.is_connected &&
+      platform.settings?.needs_blog_selection
+    ) {
+      if (!selectedBlogId) {
+        toast.error("Please select a blog");
+        return;
+      }
+
+      const selectedBlog = shopifyBlogs.find((b) => b.id === selectedBlogId);
+      if (!selectedBlog) {
+        toast.error("Please select a valid blog");
+        return;
+      }
+
+      try {
+        const blogId =
+          (window as any).blogs?.id || localStorage.getItem("currentBlogId");
+        const response = await fetch(
+          `/api/v1/blogs/${blogId}/integrations/${platform.integration_id}/shopify/settings`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              blog_id: selectedBlogId,
+              blog_handle: selectedBlog.handle,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to update blog selection");
+        }
+
+        toast.success("Blog selection updated successfully");
+        onOpenChange(false);
+        if (platform.integration_id) {
+          onSuccess(platform.integration_id);
+        }
+        return;
+      } catch (error: any) {
+        console.error("Error updating Shopify blog:", error);
+        toast.error(error.message || "Failed to update blog selection");
+        return;
+      }
+    }
+
+    // Shopify OAuth flow (for new connections)
     if (platform.id === "shopify") {
       if (!formData.shop_domain) {
         toast.error("Please enter your shop domain");
@@ -598,6 +703,56 @@ export default function ConnectIntegrationSheet({
                 Enter your Shopify store domain (e.g., yourstore.myshopify.com)
               </p>
             </div>
+
+            {/* Blog Selection - Show if connected and either needs selection or has selected blog */}
+            {platform.is_connected &&
+              (platform.settings?.needs_blog_selection ||
+                platform.settings?.blog_id) && (
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="blog_select"
+                    className="text-foreground/80 font-inter"
+                  >
+                    Shopify Blog
+                  </Label>
+                  {isFetchingBlogs ? (
+                    <div className="flex items-center gap-2 p-2 border rounded-md">
+                      <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+                      <span className="text-sm text-gray-600 font-inter">
+                        Loading blogs...
+                      </span>
+                    </div>
+                  ) : shopifyBlogs.length > 0 ? (
+                    <>
+                      <select
+                        id="blog_select"
+                        value={selectedBlogId}
+                        onChange={(e) => setSelectedBlogId(e.target.value)}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background font-inter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      >
+                        <option value="">-- Select a blog --</option>
+                        {shopifyBlogs.map((blog) => (
+                          <option key={blog.id} value={blog.id}>
+                            {blog.title} ({blog.handle})
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-[11px] text-muted-foreground">
+                        Choose which Shopify blog to publish articles to
+                      </p>
+                    </>
+                  ) : platform.settings?.blog_id ? (
+                    <div className="flex items-center gap-2 p-2 border rounded-md bg-gray-50">
+                      <p className="text-sm text-gray-700 font-inter">
+                        Current blog:{" "}
+                        {platform.settings.blog_handle ||
+                          platform.settings.blog_id}
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
+              )}
+
             <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 flex gap-2 items-start">
               <ExternalLink className="w-4 h-4 text-blue-700 mt-0.5 shrink-0" />
               <div>
@@ -785,13 +940,20 @@ export default function ConnectIntegrationSheet({
     }
   };
 
+  const computedLogoUrl = useMemo(() => {
+    if (platform?.id === "custom_webhook") {
+      return "/integration/webhook.png";
+    }
+    return platform?.logo_url;
+  }, [platform]);
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex flex-col h-full min-w-[500px] p-0 gap-0 bg-white">
         <SheetHeader className="px-6 py-4 border-b">
           <div className="flex items-center gap-4">
             <Avatar className="w-12 h-12 border rounded-xl shadow-md">
-              <AvatarImage src={platform?.logo_url} />
+              <AvatarImage src={computedLogoUrl} />
               <AvatarFallback className="text-lg font-bold">
                 {platform?.name.substring(0, 2)}
               </AvatarFallback>

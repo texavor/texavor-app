@@ -48,13 +48,34 @@ export const usePublicationsApi = (
     refetchOnMount: false, // Don't refetch when component mounts if data exists
     staleTime: 30000, // Consider data fresh for 30 seconds
     refetchInterval: (query) => {
-      // Only poll if enabled and there are publishing or pending publications
+      // Only poll if enabled
       if (!isEnabled) return false;
 
-      const hasActivePublications = query.state.data?.some(
-        (p: Publication) => p.status === "publishing" || p.status === "pending"
-      );
-      return hasActivePublications ? 5000 : false;
+      const publications = query.state.data as Publication[];
+      if (!publications) return false;
+
+      const shouldPoll = publications.some((p) => {
+        // Always poll if publishing
+        if (p.status === "publishing") return true;
+
+        // Poll if pending AND updated/attempted recently (last 2 minutes)
+        // This covers the "retry" scenario where the user just clicked retry
+        if (p.status === "pending") {
+          const lastActivity = p.attempted_at || p.published_at; // published_at tracks updated_at for pending in some APIs, or check logic
+          if (lastActivity) {
+            const timeDiff = Date.now() - new Date(lastActivity).getTime();
+            return timeDiff < 2 * 60 * 1000; // 2 minutes
+          }
+          // If no timestamp but pending, it might be brand new.
+          // But since user said "only when *I* click retry", implied active action.
+          // We'll stick to timestamp check if possible, or maybe allow if NO timestamp (fresh)
+          return false;
+        }
+
+        return false;
+      });
+
+      return shouldPoll ? 5000 : false;
     },
   });
 
@@ -75,7 +96,8 @@ export const usePublicationsApi = (
     onError: (error: any) => {
       const message =
         error?.response?.data?.error || "Failed to retry publication";
-      toast.error(message);
+      // toast.error(message);
+      console.log(message);
     },
   });
 
@@ -103,6 +125,58 @@ export const usePublicationsApi = (
     },
   });
 
+  // Unpublish article
+  const unpublishMutation = useMutation({
+    mutationFn: async (data?: {
+      integration_ids?: string[];
+      all?: boolean;
+    }) => {
+      const res = await axiosInstance.post(
+        `/api/v1/blogs/${blogId}/articles/${articleId}/unpublish`,
+        data || { all: true }
+      );
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["publications", blogId, articleId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["article", blogId],
+      });
+      toast.success("Article unpublished successfully");
+    },
+    onError: (error: any) => {
+      const message =
+        error?.response?.data?.error || "Failed to unpublish article";
+      toast.error(message);
+    },
+  });
+
+  // Update published article
+  const updatePublishedMutation = useMutation({
+    mutationFn: async () => {
+      const res = await axiosInstance.post(
+        `/api/v1/blogs/${blogId}/articles/${articleId}/update_published`
+      );
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["publications", blogId, articleId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["article", blogId],
+      });
+      toast.success("Article updated on platforms");
+    },
+    onError: (error: any) => {
+      const message =
+        error?.response?.data?.error || "Failed to update published article";
+      toast.error(message);
+    },
+  });
+
   return {
     publications: getPublications.data || [],
     isLoading: getPublications.isLoading,
@@ -113,5 +187,9 @@ export const usePublicationsApi = (
     isRetrying: retryMutation.isPending,
     publishNow: publishNowMutation.mutate,
     isPublishing: publishNowMutation.isPending,
+    unpublish: unpublishMutation.mutate,
+    isUnpublishing: unpublishMutation.isPending,
+    updatePublished: updatePublishedMutation.mutate,
+    isUpdatingPublished: updatePublishedMutation.isPending,
   };
 };

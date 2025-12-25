@@ -4,6 +4,10 @@ import { useIntegrationsApi } from "@/app/(dashboard)/integrations/hooks/useInte
 import { usePublicationsApi } from "@/app/(dashboard)/article/hooks/usePublicationsApi";
 import { fetchAuthors, Author } from "@/lib/api/authors";
 import { Checkbox } from "./ui/checkbox";
+import { CustomAlertDialog } from "./ui/CustomAlertDialog";
+import { useMutation } from "@tanstack/react-query";
+import { axiosInstance } from "@/lib/axiosInstace";
+import { toast } from "sonner";
 import React, { useState, useEffect } from "react";
 import {
   Sheet,
@@ -38,6 +42,8 @@ import {
   RefreshCw,
   Settings2,
   HelpCircle,
+  Wand2,
+  Loader2,
 } from "lucide-react";
 import {
   Tooltip,
@@ -77,8 +83,7 @@ export default function ArticleDetailsSheet({
   const [authorDropdownOpen, setAuthorDropdownOpen] = useState(false);
   const { blogs } = useAppStore();
   const { getIntegrations } = useIntegrationsApi();
-  const connectedIntegrations =
-    getIntegrations.data?.filter((p) => p.is_connected) || [];
+  const allIntegrations = getIntegrations.data || [];
 
   // Publication tracking
   const {
@@ -86,7 +91,49 @@ export default function ArticleDetailsSheet({
     isLoading: isLoadingPublications,
     retryPublication,
     refetch: refetchPublications,
+    unpublish,
+    isUnpublishing,
+    updatePublished,
+    isUpdatingPublished,
   } = usePublicationsApi(blogs?.id || "", formData?.id || "", open);
+
+  // Ensure fresh data when sheet opens
+  useEffect(() => {
+    if (open) {
+      refetchPublications();
+    }
+  }, [open, refetchPublications]);
+
+  // Alert Dialog State
+  const [alertConfig, setAlertConfig] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    variant: "default" | "destructive";
+    action: () => void;
+  }>({
+    open: false,
+    title: "",
+    description: "",
+    variant: "default",
+    action: () => {},
+  });
+
+  // Derived state
+  const isPublished = publications?.some((p) => p.status === "success");
+  const isScheduled =
+    !isPublished &&
+    formData.scheduled_at &&
+    new Date(formData.scheduled_at) > new Date();
+
+  // set publishMode based on state when sheet opens or state changes
+  useEffect(() => {
+    if (isPublished) {
+      setPublishMode("publish"); // Default to publish tab view for published
+    } else if (isScheduled) {
+      setPublishMode("schedule");
+    }
+  }, [isPublished, isScheduled, setPublishMode]);
 
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
@@ -203,6 +250,140 @@ export default function ArticleDetailsSheet({
     }
   };
 
+  const handleUnpublish = () => {
+    setAlertConfig({
+      open: true,
+      title: "Unpublish Article?",
+      description:
+        "Are you sure you want to unpublish this article? It will be reverted to draft on all platforms.",
+      variant: "destructive",
+      action: () => {
+        unpublish(undefined, {
+          onSuccess: () => {
+            onOpenChange(false);
+            setAlertConfig((prev) => ({ ...prev, open: false }));
+          },
+        });
+      },
+    });
+  };
+
+  const handleUnpublishIntegration = (integrationId: string) => {
+    setAlertConfig({
+      open: true,
+      title: "Unpublish from Platform?",
+      description:
+        "Are you sure you want to unpublish from this specific platform?",
+      variant: "destructive",
+      action: () => {
+        unpublish(
+          { integration_ids: [integrationId] },
+          {
+            onSuccess: () => {
+              setAlertConfig((prev) => ({ ...prev, open: false }));
+            },
+          }
+        );
+      },
+    });
+  };
+
+  const handleUpdatePublished = () => {
+    updatePublished(undefined, {
+      onSuccess: () => {
+        // stay open or close? usually stay open to see generic success
+        // toast handles notification
+      },
+    });
+  };
+
+  const handleCancelSchedule = () => {
+    setAlertConfig({
+      open: true,
+      title: "Cancel Schedule?",
+      description:
+        "Are you sure you want to cancel the schedule? This will revert the article to a draft.",
+      variant: "destructive",
+      action: () => {
+        setFormData((prev) => ({ ...prev, scheduled_at: null }));
+        // Save immediately as draft
+        const finalData = {
+          ...formData,
+          scheduled_at: null,
+          published_at: null,
+          platform_settings: platformSettings,
+        };
+        onSave(finalData);
+        onOpenChange(false);
+        setAlertConfig((prev) => ({ ...prev, open: false }));
+      },
+    });
+  };
+
+  // Metadata generation mutation
+  const generateMetadataMutation = useMutation({
+    mutationFn: async (targets: string[]) => {
+      if (!formData.id || !blogs?.id) return;
+
+      const response = await axiosInstance.post(
+        `/api/v1/blogs/${blogs.id}/articles/${formData.id}/generate_metadata`,
+        { targets }
+      );
+      return response.data;
+    },
+    onSuccess: (data) => {
+      if (data?.success && data?.article) {
+        setFormData((prev) => ({
+          ...prev,
+          ...(data.article.seo_description && {
+            seo_description: data.article.seo_description,
+          }),
+          ...(data.article.tags && { tags: data.article.tags }),
+        }));
+        toast.success("Generated successfully");
+      }
+    },
+    onError: () => {
+      toast.error("Failed to generate metadata");
+    },
+  });
+
+  const fillSeoTitle = () => {
+    if (formData.title) {
+      setFormData((prev) => ({ ...prev, seo_title: prev.title.slice(0, 60) }));
+    }
+  };
+
+  const generateSlug = () => {
+    if (formData.title) {
+      const slug = formData.title
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, "") // Remove special characters
+        .replace(/\s+/g, "-") // Replace spaces with hyphens
+        .replace(/-+/g, "-") // Replace multiple hyphens with single hyphen
+        .replace(/^-+|-+$/g, ""); // Remove leading/trailing hyphens
+
+      setFormData((prev) => ({ ...prev, slug }));
+    }
+  };
+
+  const generateSeoDescription = () => {
+    if (!formData.id) {
+      toast.error("Please save the article first");
+      return;
+    }
+    generateMetadataMutation.mutate(["description"]);
+  };
+
+  const generateTags = () => {
+    if (!formData.id) {
+      toast.error("Please save the article first");
+      return;
+    }
+    generateMetadataMutation.mutate(["tags"]);
+  };
+
   // Mock options for dropdowns
   const authorOptions = [
     { id: 1, name: "Author One" },
@@ -229,9 +410,24 @@ export default function ArticleDetailsSheet({
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="slug" className="text-foreground/80 font-inter">
-                  URL Slug
-                </Label>
+                <div className="flex justify-between">
+                  <Label
+                    htmlFor="slug"
+                    className="text-foreground/80 font-inter"
+                  >
+                    URL Slug
+                  </Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={generateSlug}
+                    className="h-5 px-2 text-[10px] text-[#104127] hover:text-[#0A2918] hover:bg-green-50"
+                    disabled={!formData.title}
+                  >
+                    <Wand2 className="max-h-3 max-w-3" />
+                    Generate Slug
+                  </Button>
+                </div>
                 <Input
                   id="slug"
                   name="slug"
@@ -319,12 +515,23 @@ export default function ArticleDetailsSheet({
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label
-                  htmlFor="seo_title"
-                  className="text-foreground/80 font-inter"
-                >
-                  Meta Title
-                </Label>
+                <div className="flex justify-between">
+                  <Label
+                    htmlFor="seo_title"
+                    className="text-foreground/80 font-inter"
+                  >
+                    Meta Title
+                  </Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={fillSeoTitle}
+                    className="h-5 px-2 text-[10px] text-[#104127] hover:text-[#0A2918] hover:bg-green-50"
+                    disabled={!formData.title}
+                  >
+                    Same as Title
+                  </Button>
+                </div>
                 <Input
                   id="seo_title"
                   name="seo_title"
@@ -338,12 +545,33 @@ export default function ArticleDetailsSheet({
                 </p>
               </div>
               <div className="space-y-1.5">
-                <Label
-                  htmlFor="seo_description"
-                  className="text-foreground/80 font-inter"
-                >
-                  Meta Description
-                </Label>
+                <div className="flex justify-between">
+                  <Label
+                    htmlFor="seo_description"
+                    className="text-foreground/80 font-inter"
+                  >
+                    Meta Description
+                  </Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={generateSeoDescription}
+                    className="h-5 px-2 text-[10px] text-[#104127] hover:text-[#0A2918] hover:bg-green-50"
+                    // disabled={
+                    //   !formData.content || generateMetadataMutation.isPending
+                    // }
+                  >
+                    {generateMetadataMutation.isPending &&
+                    generateMetadataMutation.variables?.includes(
+                      "description"
+                    ) ? (
+                      <Loader2 className="max-h-3 max-w-3 animate-spin" />
+                    ) : (
+                      <Wand2 className="max-h-3 max-w-3" />
+                    )}
+                    Generate
+                  </Button>
+                </div>
                 <Textarea
                   id="seo_description"
                   name="seo_description"
@@ -358,9 +586,29 @@ export default function ArticleDetailsSheet({
                 </p>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="tags" className="text-foreground/80 font-inter">
-                  Tags
-                </Label>
+                <div className="flex justify-between">
+                  <Label
+                    htmlFor="tags"
+                    className="text-foreground/80 font-inter"
+                  >
+                    Tags
+                  </Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={generateTags}
+                    className="h-5 px-2 text-[10px] text-[#104127] hover:text-[#0A2918] hover:bg-green-50"
+                    // disabled={!formData.content}
+                  >
+                    {generateMetadataMutation.isPending &&
+                    generateMetadataMutation.variables?.includes("tags") ? (
+                      <Loader2 className="max-h-3 max-w-3 animate-spin" />
+                    ) : (
+                      <Wand2 className="max-h-3 max-w-3" />
+                    )}
+                    Auto Generate
+                  </Button>
+                </div>
                 <Input
                   id="tags"
                   name="tags"
@@ -410,27 +658,29 @@ export default function ArticleDetailsSheet({
             </h3>
 
             <div className="space-y-4">
-              <Tabs
-                value={publishMode}
-                onValueChange={(v) => setPublishMode(v as PublishMode)}
-                className="w-full"
-              >
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger
-                    value="publish"
-                    className="cursor-pointer data-[state=active]:bg-[#104127] data-[state=active]:text-white"
-                  >
-                    Publish Now
-                  </TabsTrigger>
+              {!isPublished && (
+                <Tabs
+                  value={publishMode}
+                  onValueChange={(v) => setPublishMode(v as PublishMode)}
+                  className="w-full"
+                >
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger
+                      value="publish"
+                      className="cursor-pointer data-[state=active]:bg-[#104127] data-[state=active]:text-white"
+                    >
+                      Publish Now
+                    </TabsTrigger>
 
-                  <TabsTrigger
-                    value="schedule"
-                    className="cursor-pointer data-[state=active]:bg-[#104127] data-[state=active]:text-white"
-                  >
-                    Schedule
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
+                    <TabsTrigger
+                      value="schedule"
+                      className="cursor-pointer data-[state=active]:bg-[#104127] data-[state=active]:text-white"
+                    >
+                      Schedule
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              )}
 
               {publishMode === "schedule" && (
                 <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2">
@@ -494,17 +744,25 @@ export default function ArticleDetailsSheet({
                   />
                 </div>
               )}
-              {connectedIntegrations.length > 0 && (
+              {allIntegrations.length > 0 && (
                 <div className="space-y-2">
                   <Label className="text-foreground/80">Cross-Post To</Label>
                   <div className="space-y-2 rounded-md border p-3">
-                    {connectedIntegrations.map((platform) => {
+                    {allIntegrations.map((platform) => {
                       // Check if platform is selected OR has existing publications
-                      const isSelected = formData.article_publications.includes(
-                        platform.id
-                      );
+                      // Note: platform.id might be generic name (devto) or UUID depending on API response
+                      // So we check both id and integration_id against the stored values
+                      const integrationId =
+                        platform.integration_id || platform.id;
+
+                      // Skip disconnected Wordpress
+                      if (platform.id === "wordpress" && !platform.is_connected)
+                        return null;
+
+                      const isSelected =
+                        formData.article_publications.includes(integrationId);
                       const hasPublication = publications?.some(
-                        (pub) => pub.integration_id === platform.id
+                        (pub) => pub.integration_id === integrationId
                       );
                       const isChecked = isSelected || hasPublication;
 
@@ -518,8 +776,9 @@ export default function ArticleDetailsSheet({
                               id={`crosspost-${platform.id}`}
                               checked={isChecked}
                               onCheckedChange={() =>
-                                handleCrossPostChange(platform.id)
+                                handleCrossPostChange(integrationId)
                               }
+                              disabled={!platform.is_connected}
                             />
                             <Label
                               htmlFor={`crosspost-${platform.id}`}
@@ -528,17 +787,30 @@ export default function ArticleDetailsSheet({
                               {platform.name}
                             </Label>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              handlePlatformSettingsClick(platform)
-                            }
-                            className="h-7 px-2"
-                            title="Configure platform settings"
-                          >
-                            <Settings2 className="h-3.5 w-3.5" />
-                          </Button>
+                          {platform.is_connected ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                handlePlatformSettingsClick(platform)
+                              }
+                              className="h-7 px-2"
+                              title="Configure platform settings"
+                            >
+                              <Settings2 className="h-3.5 w-3.5" />
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                window.open("/integrations", "_blank")
+                              }
+                              className="h-7 px-2 text-xs"
+                            >
+                              Connect
+                            </Button>
+                          )}
                         </div>
                       );
                     })}
@@ -555,27 +827,14 @@ export default function ArticleDetailsSheet({
           <Separator />
 
           {/* Publication Status Section */}
-          {articleData?.id && (
+          {formData?.id && (
             <section className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-poppins font-medium text-[#0A2918] uppercase tracking-wider">
-                  Publication Status
-                </h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => refetchPublications()}
-                  className="h-7 px-2"
-                >
-                  <RefreshCw className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-
               <PublicationStatusList
                 publications={publications}
                 isLoading={isLoadingPublications}
                 onRetry={handleRetryPublication}
                 onRefresh={refetchPublications}
+                onUnpublish={handleUnpublishIntegration}
                 retryingId={retryingId || undefined}
               />
             </section>
@@ -584,12 +843,44 @@ export default function ArticleDetailsSheet({
 
         {/* Footer */}
         <SheetFooter className="p-6 border-t sm:justify-between bg-white gap-2">
-          <Button
-            onClick={() => handleSave("publish_or_schedule")}
-            className="min-w-[120px]"
-          >
-            {publishMode === "schedule" ? "Schedule" : "Publish Now"}
-          </Button>
+          {isPublished ? (
+            <div className="flex flex-row gap-2 w-full">
+              <Button
+                variant="destructive"
+                onClick={handleUnpublish}
+                disabled={isUnpublishing}
+                className="flex-1"
+              >
+                {isUnpublishing ? "Unpublishing..." : "Unpublish All"}
+              </Button>
+              <Button
+                onClick={handleUpdatePublished}
+                disabled={isUpdatingPublished}
+                className="bg-[#104127] hover:bg-[#0A2918] flex-1"
+              >
+                {isUpdatingPublished ? "Updating..." : "Update Published"}
+              </Button>
+            </div>
+          ) : isScheduled ? (
+            <>
+              <Button variant="outline" onClick={handleCancelSchedule}>
+                Cancel Schedule
+              </Button>
+              <Button
+                onClick={() => handleSave("publish_or_schedule")}
+                className="bg-[#104127] hover:bg-[#0A2918]"
+              >
+                Update Schedule
+              </Button>
+            </>
+          ) : (
+            <Button
+              onClick={() => handleSave("publish_or_schedule")}
+              className="w-full bg-[#104127] hover:bg-[#0A2918]"
+            >
+              {publishMode === "schedule" ? "Schedule" : "Publish Now"}
+            </Button>
+          )}
         </SheetFooter>
       </SheetContent>
 
@@ -603,6 +894,17 @@ export default function ArticleDetailsSheet({
           mode="article"
         />
       )}
+
+      <CustomAlertDialog
+        open={alertConfig.open}
+        onOpenChange={(open) => setAlertConfig((prev) => ({ ...prev, open }))}
+        title={alertConfig.title}
+        description={alertConfig.description}
+        variant={alertConfig.variant}
+        onConfirm={alertConfig.action}
+        confirmText="Confirm"
+        cancelText="Cancel"
+      />
     </Sheet>
   );
 }
