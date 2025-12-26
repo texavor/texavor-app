@@ -3,9 +3,9 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { startOfMonth, endOfMonth, format } from "date-fns";
-import { Calendar, LayoutList, ChevronDown, Plus } from "lucide-react";
+import { Calendar, LayoutList, ChevronDown, Plus, Loader2 } from "lucide-react";
 
 import { useAppStore } from "@/store/appStore";
 import { axiosInstance } from "@/lib/axiosInstace";
@@ -153,6 +153,24 @@ const ArticlePageContent = () => {
     enabled: !!blogs?.id,
   });
 
+  // --- Mutations ---
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      const res = await axiosInstance.post(
+        `/api/v1/blogs/${blogs?.id}/articles`,
+        {
+          title: "Untitled",
+          content: "",
+          source: "texavor",
+        }
+      );
+      return res.data;
+    },
+    onSuccess: (data) => {
+      router.push(`/article/${data.id}`);
+    },
+  });
+
   // --- Handlers ---
 
   const updateParams = (updates: Record<string, string | number | null>) => {
@@ -263,12 +281,18 @@ const ArticlePageContent = () => {
         </div>
 
         {role !== "viewer" && (
-          <Link href="/article/new">
-            <Button className="h-9 font-inter gap-2 shadow-sm">
+          <Button
+            className="h-9 font-inter gap-2 shadow-sm"
+            onClick={() => createMutation.mutate()}
+            disabled={createMutation.isPending}
+          >
+            {createMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
               <Plus className="h-4 w-4" />
-              Create Article
-            </Button>
-          </Link>
+            )}
+            Create Article
+          </Button>
         )}
       </div>
 

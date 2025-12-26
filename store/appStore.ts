@@ -14,9 +14,11 @@ interface AppState {
   teams: any[];
   currentTeam: any | null;
   teamMembers: any[];
+  topLoader: boolean;
   setTeams: (teams: any[]) => void;
   setCurrentTeam: (team: any) => void;
   setTeamMembers: (members: any[]) => void;
+  setTopLoader: (active: boolean) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -34,7 +36,9 @@ export const useAppStore = create<AppState>((set) => ({
   setTeams: (teams) => set({ teams }),
   setCurrentTeam: (currentTeam) => set({ currentTeam }),
   teamMembers: [],
+  topLoader: false,
   setTeamMembers: (teamMembers) => set({ teamMembers }),
+  setTopLoader: (topLoader) => set({ topLoader }),
   clear: () =>
     set({
       user: null,

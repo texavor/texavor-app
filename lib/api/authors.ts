@@ -13,6 +13,9 @@ export interface Author {
   external_platform?: string;
   created_at: string;
   updated_at: string;
+  is_default?: boolean;
+  username?: string;
+  display_name?: string;
 }
 
 export interface CreateAuthorPayload {
@@ -33,8 +36,44 @@ export interface ImportAuthorsResponse {
   errors: string[];
 }
 
+export interface FetchAuthorsResponse {
+  success: boolean;
+  authors: Author[];
+}
+
 export async function fetchAuthors(blogId: string): Promise<Author[]> {
   const response = await axiosInstance.get(`/api/v1/blogs/${blogId}/authors`);
+  return response.data.authors || response.data;
+}
+
+export async function fetchFromPlatform(
+  blogId: string,
+  integrationId: string
+): Promise<FetchAuthorsResponse> {
+  const response = await axiosInstance.post(
+    `/api/v1/blogs/${blogId}/integrations/${integrationId}/fetch_authors`
+  );
+  return response.data;
+}
+
+export async function listIntegrationAuthors(
+  blogId: string,
+  integrationId: string
+): Promise<FetchAuthorsResponse> {
+  const response = await axiosInstance.get(
+    `/api/v1/blogs/${blogId}/integrations/${integrationId}/authors`
+  );
+  return response.data;
+}
+
+export async function setDefaultAuthor(
+  blogId: string,
+  integrationId: string,
+  authorId: string
+): Promise<{ success: boolean; author: Author }> {
+  const response = await axiosInstance.patch(
+    `/api/v1/blogs/${blogId}/integrations/${integrationId}/authors/${authorId}/set_default`
+  );
   return response.data;
 }
 

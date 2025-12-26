@@ -61,6 +61,8 @@ interface ArticleDetailsSheetProps {
   // articleData prop is no longer the primary source of state, but kept for interface compatibility if needed, though likely unused for state init now.
   articleData?: ArticleDetails;
   onSave: (data: ArticleDetails) => void;
+  currentTitle?: string;
+  currentContent?: string;
 }
 
 type PublishMode = "publish" | "schedule";
@@ -70,6 +72,8 @@ export default function ArticleDetailsSheet({
   onOpenChange,
   articleData, // Unused for state now, state comes from store
   onSave,
+  currentTitle,
+  currentContent,
 }: ArticleDetailsSheetProps) {
   const {
     formData,
@@ -101,8 +105,14 @@ export default function ArticleDetailsSheet({
   useEffect(() => {
     if (open) {
       refetchPublications();
+      // Sync latest title/content from editor without saving to DB yet
+      setFormData((prev) => ({
+        ...prev,
+        title: currentTitle ?? prev.title,
+        content: currentContent ?? prev.content,
+      }));
     }
-  }, [open, refetchPublications]);
+  }, [open, refetchPublications, currentTitle, currentContent, setFormData]);
 
   // Alert Dialog State
   const [alertConfig, setAlertConfig] = useState<{
@@ -217,15 +227,9 @@ export default function ArticleDetailsSheet({
   };
 
   const handlePlatformSettingsClick = (integration: any) => {
-    // Check if it's dev.to platform
-    if (integration.platform === "devto") {
-      setCurrentPlatform(integration);
-      setPlatformSettingsDialogOpen(true);
-    } else {
-      // For other platforms, use the generic settings dialog
-      setSelectedIntegration(integration);
-      setSettingsDialogOpen(true);
-    }
+    // Start with generic settings dialog for all platforms including Dev.to
+    setSelectedIntegration(integration);
+    setSettingsDialogOpen(true);
   };
 
   const handleSavePlatformSettings = (settings: Record<string, any>) => {

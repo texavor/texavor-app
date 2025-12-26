@@ -6,7 +6,7 @@ import { AuthorsList } from "@/components/authors/AuthorsList";
 import { CreateAuthorSheet } from "@/components/authors/CreateAuthorSheet";
 import { ImportAuthorsButton } from "@/components/authors/ImportAuthorsButton";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import { useIntegrationsApi } from "@/app/(dashboard)/integrations/hooks/useIntegrationsApi";
 import { Author } from "@/lib/api/authors";
 
@@ -21,10 +21,7 @@ export default function AuthorsSettingsPage() {
     getIntegrations.data?.filter(
       (p) =>
         p.is_connected &&
-        p?.id !== "devto" &&
-        p?.id !== "hashnode" &&
-        p?.id !== "custom_webhook" &&
-        p?.id !== "shopify"
+        ["medium", "devto", "hashnode", "custom_webhook"].includes(p.id)
     ) || [];
 
   const handleSuccess = () => {
@@ -51,19 +48,10 @@ export default function AuthorsSettingsPage() {
               Authors
             </h1>
             <p className="font-inter text-gray-600">
-              Manage authors for your blog posts
+              Manage your authors and sync from connected platforms.
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {connectedIntegrations.map((integration) => (
-              <ImportAuthorsButton
-                key={integration.id}
-                blogId={blogs.id}
-                integrationId={integration.integration_id!}
-                integrationName={integration.name}
-                onSuccess={handleSuccess}
-              />
-            ))}
             <Button
               onClick={() => {
                 setEditingAuthor(null);
@@ -72,13 +60,37 @@ export default function AuthorsSettingsPage() {
               className="bg-[#104127] hover:bg-[#0A2918]"
             >
               <Plus className="mr-2 h-4 w-4" />
-              Add Author
+              Add Manual Author
             </Button>
           </div>
         </div>
+
+        {/* Unified Sync Actions */}
+        {connectedIntegrations.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-6 items-center p-3 rounded-lg border bg-gray-50/50">
+            <div className="flex items-center gap-2 mr-2">
+              <RefreshCw className="w-4 h-4 text-gray-500" />
+              <span className="text-sm font-medium text-gray-700">
+                Sync from:
+              </span>
+            </div>
+            {connectedIntegrations.map((integration) => (
+              <ImportAuthorsButton
+                key={integration.id}
+                blogId={blogs.id}
+                integrationId={integration.integration_id!}
+                integrationName={integration.name}
+                onSuccess={handleSuccess}
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs bg-white border-gray-200 hover:border-gray-300 shadow-sm"
+              />
+            ))}
+          </div>
+        )}
       </div>
 
-      <div className="mt-6">
+      <div className="mt-8">
         <AuthorsList
           blogId={blogs.id}
           onEdit={handleEdit}

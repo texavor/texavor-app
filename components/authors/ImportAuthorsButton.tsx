@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { importAuthors } from "@/lib/api/authors";
+import { fetchFromPlatform } from "@/lib/api/authors";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Loader2, Download } from "lucide-react";
@@ -9,6 +9,15 @@ interface ImportAuthorsButtonProps {
   integrationId: string;
   integrationName: string;
   onSuccess: () => void;
+  className?: string; // Manually defined
+  variant?:
+    | "ghost"
+    | "default"
+    | "outline"
+    | "secondary"
+    | "destructive"
+    | "link";
+  size?: "default" | "sm" | "lg" | "icon";
 }
 
 export function ImportAuthorsButton({
@@ -16,21 +25,21 @@ export function ImportAuthorsButton({
   integrationId,
   integrationName,
   onSuccess,
+  className,
+  variant = "ghost",
+  size = "sm",
+  ...props
 }: ImportAuthorsButtonProps) {
   const [importing, setImporting] = useState(false);
 
   const handleImport = async () => {
     setImporting(true);
     try {
-      const result = await importAuthors(blogId, integrationId);
+      const result = await fetchFromPlatform(blogId, integrationId);
 
       if (result.success) {
-        toast.success(result.message);
+        toast.success("Authors fetched successfully");
         onSuccess();
-      }
-
-      if (result.errors && result.errors.length > 0) {
-        console.error("Import errors:", result.errors);
       }
     } catch (error: any) {
       console.log(error);
@@ -41,11 +50,12 @@ export function ImportAuthorsButton({
 
   return (
     <Button
-      variant="ghost"
-      size="sm"
-      className="bg-white hover:bg-gray-50 border-0 shadow-sm"
+      variant={variant}
+      size={size}
+      className={className}
       onClick={handleImport}
       disabled={importing}
+      {...props}
     >
       {importing ? (
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />

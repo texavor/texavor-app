@@ -1,6 +1,7 @@
 "use client";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
+import { useAppStore } from "@/store/appStore";
 import Image from "next/image";
 import Link from "next/link";
 import { axiosInstance, baseURL } from "@/lib/axiosInstace";
@@ -21,9 +22,11 @@ export function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
+  const { setTopLoader } = useAppStore();
 
   async function postData(data: MyForm) {
     // Add your API endpoint here
+    setTopLoader(true);
     try {
       const res = await axiosInstance.post("/api/v1/login", {
         user: {
@@ -81,7 +84,9 @@ export function LoginContent() {
       ) {
         router.push(`/confirm-email?email=${data?.email}`);
       }
+
       console.error(error);
+      setTopLoader(false);
     }
   }
 

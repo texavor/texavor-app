@@ -13,10 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronDown } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axiosInstace";
 import { toast } from "sonner";
+import { listIntegrationAuthors, Author } from "@/lib/api/authors";
+import CustomDropdown from "@/components/ui/CustomDropdown";
+import { useAppStore } from "@/store/appStore";
 
 interface Integration {
   id: string;
@@ -181,13 +184,46 @@ export default function IntegrationSettingsDialog({
   mode = "global",
 }: IntegrationSettingsDialogProps) {
   const [formData, setFormData] = useState<Record<string, any>>({});
+  const [authors, setAuthors] = useState<Author[]>([]);
+  const [authorDropdownOpen, setAuthorDropdownOpen] = useState(false);
+  const { blogs } = useAppStore();
   const queryClient = useQueryClient();
 
   useEffect(() => {
     if (integration) {
       setFormData(integration.settings || {});
+
+      // Fetch authors if supported
+      if (
+        ["medium", "devto", "hashnode", "custom_webhook"].includes(
+          integration.platform || integration.id
+        )
+      ) {
+        if (
+          blogs?.id &&
+          (integration.id || (integration as any).integration_id)
+        ) {
+          const intId = (integration as any).integration_id || integration.id;
+          // Note: integration.id might be 'devto' if it is the static list item,
+          // but we need the actual connected integration ID.
+          // Wait, getIntegrations returns data with 'integration_id'.
+          // If this is passed from ArticleDetailsSheet, it has integration_id.
+          if ((integration as any).integration_id) {
+            listIntegrationAuthors(
+              blogs.id,
+              (integration as any).integration_id
+            )
+              .then((res) => setAuthors(res.authors || []))
+              .catch((err) =>
+                console.error("Failed to load authors for dialog", err)
+              );
+          }
+        }
+      } else {
+        setAuthors([]);
+      }
     }
-  }, [integration]);
+  }, [integration, blogs?.id]);
 
   const updateMutation = useMutation({
     mutationFn: async (settings: Record<string, any>) => {
@@ -276,8 +312,47 @@ export default function IntegrationSettingsDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4 px-4">
-          {settings.length === 0 ? (
+        <div className="space-y-4 py-4 px-4 overflow-y-visible">
+          {authors.length > 0 && (
+            <div className="space-y-2">
+              <Label className="font-inter">Publish As</Label>
+              <CustomDropdown
+                open={authorDropdownOpen}
+                onOpenChange={setAuthorDropdownOpen}
+                trigger={
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between font-normal text-left"
+                  >
+                    {authors.find(
+                      (a) =>
+                        a.id === formData.platform_author_id ||
+                        (!formData.platform_author_id && a.is_default)
+                    )?.name ||
+                      (formData.platform_author_id
+                        ? "Unknown Author"
+                        : "Default Author")}
+                    <ChevronDown className="h-4 w-4 opacity-50" />
+                  </Button>
+                }
+                options={[
+                  { id: "default_option", name: "Default Author" },
+                  ...authors,
+                ]}
+                value={formData.platform_author_id}
+                onSelect={(option: any) => {
+                  const val = option.id === "default_option" ? null : option.id;
+                  handleChange("platform_author_id", val);
+                  setAuthorDropdownOpen(false);
+                }}
+              />
+              <p className="text-xs text-gray-500">
+                Select which author profile to publish as.
+              </p>
+            </div>
+          )}
+
+          {settings.length === 0 && authors.length === 0 ? (
             <p className="text-sm text-gray-500 text-center py-4">
               No additional settings available for this platform
             </p>
@@ -327,7 +402,10 @@ export default function IntegrationSettingsDialog({
           </Button>
           <Button
             onClick={handleSave}
-            disabled={updateMutation.isPending || settings.length === 0}
+            disabled={
+              updateMutation.isPending ||
+              (settings.length === 0 && authors.length === 0)
+            }
           >
             {updateMutation.isPending ? (
               <>

@@ -61,7 +61,6 @@ export default function CreateArticlePage() {
 
   // Refs must also be called before early returns
   const isInitialLoadDone = useRef(false);
-  const isCreatingRef = useRef(false);
   // Track original fetched content to prevent unnecessary saves
   const fetchedTitleRef = useRef<string>("");
   const fetchedContentRef = useRef<string>("");
@@ -71,19 +70,15 @@ export default function CreateArticlePage() {
     setMounted(true);
   }, []);
 
-  // Redirect viewer if trying to create new article or access editor
+  // Redirect viewer if trying to access editor
   // IMPORTANT: Only redirect after permissions are loaded to avoid race condition
   useEffect(() => {
     // Don't redirect until permissions are loaded
     if (isLoadingPermissions) return;
 
-    if (isViewer) {
-      if (existingId === "new") {
-        router.push("/article");
-      } else if (existingId) {
-        // Redirect to view-only page for existing articles
-        router.push(`/article/view/${existingId}`);
-      }
+    if (isViewer && existingId) {
+      // Redirect to view-only page for existing articles
+      router.push(`/article/view/${existingId}`);
     }
   }, [isViewer, existingId, router, isLoadingPermissions]);
 
@@ -100,19 +95,13 @@ export default function CreateArticlePage() {
   const { data: fetchedArticle, isLoading } = useQuery({
     queryKey: ["article", existingId, blogs?.id],
     queryFn: async () => {
-      // Don't fetch if it's a new article
-      if (existingId === "new") {
-        isInitialLoadDone.current = true;
-        return null;
-      }
-
       const res = await axiosInstance.get(
         `/api/v1/blogs/${blogs?.id}/articles/${existingId}`
       );
       if (!res?.data) return null;
       return res.data;
     },
-    enabled: !!existingId && !!blogs?.id && existingId !== "new" && !isViewer,
+    enabled: !!existingId && !!blogs?.id && !isViewer,
     refetchOnWindowFocus: false,
   });
 
@@ -191,8 +180,6 @@ export default function CreateArticlePage() {
   const { data: fetchedInsights, isLoading: isLoadingInsights } = useQuery({
     queryKey: ["articleInsight", existingId, blogs?.id],
     queryFn: async () => {
-      if (existingId === "new") return null;
-
       try {
         const res = await axiosInstance.get(
           `/api/v1/blogs/${blogs?.id}/articles/${existingId}/article_analyses`
@@ -207,7 +194,7 @@ export default function CreateArticlePage() {
         throw error;
       }
     },
-    enabled: !!existingId && !!blogs?.id && existingId !== "new" && !isViewer,
+    enabled: !!existingId && !!blogs?.id && !isViewer,
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: (failureCount, error: any) => {
@@ -246,48 +233,6 @@ export default function CreateArticlePage() {
     refetchOnWindowFocus: false,
   });
 
-  const createMutation = useMutation({
-    mutationFn: async (payload: {
-      title: string;
-      content: string;
-      content_html?: string;
-    }) => {
-      const res = await axiosInstance.post(
-        `/api/v1/blogs/${blogs.id}/articles`,
-        {
-          title: payload?.title,
-          content: payload?.content,
-          content_html: payload?.content_html,
-          source: "texavor",
-        }
-      );
-      return res.data;
-    },
-    onSuccess: (data) => {
-      setArticleId(data); // Set the full article object
-      // Initialize store if created
-      const details: ArticleDetails = {
-        title: data.title || "",
-        content: data.content || "",
-        slug: data.slug || "",
-        canonical_url: data.canonical_url || "",
-        seo_title: data.seo_title || "",
-        seo_description: data.seo_description || "",
-        seo_keywords: data.seo_keywords || "",
-        scheduled_at: data.scheduled_at || null,
-        published_at: data.published_at || null,
-        author_id: data.author_id || null,
-        tags: data.tags || [],
-        categories: data.categories || [],
-        key_phrases: data.key_phrases || [],
-        article_publications: data.article_publications || [],
-        platform_settings: data.platform_settings || {},
-        id: data.id,
-      };
-      initializeArticleSettings(details);
-    },
-  });
-
   const updateMutation = useMutation({
     mutationFn: async (payload: any) => {
       return axiosInstance.patch(
@@ -307,45 +252,25 @@ export default function CreateArticlePage() {
 
   useEffect(() => {
     // Only block if we are expecting a specific existing article to load and it hasn't loaded yet
-    if (existingId && existingId !== "new" && !isInitialLoadDone.current)
-      return;
+    if (existingId && !isInitialLoadDone.current) return;
 
     const shouldSave =
       debouncedTitle.trim().length > 0 || debouncedContent.trim().length > 0;
     if (!shouldSave) return;
 
-    // Check if we have a real ID (from DB) or if it's still 'new' or undefined
-    const isNewArticle = !articleId?.id || articleId.id === "new";
-
-    // If it's a new article and we are already creating one, skip
-    if (isNewArticle && isCreatingRef.current) return;
-
     // For existing articles, check if content has actually changed from fetched version
-    if (!isNewArticle) {
-      const titleChanged = debouncedTitle !== fetchedTitleRef.current;
-      const contentChanged = debouncedContent !== fetchedContentRef.current;
+    const titleChanged = debouncedTitle !== fetchedTitleRef.current;
+    const contentChanged = debouncedContent !== fetchedContentRef.current;
 
-      // Don't save if nothing has changed
-      if (!titleChanged && !contentChanged) return;
+    // Don't save if nothing has changed
+    if (!titleChanged && !contentChanged) return;
 
-      // Update the refs to the new values after we decide to save
-      fetchedTitleRef.current = debouncedTitle;
-      fetchedContentRef.current = debouncedContent;
-    }
-
-    // If it's a new article, mark as creating
-    if (isNewArticle) {
-      isCreatingRef.current = true;
-    }
+    // Update the refs to the new values after we decide to save
+    fetchedTitleRef.current = debouncedTitle;
+    fetchedContentRef.current = debouncedContent;
 
     const performAutoSave = async () => {
-      try {
-        await handleManualSave();
-      } finally {
-        if (isNewArticle) {
-          isCreatingRef.current = false;
-        }
-      }
+      await handleManualSave();
     };
 
     performAutoSave();
@@ -360,7 +285,7 @@ export default function CreateArticlePage() {
     setThumbnailUrl(null);
 
     // Update article on backend to remove thumbnail
-    if (articleId?.id && articleId.id !== "new") {
+    if (articleId?.id) {
       try {
         await axiosInstance.patch(
           `/api/v1/blogs/${blogs?.id}/articles/${articleId.id}`,
@@ -381,7 +306,7 @@ export default function CreateArticlePage() {
   const toggleMetricsVisibility = () => setShowMetrics((prev) => !prev);
 
   const handleAnalyzeClick = async () => {
-    if (!articleId?.id || articleId.id === "new") return; // Cannot analyze unsaved article
+    if (!articleId?.id) return; // Cannot analyze unsaved article
 
     setIsAnalyzing(true);
 
@@ -400,25 +325,14 @@ export default function CreateArticlePage() {
     // Don't save if there's no content
     if (!title?.trim() && !content?.trim()) return;
 
-    const isNewArticle = !articleId?.id || articleId.id === "new";
-
-    if (isNewArticle) {
-      // Create new article
-      await createMutation.mutateAsync({
-        title: title || "Untitled",
+    // Update existing article
+    await updateMutation.mutateAsync({
+      article: {
+        title: title || "",
         content: content || "",
         content_html: contentHtml || "",
-      });
-    } else {
-      // Update existing article
-      await updateMutation.mutateAsync({
-        article: {
-          title: title || "",
-          content: content || "",
-          content_html: contentHtml || "",
-        },
-      });
-    }
+      },
+    });
   };
 
   // Show loading state until mounted on client
@@ -455,10 +369,10 @@ export default function CreateArticlePage() {
             onRemoveCover={handleRemoveCover}
             onSettingsClick={() => setIsDetailsSheetOpen(true)}
             onSave={handleManualSave}
-            isSaving={createMutation.isPending || updateMutation.isPending}
+            isSaving={updateMutation.isPending}
             showMetrics={showMetrics}
             onToggleMetrics={toggleMetricsVisibility}
-            isLoading={isLoading && existingId !== "new"}
+            isLoading={isLoading}
             readOnly={isViewer}
           />
         </div>
@@ -474,11 +388,7 @@ export default function CreateArticlePage() {
               insights={insights}
               savedResult={fetchedSavedResult}
               articleTitle={title}
-              articleId={
-                articleId?.id && articleId.id !== "new"
-                  ? articleId.id
-                  : undefined
-              }
+              articleId={articleId?.id ? articleId.id : undefined}
             />
           </div>
         )}

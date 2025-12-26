@@ -5,13 +5,14 @@ import { Author } from "@/lib/api/authors";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import { MoreHorizontal, Edit, Trash2, CheckCircle2 } from "lucide-react";
 import CustomDropdown from "@/components/ui/CustomDropdown";
 import { useState } from "react";
 
 export const getColumns = (
   onEdit: (author: Author) => void,
-  onDelete: (author: Author) => void
+  onDelete: (author: Author) => void,
+  onSetDefault: (author: Author) => void
 ): ColumnDef<Author>[] => [
   {
     accessorKey: "name",
@@ -26,14 +27,74 @@ export const getColumns = (
               {author.name.charAt(0)}
             </AvatarFallback>
           </Avatar>
-          <span className="font-medium text-gray-900 font-poppins">
-            {author.name}
-          </span>
+          <div className="flex flex-col">
+            <span className="font-medium text-gray-900 font-poppins">
+              {author.name}
+            </span>
+            {author.username && (
+              <span className="text-xs text-muted-foreground">
+                @{author.username}
+              </span>
+            )}
+            {author.is_default && (
+              <Badge
+                variant="default"
+                className="bg-emerald-600 hover:bg-emerald-700 capitalize font-normal px-2 py-0.5 h-4 text-[10px] w-fit mt-1"
+              >
+                Default
+              </Badge>
+            )}
+          </div>
         </div>
       );
     },
     meta: {
       width: "30%",
+    },
+  },
+  {
+    accessorKey: "external_platform",
+    header: "Platform",
+    cell: ({ row }) => {
+      const author = row.original;
+      if (!author.external_platform)
+        return <span className="text-gray-400 text-xs">-</span>;
+
+      const getPlatformLogo = (platform: string) => {
+        const p = platform.toLowerCase();
+        if (p.includes("medium")) return "/integration/medium.png";
+        if (p.includes("devto") || p.includes("dev.to"))
+          return "/integration/devto.png";
+        if (p.includes("hashnode")) return "/integration/hashnode.png";
+        if (p.includes("wordpress")) return "/integration/wordpress.png";
+        if (p.includes("shopify")) return "/integration/shopify.png";
+        if (p.includes("webflow")) return "/integration/webflow.png";
+        if (p.includes("webhook")) return "/integration/webhook.png";
+        return null; // Fallback
+      };
+
+      const logo = getPlatformLogo(author.external_platform);
+
+      return (
+        <div className="flex items-center gap-2">
+          {logo ? (
+            <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center p-1.5 border">
+              <img
+                src={logo}
+                alt={author.external_platform}
+                className="w-full h-full object-contain"
+              />
+            </div>
+          ) : (
+            <Badge variant="outline" className="capitalize">
+              {author.external_platform}
+            </Badge>
+          )}
+        </div>
+      );
+    },
+    meta: {
+      width: "15%",
     },
   },
   {
@@ -50,19 +111,11 @@ export const getColumns = (
           >
             {author.role}
           </Badge>
-          {author.external_platform && (
-            <Badge
-              variant="outline"
-              className="capitalize font-normal px-2 py-0.5 h-5 text-xs text-muted-foreground bg-gray-50"
-            >
-              {author.external_platform}
-            </Badge>
-          )}
         </div>
       );
     },
     meta: {
-      width: "20%",
+      width: "15%",
     },
   },
   {
@@ -76,7 +129,7 @@ export const getColumns = (
       );
     },
     meta: {
-      width: "40%",
+      width: "30%",
       truncate: true,
     },
   },
@@ -89,6 +142,14 @@ export const getColumns = (
       const [open, setOpen] = useState(false);
 
       const actions = [
+        author.external_platform && !author.is_default && !isOwner
+          ? {
+              id: "default",
+              name: "Set as Default",
+              icon: <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-600" />,
+              action: () => onSetDefault(author),
+            }
+          : null,
         {
           id: "edit",
           name: "Edit Author",

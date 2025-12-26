@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import ReactQueryProvider from "./ReactQueryProvider";
 import { UpgradePromptProvider } from "@/components/UpgradePromptProvider";
+import GlobalLoader from "@/components/GlobalLoader";
 // import Script from "next/script";
 
 const poppins = Poppins({
@@ -47,6 +48,7 @@ export default function RootLayout({
       <body className={`${poppins.variable} ${inter.variable} antialiased`}>
         <ReactQueryProvider>
           <UpgradePromptProvider>
+            <GlobalLoader />
             {children}
             <Toaster />
           </UpgradePromptProvider>
