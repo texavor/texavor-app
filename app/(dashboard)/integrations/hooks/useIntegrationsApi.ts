@@ -81,10 +81,30 @@ export const useIntegrationsApi = () => {
     },
   });
 
+  // 5. List Collections (Webflow specific)
+  const getCollections = (
+    integrationId: string,
+    options: { enabled?: boolean } = {}
+  ) =>
+    useQuery({
+      queryKey: ["collections", blogs?.id, integrationId],
+      queryFn: async () => {
+        const response = await axiosInstance.get(
+          `/api/v1/blogs/${blogs?.id}/integrations/${integrationId}/collections`
+        );
+        return response.data.collections as {
+          id: string;
+          display_name: string;
+        }[];
+      },
+      enabled: !!blogs?.id && !!integrationId && (options.enabled ?? true),
+    });
+
   return {
     getPlatforms,
     getIntegrations,
     connectIntegration,
     disconnectIntegration,
+    getCollections,
   };
 };

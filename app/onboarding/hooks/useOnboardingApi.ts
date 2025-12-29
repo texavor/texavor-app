@@ -10,6 +10,8 @@ export interface Platform {
   description?: string;
   is_connected?: boolean;
   integration_id?: string;
+  supports_authors?: boolean;
+  is_ready_for_authors?: boolean;
   settings?: Record<string, any>;
   platform?: string;
 }

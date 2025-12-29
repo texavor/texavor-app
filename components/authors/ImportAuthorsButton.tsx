@@ -18,6 +18,9 @@ interface ImportAuthorsButtonProps {
     | "destructive"
     | "link";
   size?: "default" | "sm" | "lg" | "icon";
+  isReady?: boolean;
+  platformId?: string;
+  children?: React.ReactNode;
 }
 
 export function ImportAuthorsButton({
@@ -28,11 +31,20 @@ export function ImportAuthorsButton({
   className,
   variant = "ghost",
   size = "sm",
+  isReady = true,
+  platformId,
+  children,
   ...props
 }: ImportAuthorsButtonProps) {
   const [importing, setImporting] = useState(false);
 
   const handleImport = async () => {
+    if (!isReady) {
+      toast.error(
+        `Please complete ${integrationName} settings to fetch authors.`
+      );
+      return;
+    }
     setImporting(true);
     try {
       const result = await fetchFromPlatform(blogId, integrationId);
@@ -62,7 +74,9 @@ export function ImportAuthorsButton({
       ) : (
         <Download className="mr-2 h-4 w-4" />
       )}
-      {importing ? "Importing..." : `Import from ${integrationName}`}
+      {importing
+        ? "Importing..."
+        : children || `Import from ${integrationName}`}
     </Button>
   );
 }

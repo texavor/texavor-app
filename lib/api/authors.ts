@@ -14,8 +14,10 @@ export interface Author {
   created_at: string;
   updated_at: string;
   is_default?: boolean;
+  platform_defaults?: string[];
   username?: string;
   display_name?: string;
+  integration_id?: string;
 }
 
 export interface CreateAuthorPayload {

@@ -146,7 +146,22 @@ export default function CreateArticlePage() {
             return p.integration?.id || p.integration_id || p.id;
           }
         ),
-        platform_settings: fetchedArticle.platform_settings || {},
+        platform_settings: {
+          ...(fetchedArticle.platform_settings || {}),
+          ...Object.fromEntries(
+            (fetchedArticle.article_publications || [])
+              .filter((p: any) => typeof p === "object" && p.platform_author_id)
+              .map((p: any) => [
+                p.integration_id || p.integration?.id,
+                {
+                  ...(fetchedArticle.platform_settings?.[
+                    p.integration_id || p.integration?.id
+                  ] || {}),
+                  platform_author_id: p.platform_author_id,
+                },
+              ])
+          ),
+        },
         id: fetchedArticle.id,
       };
 
@@ -399,9 +414,11 @@ export default function CreateArticlePage() {
         onOpenChange={setIsDetailsSheetOpen}
         currentTitle={title}
         currentContent={content}
-        onSave={(data) => {
+        onSave={(data, keepOpen) => {
           updateMutation.mutate(data);
-          setIsDetailsSheetOpen(false);
+          if (!keepOpen) {
+            setIsDetailsSheetOpen(false);
+          }
         }}
       />
 

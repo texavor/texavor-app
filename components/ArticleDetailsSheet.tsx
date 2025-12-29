@@ -60,7 +60,7 @@ interface ArticleDetailsSheetProps {
   onOpenChange: (open: boolean) => void;
   // articleData prop is no longer the primary source of state, but kept for interface compatibility if needed, though likely unused for state init now.
   articleData?: ArticleDetails;
-  onSave: (data: ArticleDetails) => void;
+  onSave: (data: ArticleDetails, keepOpen?: boolean) => void;
   currentTitle?: string;
   currentContent?: string;
 }
@@ -199,7 +199,26 @@ export default function ArticleDetailsSheet({
   };
 
   const handleSave = (action: "save_draft" | "publish_or_schedule") => {
-    const finalData = { ...formData, platform_settings: platformSettings };
+    // 8.1 Sending to EasyWrite (Frontend)
+    // Map platform settings to article_publications_attributes
+    const article_publications_attributes = (publications || [])
+      .map((pub) => {
+        const settings = platformSettings[pub.integration_id];
+        if (settings?.platform_author_id) {
+          return {
+            id: pub.id,
+            platform_author_id: settings.platform_author_id,
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
+
+    const finalData: any = {
+      ...formData,
+      platform_settings: platformSettings,
+      article_publications_attributes,
+    };
 
     if (action === "publish_or_schedule") {
       if (publishMode === "publish") {
@@ -234,13 +253,44 @@ export default function ArticleDetailsSheet({
 
   const handleSavePlatformSettings = (settings: Record<string, any>) => {
     if (selectedIntegration) {
-      setPlatformSettings((prev) => ({
-        ...prev,
-        [selectedIntegration.id]: {
-          ...(prev[selectedIntegration.id] || {}),
+      const integrationId =
+        selectedIntegration.integration_id || selectedIntegration.id;
+
+      const newPlatformSettings = {
+        ...platformSettings,
+        [integrationId]: {
+          ...(platformSettings[integrationId] || {}),
           ...settings,
         },
-      }));
+      };
+
+      setPlatformSettings(newPlatformSettings);
+
+      // Construct attributes for immediate patch
+      const article_publications_attributes = (publications || [])
+        .map((pub) => {
+          const s =
+            pub.integration_id === integrationId
+              ? settings
+              : platformSettings[pub.integration_id];
+          if (s?.platform_author_id) {
+            return {
+              id: pub.id,
+              platform_author_id: s.platform_author_id,
+            };
+          }
+          return null;
+        })
+        .filter(Boolean);
+
+      const finalData: any = {
+        ...formData,
+        platform_settings: newPlatformSettings,
+        article_publications_attributes,
+      };
+
+      // Trigger the patch call (onSave) with keepOpen=true
+      onSave(finalData, true);
     }
     setSettingsDialogOpen(false);
   };

@@ -19,7 +19,9 @@ import { axiosInstance } from "@/lib/axiosInstace";
 import { toast } from "sonner";
 import { listIntegrationAuthors, Author } from "@/lib/api/authors";
 import CustomDropdown from "@/components/ui/CustomDropdown";
+import { CustomAutocomplete } from "@/components/ui/CustomAutocomplete";
 import { useAppStore } from "@/store/appStore";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Integration {
   id: string;
@@ -195,9 +197,15 @@ export default function IntegrationSettingsDialog({
 
       // Fetch authors if supported
       if (
-        ["medium", "devto", "hashnode", "custom_webhook"].includes(
-          integration.platform || integration.id
-        )
+        [
+          "medium",
+          "devto",
+          "hashnode",
+          "custom_webhook",
+          "webflow",
+          "wordpress",
+          "shopify",
+        ].includes(integration.platform || integration.id)
       ) {
         if (
           blogs?.id &&
@@ -315,39 +323,35 @@ export default function IntegrationSettingsDialog({
         <div className="space-y-4 py-4 px-4 overflow-y-visible">
           {authors.length > 0 && (
             <div className="space-y-2">
-              <Label className="font-inter">Publish As</Label>
-              <CustomDropdown
-                open={authorDropdownOpen}
-                onOpenChange={setAuthorDropdownOpen}
-                trigger={
-                  <Button
-                    variant="outline"
-                    className="w-full justify-between font-normal text-left"
-                  >
-                    {authors.find(
-                      (a) =>
-                        a.id === formData.platform_author_id ||
-                        (!formData.platform_author_id && a.is_default)
-                    )?.name ||
-                      (formData.platform_author_id
-                        ? "Unknown Author"
-                        : "Default Author")}
-                    <ChevronDown className="h-4 w-4 opacity-50" />
-                  </Button>
-                }
+              <Label className="font-inter text-sm font-medium text-gray-700">
+                Publish As
+              </Label>
+              <CustomAutocomplete
                 options={[
                   { id: "default_option", name: "Default Author" },
-                  ...authors,
+                  ...authors.map((a) => ({
+                    ...a,
+                    id: a.external_id || a.id,
+                    icon: (
+                      <Avatar className="h-4 w-4">
+                        <AvatarImage src={a.avatar} />
+                        <AvatarFallback className="text-[8px]">
+                          {a.name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                    ),
+                  })),
                 ]}
-                value={formData.platform_author_id}
+                value={formData.platform_author_id || "default_option"}
                 onSelect={(option: any) => {
                   const val = option.id === "default_option" ? null : option.id;
                   handleChange("platform_author_id", val);
-                  setAuthorDropdownOpen(false);
                 }}
+                placeholder="Select author profile"
+                searchPlaceholder="Search authors..."
               />
-              <p className="text-xs text-gray-500">
-                Select which author profile to publish as.
+              <p className="text-[11px] text-gray-500 font-inter">
+                Select which author profile to publish as on {integration.name}.
               </p>
             </div>
           )}

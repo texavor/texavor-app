@@ -1,5 +1,10 @@
-import { useEffect, useState } from "react";
-import { Author, fetchAuthors, deleteAuthor } from "@/lib/api/authors";
+import { useEffect, useState, useMemo } from "react";
+import {
+  Author,
+  fetchAuthors,
+  deleteAuthor,
+  setDefaultAuthor,
+} from "@/lib/api/authors";
 import { toast } from "sonner";
 import { Edit2, Trash2 } from "lucide-react";
 import { CustomTable } from "@/components/ui/CustomTable";
@@ -9,12 +14,14 @@ interface AuthorsListProps {
   blogId: string;
   onEdit: (author: Author) => void;
   refreshTrigger: number;
+  integrations?: any[];
 }
 
 export function AuthorsList({
   blogId,
   onEdit,
   refreshTrigger,
+  integrations = [],
 }: AuthorsListProps) {
   const [authors, setAuthors] = useState<Author[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,33 +59,42 @@ export function AuthorsList({
   };
 
   const handleSetDefault = async (author: Author) => {
-    try {
-      // Assuming we can get integration info from author or we need to pass integration id???
-      // Wait, list authors returns all authors. We might need integration info.
-      // The author object has external_id, but not integration_id directly explicitly in interface?
-      // Ah, the API requires integrationId.
-      // NOTE: For now, we only support default toggle via the specific integration list view or we need to enrich author object.
-      // Let's assume we can't do it easily here without integration ID.
-      // BUT, the guide says "listAuthors" gets all stored authors for an integration.
-      // The current page lists ALL authors for the blog.
-      // We need to know which integration this author belongs to.
-      // Use case: User sees all authors.
-      // Actually, standard authors don't have integration_id.
-      // Only platform authors do?
-      // Check author interface in lib/api/authors.ts
-      // It has `external_platform` but not `integration_id`.
-      // We might need to fetch integration ID or store it.
-      // For now, let's just log or try to find a workaround.
+    if (!author.external_platform && !author.integration_id) {
+      toast.error("Manual authors cannot be set as platform defaults.");
+      return;
+    }
 
-      // Quick fix: The prompt asked to "Update AuthorsSettingsPage for platform-specific management".
-      // Maybe I should filter by integration?
-      // But for now, let's just leave this placeholder and maybe refactor AuthorsList to support integration filtering.
-      // Actually, I can't implement handleSetDefault fully without integration_id.
-      // Let's check updateAuthor. Can we set default via updateAuthor? No, separate endpoint.
-      // Let's skip implementing the logic inside handleSetDefault for now and just pass a dummy or specific handler if available.
-      // Wait, I can pass a prop to AuthorsList?
-      // Let's just implement the stub for now.
-      toast.info("Please go to integration settings to set default.");
+    try {
+      let integrationId = author.integration_id;
+
+      // Fallback: If integration_id is missing, try to find a matching one from the integrations list
+      if (!integrationId && author.external_platform) {
+        const platform = author.external_platform.toLowerCase();
+        // Custom Webhook might be tricky, so we handle it specifically if needed
+        const matchingIntegration = integrations.find((i) => {
+          if (platform === "webhook" || platform === "custom_webhook") {
+            return i.id === "custom_webhook";
+          }
+          return i.id === platform;
+        });
+
+        if (matchingIntegration) {
+          integrationId = matchingIntegration.integration_id;
+        }
+      }
+
+      if (!integrationId) {
+        toast.error(
+          `Could not find a connected ${author.external_platform} integration to set default.`
+        );
+        return;
+      }
+
+      const result = await setDefaultAuthor(blogId, integrationId, author.id);
+      if (result.success) {
+        toast.success(`${author.name} is now the default author.`);
+        loadAuthors();
+      }
     } catch (error) {
       console.error(error);
     }
