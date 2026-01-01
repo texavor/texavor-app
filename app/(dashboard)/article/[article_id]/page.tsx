@@ -150,16 +150,38 @@ export default function CreateArticlePage() {
           ...(fetchedArticle.platform_settings || {}),
           ...Object.fromEntries(
             (fetchedArticle.article_publications || [])
-              .filter((p: any) => typeof p === "object" && p.platform_author_id)
-              .map((p: any) => [
-                p.integration_id || p.integration?.id,
-                {
-                  ...(fetchedArticle.platform_settings?.[
-                    p.integration_id || p.integration?.id
-                  ] || {}),
-                  platform_author_id: p.platform_author_id,
-                },
-              ])
+              .filter((p: any) => typeof p === "object")
+              .map((p: any) => {
+                const integrationId = p.integration_id || p.integration?.id;
+                // Merge existing store settings, settings from DB (if any were flattened), and the new structured publication_settings
+                // The DB returns nested publication_settings: { devto: { ... } }
+                // We need to extract the relevant inner object based on platform.
+
+                // Try to find the inner settings object. It should be under the platform name key.
+                // But p.publication_settings keys might be "devto", "hashnode". Unsure of platform from just 'p' if integration is not expanded,
+                // but p usually has integration: { platform: "..." }.
+
+                const platformName =
+                  p.integration?.platform || p.integration?.id || "";
+                const normalizedPlatform = platformName
+                  .toLowerCase()
+                  .replace(/[.\s-_]/g, "");
+
+                const dbSettings =
+                  p.publication_settings?.[normalizedPlatform] ||
+                  p.publication_settings?.[platformName] ||
+                  {};
+
+                return [
+                  integrationId,
+                  {
+                    ...(fetchedArticle.platform_settings?.[integrationId] ||
+                      {}), // Legacy/Fallback
+                    ...dbSettings, // New structured settings
+                    platform_author_id: p.platform_author_id, // Ensure author overrides
+                  },
+                ];
+              })
           ),
         },
         id: fetchedArticle.id,
@@ -350,8 +372,8 @@ export default function CreateArticlePage() {
     });
   };
 
-  // Show loading state until mounted on client
-  if (!mounted) {
+  // Show loading state until mounted on client or while fetching initial data
+  if (!mounted || isLoading) {
     return (
       <div className="p-6 space-y-4">
         <Skeleton className="h-12 w-full" />
@@ -414,8 +436,10 @@ export default function CreateArticlePage() {
         onOpenChange={setIsDetailsSheetOpen}
         currentTitle={title}
         currentContent={content}
+        currentContentHtml={contentHtml}
         onSave={(data, keepOpen) => {
-          updateMutation.mutate(data);
+          // Wrapped in { article: ... } to match backend expectation
+          updateMutation.mutate({ article: data });
           if (!keepOpen) {
             setIsDetailsSheetOpen(false);
           }

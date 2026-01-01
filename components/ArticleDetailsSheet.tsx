@@ -3,6 +3,7 @@
 import { useIntegrationsApi } from "@/app/(dashboard)/integrations/hooks/useIntegrationsApi";
 import { usePublicationsApi } from "@/app/(dashboard)/article/hooks/usePublicationsApi";
 import { fetchAuthors, Author } from "@/lib/api/authors";
+import { AuthorSelector } from "@/components/integrations/AuthorSelector";
 import { Checkbox } from "./ui/checkbox";
 import { CustomAlertDialog } from "./ui/CustomAlertDialog";
 import { useMutation } from "@tanstack/react-query";
@@ -63,6 +64,7 @@ interface ArticleDetailsSheetProps {
   onSave: (data: ArticleDetails, keepOpen?: boolean) => void;
   currentTitle?: string;
   currentContent?: string;
+  currentContentHtml?: string;
 }
 
 type PublishMode = "publish" | "schedule";
@@ -74,6 +76,7 @@ export default function ArticleDetailsSheet({
   onSave,
   currentTitle,
   currentContent,
+  currentContentHtml,
 }: ArticleDetailsSheetProps) {
   const {
     formData,
@@ -110,9 +113,17 @@ export default function ArticleDetailsSheet({
         ...prev,
         title: currentTitle ?? prev.title,
         content: currentContent ?? prev.content,
+        content_html: currentContentHtml ?? prev.content_html,
       }));
     }
-  }, [open, refetchPublications, currentTitle, currentContent, setFormData]);
+  }, [
+    open,
+    refetchPublications,
+    currentTitle,
+    currentContent,
+    currentContentHtml,
+    setFormData,
+  ]);
 
   // Alert Dialog State
   const [alertConfig, setAlertConfig] = useState<{
@@ -149,6 +160,37 @@ export default function ArticleDetailsSheet({
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [selectedIntegration, setSelectedIntegration] = useState<any>(null);
   const [authors, setAuthors] = useState<Author[]>([]);
+
+  // New state for per-article author selection
+  // Map of integrationId -> platform_author_id (UUID)
+  const [selectedAuthors, setSelectedAuthors] = useState<
+    Record<string, string>
+  >({});
+
+  // Initialize selectedAuthors from existing publications
+  useEffect(() => {
+    if (publications) {
+      const initialSelection: Record<string, string> = {};
+      publications.forEach((pub) => {
+        // If the publication has a platform_author_id, it means an author was selected
+        // We use the UUID here directly
+        const pubWithAuthor = pub as any;
+        if (pubWithAuthor.platform_author_id) {
+          initialSelection[pub.integration_id] =
+            pubWithAuthor.platform_author_id;
+        }
+      });
+
+      setSelectedAuthors((prev) => {
+        const next = { ...prev, ...initialSelection };
+        // Deep compare to avoid infinite render loop if content hasn't changed
+        if (JSON.stringify(prev) === JSON.stringify(next)) {
+          return prev;
+        }
+        return next;
+      });
+    }
+  }, [publications]);
 
   // Platform-specific settings state
   const [platformSettingsDialogOpen, setPlatformSettingsDialogOpen] =
@@ -200,23 +242,67 @@ export default function ArticleDetailsSheet({
 
   const handleSave = (action: "save_draft" | "publish_or_schedule") => {
     // 8.1 Sending to EasyWrite (Frontend)
-    // Map platform settings to article_publications_attributes
-    const article_publications_attributes = (publications || [])
-      .map((pub) => {
-        const settings = platformSettings[pub.integration_id];
-        if (settings?.platform_author_id) {
-          return {
-            id: pub.id,
-            platform_author_id: settings.platform_author_id,
-          };
+    // Map selected authors to article_publications_attributes
+    // We iterate over ALL selected integrations (both existing and new)
+    const selectedIntegrationIds = formData.article_publications || [];
+
+    const article_publications_attributes = selectedIntegrationIds.map(
+      (intId: string) => {
+        // Find existing publication if any
+        const existingPub = publications?.find(
+          (p) => p.integration_id === intId
+        );
+        const authorId = selectedAuthors[intId];
+
+        const attr: any = {
+          integration_id: intId,
+        };
+
+        if (existingPub) {
+          attr.id = existingPub.id;
         }
-        return null;
-      })
-      .filter(Boolean);
+
+        if (authorId) {
+          attr.platform_author_id = authorId;
+        }
+
+        // Add publication_settings if exists in platformSettings
+        if (platformSettings[intId]) {
+          // Flatten: The store has platformSettings[intId] = { organization_id: ... }
+          // The API expects publication_settings: { [platformName]: { organization_id: ... } }
+          // We need to find the platform name.
+          const platform = allIntegrations.find(
+            (i) => (i.integration_id || i.id) === intId
+          );
+          if (platform) {
+            const platformName = platform.platform || platform.id;
+            // Normalize platform name if needed (e.g. "devto" is good, "Custom Webhook" -> "customwebhook"?)
+            // The guide says "devto", "hashnode".
+            // Let's use the raw platform name/id or normalized version?
+            // Guide uses "devto", "hashnode".
+            // Existing code in IntegrationSettingsDialog normalizes.
+            const normalizedPlatform = platformName
+              .toLowerCase()
+              .replace(/[.\s-_]/g, "");
+
+            // Special handling for Custom Webhook author_id
+            // User said: "for custom use platfor author_id rather for author"
+            // If normalizedPlatform is customwebhook, we might need to verify what is being sent.
+            // But usually the settings from dialog are already correct.
+
+            attr.publication_settings = {
+              [normalizedPlatform]: platformSettings[intId],
+            };
+          }
+        }
+
+        return attr;
+      }
+    );
 
     const finalData: any = {
       ...formData,
-      platform_settings: platformSettings,
+      // platform_settings: platformSettings, // Removed per guide, now inside attributes
       article_publications_attributes,
     };
 
@@ -247,7 +333,20 @@ export default function ArticleDetailsSheet({
 
   const handlePlatformSettingsClick = (integration: any) => {
     // Start with generic settings dialog for all platforms including Dev.to
-    setSelectedIntegration(integration);
+    // Merge existing global setting overrides for this article if any
+    const integrationId = integration.integration_id || integration.id;
+    const currentArticleSettings = platformSettings[integrationId] || {};
+
+    // Merge: Integration Global Settings (defaults) < Article Specific Settings
+    const mergedIntegration = {
+      ...integration,
+      settings: {
+        ...(integration.settings || {}),
+        ...currentArticleSettings,
+      },
+    };
+
+    setSelectedIntegration(mergedIntegration);
     setSettingsDialogOpen(true);
   };
 
@@ -267,25 +366,45 @@ export default function ArticleDetailsSheet({
       setPlatformSettings(newPlatformSettings);
 
       // Construct attributes for immediate patch
-      const article_publications_attributes = (publications || [])
-        .map((pub) => {
+      const article_publications_attributes = (publications || []).map(
+        (pub) => {
           const s =
             pub.integration_id === integrationId
               ? settings
               : platformSettings[pub.integration_id];
+
+          const attr: any = { id: pub.id };
+
           if (s?.platform_author_id) {
-            return {
-              id: pub.id,
-              platform_author_id: s.platform_author_id,
+            attr.platform_author_id = s.platform_author_id;
+          }
+
+          // Add publication_settings structure
+          const integration = allIntegrations.find(
+            (i) => (i.integration_id || i.id) === pub.integration_id
+          );
+
+          if (integration && s) {
+            const platformName = integration.platform || integration.id;
+            const normalizedPlatform = platformName
+              .toLowerCase()
+              .replace(/[.\s-_]/g, "");
+
+            // Ensure we don't send internal UI fields if we can avoid it, but 's' is the whole settings object.
+            // It's probably fine.
+            attr.publication_settings = {
+              [normalizedPlatform]: s,
             };
           }
-          return null;
-        })
-        .filter(Boolean);
+
+          return attr;
+        }
+      );
+      // .filter(Boolean); // map always returns object here
 
       const finalData: any = {
         ...formData,
-        platform_settings: newPlatformSettings,
+        // platform_settings: newPlatformSettings, // Removed per guide
         article_publications_attributes,
       };
 
@@ -821,50 +940,75 @@ export default function ArticleDetailsSheet({
                       const isChecked = isSelected || hasPublication;
 
                       return (
-                        <div
-                          key={platform.id}
-                          className="flex items-center justify-between gap-2"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`crosspost-${platform.id}`}
-                              checked={isChecked}
-                              onCheckedChange={() =>
-                                handleCrossPostChange(integrationId)
-                              }
-                              disabled={!platform.is_connected}
-                            />
-                            <Label
-                              htmlFor={`crosspost-${platform.id}`}
-                              className="font-normal cursor-pointer"
-                            >
-                              {platform.name}
-                            </Label>
+                        <div key={platform.id} className="flex flex-col gap-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`crosspost-${platform.id}`}
+                                checked={isChecked}
+                                onCheckedChange={() =>
+                                  handleCrossPostChange(integrationId)
+                                }
+                                disabled={!platform.is_connected}
+                              />
+                              <Label
+                                htmlFor={`crosspost-${platform.id}`}
+                                className="font-normal cursor-pointer"
+                              >
+                                {platform.name}
+                              </Label>
+                            </div>
+                            {platform.is_connected ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  handlePlatformSettingsClick(platform)
+                                }
+                                className="h-7 px-2"
+                                title="Configure platform settings"
+                              >
+                                <Settings2 className="h-3.5 w-3.5" />
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  window.open("/integrations", "_blank")
+                                }
+                                className="h-7 text-xs"
+                              >
+                                Connect
+                              </Button>
+                            )}
                           </div>
-                          {platform.is_connected ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                handlePlatformSettingsClick(platform)
-                              }
-                              className="h-7 px-2"
-                              title="Configure platform settings"
-                            >
-                              <Settings2 className="h-3.5 w-3.5" />
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                window.open("/integrations", "_blank")
-                              }
-                              className="h-7 px-2 text-xs"
-                            >
-                              Connect
-                            </Button>
-                          )}
+
+                          {/* Inline Author Selector - Only show if checked and supports authors */}
+                          {isChecked &&
+                            platform.is_connected &&
+                            platform.supports_authors && (
+                              <AuthorSelector
+                                blogId={blogs?.id || ""}
+                                integrationId={integrationId}
+                                selectedAuthorId={
+                                  selectedAuthors[integrationId]
+                                }
+                                onSelect={(authorId) => {
+                                  setSelectedAuthors((prev) => {
+                                    if (!authorId) {
+                                      const next = { ...prev };
+                                      delete next[integrationId];
+                                      return next;
+                                    }
+                                    return {
+                                      ...prev,
+                                      [integrationId]: authorId,
+                                    };
+                                  });
+                                }}
+                              />
+                            )}
                         </div>
                       );
                     })}

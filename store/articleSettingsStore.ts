@@ -17,6 +17,7 @@ export interface ArticleDetails {
   key_phrases: string[];
   article_publications: string[];
   platform_settings?: Record<string, any>;
+  content_html?: string;
 }
 
 interface ArticleSettingsState {

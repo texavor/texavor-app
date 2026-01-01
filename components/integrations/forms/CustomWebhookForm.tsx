@@ -48,6 +48,11 @@ const MAPPABLE_FIELDS = [
     description: "Name of the author",
   },
   {
+    label: "Author ID (External)",
+    variable: "{{author.external_id}}",
+    description: "ID of the selected platform author",
+  },
+  {
     label: "Canonical URL",
     variable: "{{canonical_url}}",
     description: "Original URL",

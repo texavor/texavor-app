@@ -1,4 +1,5 @@
 import { fetchFromPlatform } from "@/lib/api/authors";
+import { discoverIntegrationSettings } from "@/lib/api/integrations";
 import { Platform } from "@/app/onboarding/hooks/useOnboardingApi";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Lock, ExternalLink, Info } from "lucide-react";
+import { Loader2, Lock, ExternalLink, Info, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -31,6 +32,8 @@ import { WebflowForm } from "./forms/WebflowForm";
 import { ShopifyForm } from "./forms/ShopifyForm";
 import { CustomWebhookForm } from "./forms/CustomWebhookForm";
 
+import { useAppStore } from "@/store/appStore";
+
 interface ConnectIntegrationSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -46,11 +49,17 @@ export default function ConnectIntegrationSheet({
   onSuccess,
   connectMutation,
 }: ConnectIntegrationSheetProps) {
+  const { blogs } = useAppStore();
   const [formData, setFormData] = useState<any>({});
   const [mappingData, setMappingData] = useState<Record<string, string>>({});
   const [customHeaders, setCustomHeaders] = useState<
     { key: string; value: string }[]
   >([]);
+
+  // Discovery state
+  const [discoveredData, setDiscoveredData] = useState<any>(null);
+  const [isDiscovering, setIsDiscovering] = useState(false);
+  const [showDiscoveryFields, setShowDiscoveryFields] = useState(false);
 
   // Shopify blog selection state
   const [shopifyBlogs, setShopifyBlogs] = useState<
@@ -274,7 +283,11 @@ export default function ConnectIntegrationSheet({
   }, [platform]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e:
+      | React.ChangeEvent<
+          HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+        >
+      | { target: { name: string; value: any } }
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -493,10 +506,119 @@ export default function ConnectIntegrationSheet({
           payload.credentials = { ...formData };
       }
 
+      // If we are in "Discovery/Update" mode (already connected or just connected and found options)
+      if (showDiscoveryFields && platform.integration_id) {
+        try {
+          const blogId = blogs?.id || localStorage.getItem("currentBlogId");
+          if (!blogId) {
+            toast.error("Blog ID not found. Please select a blog.");
+            return;
+          }
+
+          // use the same patch endpoint as Shopify or general update
+          const settingsPayload: any = {};
+
+          if (platform.id === "devto") {
+            if (formData.organization_id)
+              settingsPayload.organization_id = formData.organization_id;
+            if (formData.series) settingsPayload.series = formData.series;
+          } else if (platform.id === "hashnode") {
+            if (formData.publication_id)
+              settingsPayload.publication_id = formData.publication_id;
+          } else if (platform.id === "webflow") {
+            if (formData.collection_id)
+              settingsPayload.collection_id = formData.collection_id;
+            if (formData.authors_collection_id)
+              settingsPayload.authors_collection_id =
+                formData.authors_collection_id;
+          }
+
+          if (Object.keys(settingsPayload).length > 0) {
+            const response = await fetch(
+              `/api/v1/blogs/${blogId}/integrations/${platform.integration_id}`,
+              {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  integration: { settings: settingsPayload },
+                }),
+              }
+            );
+
+            if (!response.ok) throw new Error("Failed to save settings");
+            toast.success("Settings saved successfully");
+          }
+
+          onSuccess(platform.integration_id);
+          onOpenChange(false);
+          return;
+        } catch (e) {
+          console.error("Failed to save settings", e);
+          toast.error("Failed to save settings");
+          return;
+        }
+      }
+
       const result = await connectMutation.mutateAsync(payload);
 
       if (result.success) {
         toast.success(`Connected to ${platform.name} successfully!`);
+
+        // Check if platform supports discovery
+        if (["devto", "hashnode", "webflow"].includes(platform.id)) {
+          try {
+            const blogId = blogs?.id || localStorage.getItem("currentBlogId");
+            // Attempt to find ID in various common locations
+            const integrationId =
+              result.integration_id || result.integration?.id || result.id;
+
+            if (blogId && integrationId) {
+              setIsDiscovering(true);
+              const discoveryResult = await discoverIntegrationSettings(
+                blogId,
+                integrationId
+              );
+
+              if (discoveryResult.success && discoveryResult.discovered) {
+                setDiscoveredData(discoveryResult.discovered);
+                setShowDiscoveryFields(true);
+
+                // Update the platform object locally to have the integration_id so we can save later
+
+                // We need to temporarily mock/update the platform ID for this component's lifecycle.
+                // Or better, use a local state for `currentIntegrationId`.
+
+                onSuccess(result.integration_id);
+                // DONT close sheet.
+
+                // Store the ID for the next "Save" pass
+                platform.integration_id = result.integration_id;
+                // Dirty hack? Yes. But standard objects in JS are references.
+                // If `platform` is from a list in parent, this might update it in memory.
+                // Better approach: Use a ref or state variable.
+
+                toast.message("Additional options fetched.");
+                return;
+              }
+            } else {
+              console.error("Missing ID for discovery:", {
+                blogId,
+                integrationId,
+              });
+              if (!blogId)
+                toast.error("Could not fetch options: Blog ID missing.");
+              if (!integrationId)
+                toast.error("Could not fetch options: Integration ID missing.");
+            }
+          } catch (err) {
+            console.error("Discovery failed", err);
+            // Fallback: just close if discovery fails?
+            toast.error("Connected, but failed to fetch options.");
+          } finally {
+            setIsDiscovering(false);
+          }
+        }
+
         onSuccess(result.integration_id);
         onOpenChange(false);
 
@@ -507,12 +629,11 @@ export default function ConnectIntegrationSheet({
           )
         ) {
           try {
-            // Retrieve blogId same way as used elsewhere in this component
-            const blogId =
-              (window as any).blogs?.id ||
-              localStorage.getItem("currentBlogId");
-            if (blogId && result.integration_id) {
-              await fetchFromPlatform(blogId, result.integration_id);
+            const blogId = blogs?.id;
+            const integrationId =
+              result.integration_id || result.integration?.id || result.id;
+            if (blogId && integrationId) {
+              await fetchFromPlatform(blogId, integrationId);
               toast.success("Authors fetched successfully");
             }
           } catch (error) {
@@ -535,15 +656,33 @@ export default function ConnectIntegrationSheet({
       case "medium":
         return <MediumForm formData={formData} handleChange={handleChange} />;
       case "devto":
-        return <DevtoForm formData={formData} handleChange={handleChange} />;
+        return (
+          <DevtoForm
+            formData={formData}
+            handleChange={handleChange}
+            discovered={discoveredData}
+          />
+        );
       case "hashnode":
-        return <HashnodeForm formData={formData} handleChange={handleChange} />;
+        return (
+          <HashnodeForm
+            formData={formData}
+            handleChange={handleChange}
+            discovered={discoveredData}
+          />
+        );
       case "wordpress":
         return (
           <WordpressForm formData={formData} handleChange={handleChange} />
         );
       case "webflow":
-        return <WebflowForm formData={formData} handleChange={handleChange} />;
+        return (
+          <WebflowForm
+            formData={formData}
+            handleChange={handleChange}
+            discovered={discoveredData}
+          />
+        );
       case "shopify":
         return (
           <>
@@ -639,6 +778,42 @@ export default function ConnectIntegrationSheet({
     return platform?.logo_url;
   }, [platform]);
 
+  const handleManualDiscovery = async () => {
+    if (
+      !platform?.integration_id ||
+      !["devto", "hashnode", "webflow"].includes(platform.id)
+    )
+      return;
+
+    setIsDiscovering(true);
+    try {
+      const blogId = blogs?.id || localStorage.getItem("currentBlogId");
+      // For existing connections, platform.integration_id is reliable
+      const integrationId = platform.integration_id;
+
+      if (blogId && integrationId) {
+        const discoveryResult = await discoverIntegrationSettings(
+          blogId,
+          integrationId
+        );
+        if (discoveryResult.success && discoveryResult.discovered) {
+          setDiscoveredData(discoveryResult.discovered);
+          setShowDiscoveryFields(true);
+          toast.success("Options refreshed successfully");
+        } else {
+          toast.info("No new options found");
+        }
+      } else {
+        toast.error("Missing ID for discovery");
+      }
+    } catch (err) {
+      console.error("Manual discovery failed", err);
+      toast.error("Failed to fetch options");
+    } finally {
+      setIsDiscovering(false);
+    }
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex flex-col h-full min-w-[500px] p-0 gap-0 bg-white">
@@ -665,9 +840,28 @@ export default function ConnectIntegrationSheet({
           {/* Connected Account Information */}
           {platform?.is_connected && platform?.settings && (
             <section className="space-y-4">
-              <h3 className="text-sm font-poppins font-medium text-[#0A2918] uppercase tracking-wider">
-                Connected Account
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-poppins font-medium text-[#0A2918] uppercase tracking-wider">
+                  Connected Account
+                </h3>
+                {/* Manual Discovery Button */}
+                {["devto", "hashnode", "webflow"].includes(platform.id) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleManualDiscovery}
+                    disabled={isDiscovering}
+                    className="h-7 text-xs"
+                  >
+                    {isDiscovering ? (
+                      <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                    ) : (
+                      <RefreshCw className="w-3 h-3 mr-1" />
+                    )}
+                    Refresh Options
+                  </Button>
+                )}
+              </div>
               <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-4">
                 <div className="flex items-start gap-4">
                   <Avatar className="w-12 h-12 border-2 border-emerald-200 shadow-sm">
@@ -797,21 +991,18 @@ export default function ConnectIntegrationSheet({
           <Button
             type="submit"
             form="connect-form"
-            disabled={connectMutation.isPending}
             className="w-full bg-[#104127] hover:bg-[#0A2918] text-white font-inter"
+            disabled={connectMutation.isPending || isDiscovering}
           >
-            {connectMutation.isPending ? (
+            {isDiscovering ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Connecting...
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Fetching options...
               </>
-            ) : platform?.id === "shopify" ? (
-              <>
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Connect Shopify Store
-              </>
+            ) : showDiscoveryFields ? (
+              "Save Settings"
             ) : (
-              "Connect Integration"
+              "Connect"
             )}
           </Button>
         </SheetFooter>

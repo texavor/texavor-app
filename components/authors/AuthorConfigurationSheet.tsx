@@ -46,6 +46,14 @@ export function AuthorConfigurationSheet({
     enabled: integration?.id === "webflow" && open,
   });
 
+  const [discoveredData, setDiscoveredData] = useState<any>(null);
+
+  useEffect(() => {
+    if (collectionsQuery.data) {
+      setDiscoveredData({ collections: collectionsQuery.data });
+    }
+  }, [collectionsQuery.data]);
+
   useEffect(() => {
     if (integration && open) {
       setFormData(integration.settings || {});
