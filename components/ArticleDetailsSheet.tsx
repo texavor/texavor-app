@@ -917,48 +917,50 @@ export default function ArticleDetailsSheet({
                   />
                 </div>
               )}
-              {allIntegrations.length > 0 && (
-                <div className="space-y-2">
-                  <Label className="text-foreground/80">Cross-Post To</Label>
-                  <div className="space-y-2 rounded-md border p-3">
-                    {allIntegrations.map((platform) => {
-                      // Check if platform is selected OR has existing publications
-                      // Note: platform.id might be generic name (devto) or UUID depending on API response
-                      // So we check both id and integration_id against the stored values
-                      const integrationId =
-                        platform.integration_id || platform.id;
+              {/* Filter connected integrations first */}
+              {(() => {
+                const connectedIntegrations = allIntegrations.filter(
+                  (i) => i.is_connected
+                );
 
-                      // Skip disconnected Wordpress
-                      if (platform.id === "wordpress" && !platform.is_connected)
-                        return null;
+                if (connectedIntegrations.length === 0) return null;
 
-                      const isSelected =
-                        formData.article_publications.includes(integrationId);
-                      const hasPublication = publications?.some(
-                        (pub) => pub.integration_id === integrationId
-                      );
-                      const isChecked = isSelected || hasPublication;
+                return (
+                  <div className="space-y-2">
+                    <Label className="text-foreground/80">Cross-Post To</Label>
+                    <div className="space-y-2 rounded-md border p-3">
+                      {connectedIntegrations.map((platform) => {
+                        const integrationId =
+                          platform.integration_id || platform.id;
 
-                      return (
-                        <div key={platform.id} className="flex flex-col gap-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`crosspost-${platform.id}`}
-                                checked={isChecked}
-                                onCheckedChange={() =>
-                                  handleCrossPostChange(integrationId)
-                                }
-                                disabled={!platform.is_connected}
-                              />
-                              <Label
-                                htmlFor={`crosspost-${platform.id}`}
-                                className="font-normal cursor-pointer"
-                              >
-                                {platform.name}
-                              </Label>
-                            </div>
-                            {platform.is_connected ? (
+                        const isSelected =
+                          formData.article_publications.includes(integrationId);
+                        const hasPublication = publications?.some(
+                          (pub) => pub.integration_id === integrationId
+                        );
+                        const isChecked = isSelected || hasPublication;
+
+                        return (
+                          <div
+                            key={platform.id}
+                            className="flex flex-col gap-1"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`crosspost-${platform.id}`}
+                                  checked={isChecked}
+                                  onCheckedChange={() =>
+                                    handleCrossPostChange(integrationId)
+                                  }
+                                />
+                                <Label
+                                  htmlFor={`crosspost-${platform.id}`}
+                                  className="font-normal cursor-pointer"
+                                >
+                                  {platform.name}
+                                </Label>
+                              </div>
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -970,24 +972,10 @@ export default function ArticleDetailsSheet({
                               >
                                 <Settings2 className="h-3.5 w-3.5" />
                               </Button>
-                            ) : (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  window.open("/integrations", "_blank")
-                                }
-                                className="h-7 text-xs"
-                              >
-                                Connect
-                              </Button>
-                            )}
-                          </div>
+                            </div>
 
-                          {/* Inline Author Selector - Only show if checked and supports authors */}
-                          {isChecked &&
-                            platform.is_connected &&
-                            platform.supports_authors && (
+                            {/* Inline Author Selector - Only show if checked and supports authors */}
+                            {isChecked && platform.supports_authors && (
                               <AuthorSelector
                                 blogId={blogs?.id || ""}
                                 integrationId={integrationId}
@@ -1009,16 +997,17 @@ export default function ArticleDetailsSheet({
                                 }}
                               />
                             )}
-                        </div>
-                      );
-                    })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Click <Settings2 className="h-3 w-3 inline" /> to
+                      customize settings per platform
+                    </p>
                   </div>
-                  <p className="text-xs text-gray-500">
-                    Click <Settings2 className="h-3 w-3 inline" /> to customize
-                    settings per platform
-                  </p>
-                </div>
-              )}
+                );
+              })()}
             </div>
           </section>
 

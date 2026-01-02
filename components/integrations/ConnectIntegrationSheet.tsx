@@ -518,10 +518,7 @@ export default function ConnectIntegrationSheet({
           // use the same patch endpoint as Shopify or general update
           const settingsPayload: any = {};
 
-          if (platform.id === "devto") {
-            if (formData.organization_id)
-              settingsPayload.organization_id = formData.organization_id;
-          } else if (platform.id === "hashnode") {
+          if (platform.id === "hashnode") {
             if (formData.publication_id)
               settingsPayload.publication_id = formData.publication_id;
           } else if (platform.id === "webflow") {
