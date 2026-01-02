@@ -102,6 +102,7 @@ export default function ArticleDetailsSheet({
     isUnpublishing,
     updatePublished,
     isUpdatingPublished,
+    publishNow,
   } = usePublicationsApi(blogs?.id || "", formData?.id || "", open);
 
   // Ensure fresh data when sheet opens
@@ -240,7 +241,7 @@ export default function ArticleDetailsSheet({
     });
   };
 
-  const handleSave = (action: "save_draft" | "publish_or_schedule") => {
+  const handleSave = async (action: "save_draft" | "publish_or_schedule") => {
     // 8.1 Sending to EasyWrite (Frontend)
     // Map selected authors to article_publications_attributes
     // We iterate over ALL selected integrations (both existing and new)
@@ -276,19 +277,10 @@ export default function ArticleDetailsSheet({
           );
           if (platform) {
             const platformName = platform.platform || platform.id;
-            // Normalize platform name if needed (e.g. "devto" is good, "Custom Webhook" -> "customwebhook"?)
-            // The guide says "devto", "hashnode".
-            // Let's use the raw platform name/id or normalized version?
-            // Guide uses "devto", "hashnode".
-            // Existing code in IntegrationSettingsDialog normalizes.
+            // Normalize platform name if needed
             const normalizedPlatform = platformName
               .toLowerCase()
               .replace(/[.\s-_]/g, "");
-
-            // Special handling for Custom Webhook author_id
-            // User said: "for custom use platfor author_id rather for author"
-            // If normalizedPlatform is customwebhook, we might need to verify what is being sent.
-            // But usually the settings from dialog are already correct.
 
             attr.publication_settings = {
               [normalizedPlatform]: platformSettings[intId],
@@ -309,19 +301,44 @@ export default function ArticleDetailsSheet({
     if (action === "publish_or_schedule") {
       if (publishMode === "publish") {
         finalData.scheduled_at = null;
-        if (!finalData.published_at)
+        if (!finalData.published_at) {
           finalData.published_at = new Date().toISOString();
-      } else {
-        finalData.published_at = null;
-        if (!finalData.scheduled_at) {
-          finalData.scheduled_at = new Date().toISOString();
         }
-        // formData.scheduled_at is already in UTC ISO format from onChange handler
+        finalData.status = "published"; // Explicitly set status
+      } else {
+        // Validation: scheduled_at must be in the future
+        if (!finalData.scheduled_at) {
+          toast.error("Please select a date and time to schedule.");
+          return;
+        }
+
+        const scheduledTime = new Date(finalData.scheduled_at).getTime();
+        const now = Date.now();
+
+        if (scheduledTime <= now) {
+          toast.error("Scheduled time must be in the future.");
+          return;
+        }
+
+        finalData.published_at = null;
+        finalData.status = "scheduled";
       }
     }
     // formData.scheduled_at is already in UTC ISO format, no conversion needed
 
-    onSave(finalData);
+    try {
+      // Step 1: Save/Update Article (Action 1)
+      // We await this to ensure DB is updated before triggering publish
+      await onSave(finalData);
+
+      // Step 2: Trigger Publication (Action 2) - Only for "Publish Now"
+      if (action === "publish_or_schedule" && publishMode === "publish") {
+        publishNow(); // Fire and forget or handle error? Hook manages toasts.
+      }
+    } catch (error) {
+      console.error("Failed to save article:", error);
+      // Toast handled by parent or mutation?
+    }
   };
 
   const handleRetryPublication = (publicationId: string) => {

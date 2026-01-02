@@ -437,9 +437,9 @@ export default function CreateArticlePage() {
         currentTitle={title}
         currentContent={content}
         currentContentHtml={contentHtml}
-        onSave={(data, keepOpen) => {
+        onSave={async (data, keepOpen) => {
           // Wrapped in { article: ... } to match backend expectation
-          updateMutation.mutate({ article: data });
+          await updateMutation.mutateAsync({ article: data });
           if (!keepOpen) {
             setIsDetailsSheetOpen(false);
           }
