@@ -67,7 +67,7 @@ export const AuthorSelector: React.FC<AuthorSelectorProps> = ({
       <CustomDropdown
         options={options}
         selectedValue={selectedAuthorId || ""}
-        onSelect={(value) => onSelect(value)}
+        onSelect={(value: any) => onSelect(value.id)}
         placeholder="Select author..."
         disabled={disabled}
         className="h-8 text-xs w-[200px]"
