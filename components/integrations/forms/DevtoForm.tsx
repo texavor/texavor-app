@@ -116,59 +116,6 @@ export function DevtoForm({
             No organizations found. Publishing to personal account.
           </p>
         )}
-
-      <div className="space-y-1.5">
-        <Label className="font-inter text-foreground/80">
-          Series (Optional)
-        </Label>
-        <Input
-          name="series"
-          list="series-options"
-          value={formData.series || ""}
-          onChange={handleChange}
-          placeholder="Series Name"
-          className="font-inter"
-        />
-        {discovered?.series && discovered.series.length > 0 && (
-          <datalist id="series-options">
-            {discovered.series.map((s: string) => (
-              <option key={s} value={s} />
-            ))}
-          </datalist>
-        )}
-        <p className="text-[11px] text-muted-foreground">
-          Enter a series name to add this article to a series.
-        </p>
-      </div>
-
-      <div className="space-y-1.5 animation-in fade-in slide-in-from-top-1">
-        <Label className="font-inter text-foreground/80">Tags (Max 4)</Label>
-        <CustomMultiSelect
-          options={discovered?.tags?.map((t) => ({ label: t, value: t })) || []}
-          selected={
-            Array.isArray(formData.tags)
-              ? formData.tags
-              : formData.tags
-              ? [formData.tags]
-              : []
-          }
-          onChange={(newTags) => {
-            // Dev.to tags are alphanumeric + underscore usually.
-            // CustomMultiSelect sanitizes? Or we sanitize here?
-            // CustomMultiSelect we wrote returns sanitized values if created.
-            handleChange({
-              target: { name: "tags", value: newTags },
-            } as any);
-          }}
-          placeholder="Select or create tags..."
-          creatable={true}
-          maxSelected={4}
-          className="font-inter"
-        />
-        <p className="text-[11px] text-muted-foreground">
-          Select up to 4 tags. Create new ones by typing and pressing Enter.
-        </p>
-      </div>
     </div>
   );
 }

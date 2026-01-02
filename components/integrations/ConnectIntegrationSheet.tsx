@@ -521,7 +521,6 @@ export default function ConnectIntegrationSheet({
           if (platform.id === "devto") {
             if (formData.organization_id)
               settingsPayload.organization_id = formData.organization_id;
-            if (formData.series) settingsPayload.series = formData.series;
           } else if (platform.id === "hashnode") {
             if (formData.publication_id)
               settingsPayload.publication_id = formData.publication_id;
