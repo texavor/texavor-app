@@ -1,0 +1,52 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e4]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - heading "Sign up" [level=1] [ref=e8]
+        - paragraph [ref=e9]: Create your account and build your authority in search.
+      - generic [ref=e10]:
+        - textbox "Enter First Name" [active] [ref=e11]
+        - textbox "Enter Last Name" [ref=e12]: Doe
+        - textbox "Enter Email" [ref=e13]: newuser@example.com
+        - generic [ref=e14]:
+          - textbox "Create Password" [ref=e15]: Password123!
+          - button "Show password" [ref=e16] [cursor=pointer]:
+            - img
+            - generic [ref=e17]: Show password
+        - generic [ref=e18]:
+          - textbox "Confirm Password" [ref=e19]: Password123!
+          - button "Show password" [ref=e20] [cursor=pointer]:
+            - img
+            - generic [ref=e21]: Show password
+        - generic [ref=e22]:
+          - checkbox "I Agree To The Terms & Privacy Policy" [checked] [ref=e23]:
+            - generic:
+              - img
+          - checkbox [checked]
+          - generic [ref=e24]:
+            - text: I Agree To The
+            - link "Terms" [ref=e25]:
+              - /url: https://www.texavor.com/terms-and-conditions
+            - text: "&"
+            - link "Privacy Policy" [ref=e26]:
+              - /url: https://www.texavor.com/privacy-policy
+        - button "Create Account" [ref=e27] [cursor=pointer]
+      - generic [ref=e32]: or sign up via
+      - link "Google Google" [ref=e34]:
+        - /url: http://localhost:3000/api/v1/auth/google_oauth2
+        - button "Google Google" [ref=e35] [cursor=pointer]:
+          - img "Google" [ref=e36]
+          - text: Google
+      - generic [ref=e37]:
+        - text: Already Have An Account?
+        - link "Login" [ref=e38]:
+          - /url: /login
+    - img "Texavor logo" [ref=e42]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e48] [cursor=pointer]:
+    - img [ref=e49]
+  - alert [ref=e54]
+```
