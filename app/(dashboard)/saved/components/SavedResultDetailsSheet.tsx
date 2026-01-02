@@ -450,9 +450,22 @@ export default function SavedResultDetailsSheet({
           )}
         </div>
 
-        <div className="p-6 border-t bg-gray-50/50 mt-auto">
+        <div className="p-6 border-t bg-gray-50/50 mt-auto flex gap-3">
+          {displayResult.result_type === "outline_generation" && (
+            <Button
+              className="flex-1 border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-gray-900 shadow-none"
+              variant="outline"
+              size="lg"
+              onClick={() =>
+                router.push(`/outline-generation/${displayResult.id}`)
+              }
+            >
+              <ListTree className="mr-2 h-4 w-4" />
+              View Generation
+            </Button>
+          )}
           <Button
-            className="w-full bg-[#104127] hover:bg-[#0d3320] text-white shadow-none"
+            className="flex-1 bg-[#104127] hover:bg-[#0d3320] text-white shadow-none"
             size="lg"
             onClick={handleGenerateValues}
             disabled={createArticleMutation.isPending}

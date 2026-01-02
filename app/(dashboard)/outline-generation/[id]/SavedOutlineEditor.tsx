@@ -2,14 +2,15 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axiosInstace";
 import { useAppStore } from "@/store/appStore";
 import { OutlineEditor } from "../components/OutlineEditor";
 import { useOutlineApi, OutlineData } from "../hooks/useOutlineApi";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, FileText, Sparkles, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 const SavedOutlineEditor = () => {
   const params = useParams();
@@ -23,6 +24,32 @@ const SavedOutlineEditor = () => {
   const [linkedArticle, setLinkedArticle] = useState<any>(null);
 
   const { updateOutline } = useOutlineApi();
+
+  // Mutation to create article from outline
+  const createArticleMutation = useMutation({
+    mutationFn: async () => {
+      if (!currentOutline || !blogs?.id) return;
+
+      const res = await axiosInstance.post(
+        `/api/v1/blogs/${blogs?.id}/articles`,
+        {
+          title: currentOutline.title || "Untitled Article",
+          content: currentOutline.meta_description || "",
+          saved_result_id: currentOutline.id,
+          source: "texavor",
+        }
+      );
+      return res.data;
+    },
+    onSuccess: (articleData) => {
+      router.push(`/article/${articleData?.id}`);
+      toast.success("Article created successfully!");
+    },
+    onError: (err) => {
+      console.error("Failed to create article", err);
+      toast.error("Failed to create article.");
+    },
+  });
 
   // Fetch saved outline
   const {
@@ -173,6 +200,48 @@ const SavedOutlineEditor = () => {
   return (
     <div className="space-y-6 w-full h-full">
       {/* Header */}
+      <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-none border-none">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push("/saved")}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-xl font-semibold font-poppins text-[#0A2918]">
+              Edit Outline
+            </h1>
+            <p className="text-sm text-gray-500 font-inter">
+              Refine your outline before generating the article
+            </p>
+          </div>
+        </div>
+
+        {linkedArticle ? (
+          <Button
+            className="bg-[#104127] hover:bg-[#0d3320] text-white shadow-none"
+            onClick={() => router.push(`/article/${linkedArticle.id}`)}
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            View Article
+          </Button>
+        ) : (
+          <Button
+            className="bg-[#104127] hover:bg-[#0d3320] text-white shadow-none"
+            onClick={() => createArticleMutation.mutate()}
+            disabled={createArticleMutation.isPending}
+          >
+            {createArticleMutation.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="mr-2 h-4 w-4" />
+            )}
+            Generate Article
+          </Button>
+        )}
+      </div>
 
       {/* Editor and Metrics Panel */}
       <div className="flex flex-col lg:flex-row gap-4">

@@ -252,13 +252,10 @@ export default function KeywordResearchClient() {
                     Competition
                   </p>
                   <p className="text-sm font-inter">
-                    {((seedData.competition || 0) * 10).toFixed(1)}/10
+                    {((seedData?.competition ?? 0) * 10).toFixed(1)}/10
                   </p>
                 </div>
-                <ScoreMeter
-                  value={(seedData.competition || 0) * 10}
-                  inverse={true}
-                />
+                <ScoreMeter value={seedData?.competition ?? 0} inverse={true} />
               </div>
 
               {/* Volume and CPC */}
