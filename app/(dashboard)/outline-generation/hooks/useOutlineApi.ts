@@ -29,6 +29,7 @@ export interface GenerateOutlineRequest {
   tone?: string;
   target_audience?: string;
   article_id?: string;
+  aeo_optimization?: boolean;
 }
 
 export const useOutlineApi = () => {

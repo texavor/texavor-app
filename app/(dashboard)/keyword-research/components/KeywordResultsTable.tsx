@@ -4,8 +4,25 @@ import { ColumnDef, Column } from "@tanstack/react-table";
 import { CustomTable } from "@/components/ui/CustomTable";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowDown, ArrowUp, ArrowUpDown, Bookmark } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Bookmark,
+  Info,
+  Sparkles,
+  Brain,
+  Bot,
+  Search,
+  MessageSquare,
+} from "lucide-react";
 import { useState } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export type KeywordData = {
   term: string;
@@ -14,11 +31,14 @@ export type KeywordData = {
   cpc?: number;
   competition?: number;
   difficulty?: number;
+  ai_visibility_score?: number;
+  geo_score?: number;
+  type?: "google_question" | "ai_prediction" | "prompt_seed";
 };
 
 interface KeywordResultsTableProps {
   data: KeywordData[];
-  mode: "basic" | "detailed";
+  mode: "basic" | "detailed" | "prompt";
   isLoading: boolean;
   onSave?: (term: string, data: KeywordData) => void;
   onGenerateTopic?: (term: string) => void;
@@ -65,6 +85,85 @@ const SortableHeader = ({
       )}
     </Button>
   );
+};
+
+export const AiVisibilityScore = ({ score }: { score?: number }) => {
+  if (score === undefined || score === null)
+    return <span className="text-gray-400">-</span>;
+
+  let color = "bg-gray-100 text-gray-500";
+  let icon = <Bot className="h-3.5 w-3.5" />;
+  let label = "Traditional SEO";
+
+  if (score >= 8) {
+    color = "bg-green-100 text-green-700";
+    icon = <Sparkles className="h-3.5 w-3.5" />;
+    label = "AI Optimized";
+  } else if (score >= 5) {
+    color = "bg-yellow-100 text-yellow-700";
+    icon = <Brain className="h-3.5 w-3.5" />;
+    label = "AI Friendly";
+  }
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div
+            className={`flex items-center gap-2 px-2.5 py-1 rounded-full w-fit ${color}`}
+          >
+            {icon}
+            <span className="text-xs font-semibold whitespace-nowrap">
+              {label} <span className="opacity-75">({score}/10)</span>
+            </span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs p-3">
+          <p className="font-semibold mb-1">AI Visibility Score: {score}/10</p>
+          <p className="text-xs text-gray-300">
+            This score measures how likely an LLM (like ChatGPT) is to use your
+            content as a direct answer. High scores mean the topic is specific,
+            question-based, and educational.
+          </p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+};
+
+export const PromptTypeBadge = ({ type }: { type?: string }) => {
+  if (!type) return null;
+
+  if (type === "google_question") {
+    return (
+      <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-none shadow-none flex items-center gap-1 w-fit">
+        <Search className="h-3 w-3" />
+        Human Search
+      </Badge>
+    );
+  }
+
+  if (type === "ai_prediction") {
+    return (
+      <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 border-none shadow-none flex items-center gap-1 w-fit">
+        <Sparkles className="h-3 w-3" />
+        AI Prompt
+      </Badge>
+    );
+  }
+
+  if (type === "prompt_seed") {
+    return (
+      <Badge
+        variant="outline"
+        className="text-gray-500 border-gray-200 shadow-none"
+      >
+        Seed
+      </Badge>
+    );
+  }
+
+  return <Badge variant="secondary">{type}</Badge>;
 };
 
 export const KeywordResultsTable = ({
@@ -162,6 +261,31 @@ export const KeywordResultsTable = ({
         </Badge>
       ),
     },
+    {
+      accessorKey: "ai_visibility_score",
+      header: ({ column }) => (
+        <SortableHeader column={column}>
+          <div className="flex items-center gap-1">
+            AI Visibility
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info className="h-3 w-3 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>How well this keyword targets AI Search Engines</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </SortableHeader>
+      ),
+      cell: ({ row }) => {
+        return (
+          <AiVisibilityScore score={row.getValue("ai_visibility_score")} />
+        );
+      },
+    },
     actionsColumn,
   ];
 
@@ -226,12 +350,91 @@ export const KeywordResultsTable = ({
         );
       },
     },
+    {
+      accessorKey: "ai_visibility_score",
+      header: ({ column }) => (
+        <SortableHeader column={column}>
+          <div className="flex items-center gap-1">
+            AI Visibility
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info className="h-3 w-3 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>How well this keyword targets AI Search Engines</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </SortableHeader>
+      ),
+      cell: ({ row }) => {
+        return (
+          <AiVisibilityScore score={row.getValue("ai_visibility_score")} />
+        );
+      },
+    },
+    actionsColumn,
+  ];
+
+  const promptColumns: ColumnDef<KeywordData>[] = [
+    {
+      accessorKey: "term",
+      header: "Prompt / Question",
+      cell: ({ row }) => (
+        <div className="flex flex-col gap-1 py-1 max-w-[400px]">
+          <span
+            className="font-normal text-[#09090B] text-base truncate"
+            title={row.getValue("term")}
+          >
+            {row.getValue("term")}
+          </span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "type",
+      header: "Type",
+      cell: ({ row }) => <PromptTypeBadge type={row.original.type} />,
+    },
+    {
+      accessorKey: "ai_visibility_score",
+      header: ({ column }) => (
+        <SortableHeader column={column}>
+          <div className="flex items-center gap-1">
+            AI Visibility
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info className="h-3 w-3 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>How well this keyword targets AI Search Engines</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </SortableHeader>
+      ),
+      cell: ({ row }) => {
+        return (
+          <AiVisibilityScore score={row.getValue("ai_visibility_score")} />
+        );
+      },
+    },
     actionsColumn,
   ];
 
   return (
     <CustomTable
-      columns={mode === "basic" ? basicColumns : detailedColumns}
+      columns={
+        mode === "detailed"
+          ? detailedColumns
+          : mode === "prompt"
+          ? promptColumns
+          : basicColumns
+      }
       data={data}
       isLoading={isLoading}
       onClick={() => {}}

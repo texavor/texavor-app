@@ -22,6 +22,7 @@ export interface LatestAnalysis {
   seo: SeoAnalysis;
   topics: TopicsAnalysis;
   keywords: KeywordsAnalysis;
+  llm_share_of_voice?: number;
 }
 
 export interface Analysis {
@@ -38,6 +39,7 @@ export interface Analysis {
   content_quality_score?: number;
   seo_score?: number;
   overall_score?: number;
+  llm_share_of_voice?: number;
   recommendations?: Recommendation[];
 }
 

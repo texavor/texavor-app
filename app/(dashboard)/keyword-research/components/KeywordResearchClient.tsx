@@ -3,9 +3,13 @@
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Loader2, Zap, Database, BarChart3 } from "lucide-react";
+import { Search, Loader2, Zap, Database, BarChart3, Bot } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { KeywordResultsTable, KeywordData } from "./KeywordResultsTable";
+import {
+  KeywordResultsTable,
+  KeywordData,
+  AiVisibilityScore,
+} from "./KeywordResultsTable";
 import { toast } from "sonner";
 import { axiosInstance } from "@/lib/axiosInstace";
 import { useAppStore } from "@/store/appStore";
@@ -27,10 +31,10 @@ export default function KeywordResearchClient() {
   const queryClient = useQueryClient();
   const { saveResult } = useSavedResultsApi();
   const [query, setQuery] = useState("");
-  const [mode, setMode] = useState<"basic" | "detailed">("basic");
-  const [searchedMode, setSearchedMode] = useState<"basic" | "detailed">(
-    "basic"
-  );
+  const [mode, setMode] = useState<"basic" | "detailed" | "prompt">("basic");
+  const [searchedMode, setSearchedMode] = useState<
+    "basic" | "detailed" | "prompt"
+  >("basic");
   const [results, setResults] = useState<KeywordData[]>([]);
   const [seedData, setSeedData] = useState<KeywordData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -128,10 +132,13 @@ export default function KeywordResearchClient() {
               />
             </div>
 
-            <div className="flex gap-2 w-full sm:w-auto items-center">
+            <div className="flex gap-2 w-full sm:w-auto items-center h-10">
               <CustomTabs
+                compact={true}
                 value={mode}
-                onValueChange={(val) => setMode(val as "basic" | "detailed")}
+                onValueChange={(val) =>
+                  setMode(val as "basic" | "detailed" | "prompt")
+                }
                 items={[
                   {
                     value: "basic",
@@ -142,6 +149,11 @@ export default function KeywordResearchClient() {
                     value: "detailed",
                     label: "Detailed",
                     icon: <Database className="h-3.5 w-3.5" />,
+                  },
+                  {
+                    value: "prompt",
+                    label: "Prompt Research",
+                    icon: <Bot className="h-3.5 w-3.5" />,
                   },
                 ]}
               />
@@ -256,6 +268,18 @@ export default function KeywordResearchClient() {
                   </p>
                 </div>
                 <ScoreMeter value={seedData?.competition ?? 0} inverse={true} />
+              </div>
+
+              {/* AI Visibility Score */}
+              <div className="space-y-1 pt-2 border-t mt-4">
+                <div className="flex justify-between items-center mb-2">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-black font-poppins">
+                      AI Visibility
+                    </p>
+                    <AiVisibilityScore score={seedData?.ai_visibility_score} />
+                  </div>
+                </div>
               </div>
 
               {/* Volume and CPC */}

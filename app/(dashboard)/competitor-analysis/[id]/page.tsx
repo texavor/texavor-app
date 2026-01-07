@@ -490,7 +490,10 @@ export default function CompetitorDetailPage() {
           <Skeleton className="h-[400px] w-full rounded-xl" />
         </div>
       ) : fullAnalysis ? (
-        <CompetitorAnalysisDetail analysis={fullAnalysis} />
+        <CompetitorAnalysisDetail
+          analysis={fullAnalysis}
+          analysesHistory={analyses}
+        />
       ) : (
         <div className="text-center py-16 rounded-xl bg-muted/10">
           <div className="mx-auto max-w-md space-y-3">

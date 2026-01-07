@@ -18,15 +18,24 @@ import { cn } from "@/lib/utils";
 import { CustomTable } from "@/components/ui/CustomTable";
 import { articleColumns } from "./article-columns";
 import RecommendationsList from "./RecommendationsList";
+import { LLMAuthorityGauge } from "./LLMAuthorityGauge";
+import { AIAuthorityChart } from "./AIAuthorityChart";
 
 interface CompetitorAnalysisDetailProps {
   analysis: Analysis;
+  analysesHistory?: Analysis[];
 }
 
-type TabType = "content" | "seo" | "topics" | "recommendations";
+type TabType =
+  | "content"
+  | "seo"
+  | "topics"
+  | "recommendations"
+  | "ai_authority";
 
 export default function CompetitorAnalysisDetail({
   analysis,
+  analysesHistory = [],
 }: CompetitorAnalysisDetailProps) {
   const {
     content_analysis,
@@ -43,7 +52,9 @@ export default function CompetitorAnalysisDetail({
   return (
     <div className="space-y-6">
       {/* Overview Cards - Dashboard Style */}
+      {/* Overview Cards - Dashboard Style */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {/* Content Score Card */}
         <Card className="border-none shadow-none p-2">
           <CardContent className="flex items-start justify-between p-0">
             <div className="flex gap-4 items-center">
@@ -84,44 +95,7 @@ export default function CompetitorAnalysisDetail({
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-none p-2">
-          <CardContent className="flex items-start justify-between p-0">
-            <div className="flex gap-4 items-center">
-              <div
-                className={cn(
-                  "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
-                  (seo_score || 0) >= 70
-                    ? "bg-green-100"
-                    : (seo_score || 0) >= 40
-                    ? "bg-orange-100"
-                    : "bg-red-100"
-                )}
-              >
-                <div
-                  className={cn(
-                    "w-6 h-6",
-                    (seo_score || 0) >= 70
-                      ? "text-green-600"
-                      : (seo_score || 0) >= 40
-                      ? "text-orange-600"
-                      : "text-red-600"
-                  )}
-                >
-                  <Globe className="w-full h-full" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-[#7A7A7A] font-poppins">
-                  SEO Score
-                </p>
-                <h3 className="text-2xl font-semibold text-[#0A2918] font-poppins">
-                  {seo_score ? seo_score.toFixed(1) : "N/A"}
-                </h3>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
+        {/* Overall Score Card */}
         <Card className="border-none shadow-none p-2">
           <CardContent className="flex items-start justify-between p-0">
             <div className="flex gap-4 items-center">
@@ -160,6 +134,46 @@ export default function CompetitorAnalysisDetail({
           </CardContent>
         </Card>
 
+        {/* SEO Score Card */}
+        <Card className="border-none shadow-none p-2">
+          <CardContent className="flex items-start justify-between p-0">
+            <div className="flex gap-4 items-center">
+              <div
+                className={cn(
+                  "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
+                  (seo_score || 0) >= 70
+                    ? "bg-green-100"
+                    : (seo_score || 0) >= 40
+                    ? "bg-orange-100"
+                    : "bg-red-100"
+                )}
+              >
+                <div
+                  className={cn(
+                    "w-6 h-6",
+                    (seo_score || 0) >= 70
+                      ? "text-green-600"
+                      : (seo_score || 0) >= 40
+                      ? "text-orange-600"
+                      : "text-red-600"
+                  )}
+                >
+                  <Globe className="w-full h-full" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-[#7A7A7A] font-poppins">
+                  SEO Score
+                </p>
+                <h3 className="text-2xl font-semibold text-[#0A2918] font-poppins">
+                  {seo_score ? seo_score.toFixed(1) : "N/A"}
+                </h3>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* New Articles Card */}
         <Card className="border-none shadow-none p-2">
           <CardContent className="flex items-start justify-between p-0">
             <div className="flex gap-4 items-center">
@@ -215,6 +229,13 @@ export default function CompetitorAnalysisDetail({
           className="border-none"
         >
           Recommendations
+        </Button>
+        <Button
+          variant={activeTab === "ai_authority" ? "default" : "outline"}
+          onClick={() => setActiveTab("ai_authority")}
+          className="border-none"
+        >
+          AI Authority
         </Button>
       </div>
 
@@ -510,6 +531,28 @@ export default function CompetitorAnalysisDetail({
           <RecommendationsList
             recommendations={analysis.recommendations || []}
           />
+        </div>
+      )}
+
+      {activeTab === "ai_authority" && (
+        <div className="space-y-4">
+          <Card className="border-none shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle>AI Brand Authority Analysis</CardTitle>
+              <LLMAuthorityGauge score={analysis.llm_share_of_voice} />
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col items-center justify-center py-4 space-y-4">
+                <p className="text-center text-muted-foreground max-w-md">
+                  This score represents how authoritative major Large Language
+                  Models (LLMs) consider this brand in its niche.
+                </p>
+                <div className="w-full max-w-3xl px-4">
+                  <AIAuthorityChart data={analysesHistory} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>

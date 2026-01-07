@@ -53,10 +53,13 @@ function OutlineGenerationContent() {
     }
   }, [outlineId, topicParam]);
 
-  const handleGenerate = (data: { topic: string }) => {
+  const handleGenerate = (data: {
+    topic: string;
+    aeo_optimization: boolean;
+  }) => {
     setPrefilledTopic(data.topic);
     generateOutline.mutate(
-      { topic: data.topic },
+      { topic: data.topic, aeo_optimization: data.aeo_optimization },
       {
         onSuccess: (data) => {
           setCurrentOutline(data);
@@ -109,7 +112,9 @@ function OutlineGenerationContent() {
         <div className="w-full lg:w-4/12">
           <RecentSearches
             type="outline_generation"
-            onSelect={(topic) => handleGenerate({ topic })}
+            onSelect={(topic) =>
+              handleGenerate({ topic, aeo_optimization: false })
+            }
           />
         </div>
       </div>

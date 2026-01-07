@@ -10,6 +10,13 @@ export interface TabItem {
   icon?: React.ReactNode;
 }
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 interface CustomTabsProps {
   items: TabItem[];
   value: string;
@@ -17,6 +24,7 @@ interface CustomTabsProps {
   className?: string;
   listClassName?: string;
   triggerClassName?: string;
+  compact?: boolean;
 }
 
 export function CustomTabs({
@@ -26,6 +34,7 @@ export function CustomTabs({
   className,
   listClassName,
   triggerClassName,
+  compact = false,
 }: CustomTabsProps) {
   return (
     <Tabs
@@ -35,25 +44,54 @@ export function CustomTabs({
     >
       <TabsList
         className={cn(
-          "bg-gray-100/80 p-1 rounded-lg h-auto border border-gray-200/50 gap-1",
+          "bg-gray-100/80 p-1 rounded-lg border border-gray-200/50 gap-1",
+          compact ? "h-10 items-center bg-white" : "h-auto",
           listClassName
         )}
       >
-        {items.map((item) => (
-          <TabsTrigger
-            key={item.value}
-            value={item.value}
-            className={cn(
-              "cursor-pointer rounded-md px-4 py-2 text-sm font-medium transition-all",
-              "data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-sm",
-              "text-gray-500 hover:text-gray-900",
-              triggerClassName
-            )}
-          >
-            {item.icon && <span className="mr-2 h-4 w-4">{item.icon}</span>}
-            {item.label}
-          </TabsTrigger>
-        ))}
+        {items.map((item) => {
+          const isActive = value === item.value;
+          const content = (
+            <TabsTrigger
+              key={item.value}
+              value={item.value}
+              className={cn(
+                "cursor-pointer font-medium transition-all flex items-center justify-center",
+                compact
+                  ? cn(
+                      "rounded-md p-0 h-8 w-8 border border-transparent hover:bg-gray-100",
+                      isActive
+                        ? "bg-[#104127] text-white shadow-md hover:bg-[#104127]"
+                        : "bg-transparent text-gray-500"
+                    )
+                  : "rounded-md px-4 py-2 text-sm text-gray-500 hover:text-gray-900 data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:shadow-sm",
+                triggerClassName
+              )}
+            >
+              {item.icon && (
+                <span className={cn(compact ? "h-4 w-4" : "mr-2 h-4 w-4")}>
+                  {item.icon}
+                </span>
+              )}
+              {!compact && item.label}
+            </TabsTrigger>
+          );
+
+          if (compact) {
+            return (
+              <TooltipProvider key={item.value}>
+                <Tooltip delayDuration={300}>
+                  <TooltipTrigger asChild>{content}</TooltipTrigger>
+                  <TooltipContent>
+                    <p>{item.label}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            );
+          }
+
+          return content;
+        })}
       </TabsList>
     </Tabs>
   );
