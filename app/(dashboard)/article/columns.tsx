@@ -19,6 +19,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import CustomDropdown from "@/components/ui/CustomDropdown";
+import { FreshnessScoreBadge } from "./components/FreshnessScoreBadge";
 import { useState } from "react";
 import { format } from "date-fns";
 
@@ -40,6 +41,9 @@ export interface Article {
   status: string;
   source?: string;
   blog_id: string;
+  freshness_score?: number | null;
+  decay_risk?: number | null;
+  needs_freshness_update?: boolean | null;
 }
 
 import { Column, ColumnDef } from "@tanstack/react-table";
@@ -179,6 +183,14 @@ export const columns: ColumnDef<Article, any>[] = [
     },
     meta: {
       width: "20%",
+    },
+  },
+  {
+    accessorKey: "freshness_score",
+    header: "Freshness",
+    cell: ({ row }) => <FreshnessScoreBadge article={row.original} />,
+    meta: {
+      width: "15%",
     },
   },
   {

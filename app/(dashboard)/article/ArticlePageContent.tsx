@@ -35,6 +35,9 @@ interface Article {
   status: string;
   published_at?: string;
   source?: string;
+  freshness_score?: number | null;
+  decay_risk?: number | null;
+  needs_freshness_update?: boolean | null;
 }
 
 interface Pagination {
