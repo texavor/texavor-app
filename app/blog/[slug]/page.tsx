@@ -46,7 +46,7 @@ const marked = new Marked(
       const language = hljs.getLanguage(lang) ? lang : "plaintext";
       return hljs.highlight(code, { language }).value;
     },
-  }),
+  })
 );
 
 // This function now runs at BUILD TIME for each slug
@@ -54,7 +54,7 @@ async function getArticleData(slug: string): Promise<ArticleData | null> {
   try {
     const axiosInstance = getServerAxiosInstance();
     const response = await axiosInstance.get(
-      `${baseURL}/easywrite_articles/${slug}`,
+      `${baseURL}/easywrite_articles/${slug}`
     );
     return response.data;
   } catch (error) {
@@ -127,7 +127,7 @@ export default async function ArticlePage({
     return (
       <>
         <div className="container mx-auto flex justify-center lg:w-[1200px] md:w-8/12 w-11/12 mt-10 lg:mt-28">
-          <img src="/article_not_found.png" className="md:size-[500px]" />
+          <img src="/empty-state.png" className="md:size-[500px]" />
         </div>
         <div className="container mx-auto flex justify-center lg:w-[1200px] md:w-8/12 w-11/12 mt-10 lg:mt-28">
           <Link href="/" className="flex items-center gap-2">

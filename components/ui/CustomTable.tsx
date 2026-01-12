@@ -132,7 +132,7 @@ export function CustomTable<TData, TValue>({
                   <TableCell colSpan={columns.length} className="text-center">
                     <div className="flex justify-center">
                       <Image
-                        src="/not_data.png"
+                        src="/empty-state.png"
                         alt="No Data"
                         height={300}
                         width={300}

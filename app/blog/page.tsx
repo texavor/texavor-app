@@ -56,7 +56,7 @@ export default async function ArticleListPage() {
         {articleData?.length === 0 ? (
           <div className="w-full justify-center flex">
             <Image
-              src="/not_found_article.png"
+              src="/empty-state.png"
               alt="not_found"
               width={500}
               height={500}
