@@ -1,4 +1,10 @@
-"use client";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Competitor Analysis",
+};
+
+("use client");
 
 import { useEffect, useState, useRef } from "react";
 import { useAppStore } from "@/store/appStore";

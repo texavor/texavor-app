@@ -1,7 +1,12 @@
 // app/articles/page.tsx
 
 import React from "react";
+import { Metadata } from "next";
 import { baseURL } from "@/lib/axiosInstace";
+
+export const metadata: Metadata = {
+  title: "Blog",
+};
 import PageTransition from "@/components/PageTransition";
 import Image from "next/image";
 

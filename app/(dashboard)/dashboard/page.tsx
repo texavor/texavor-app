@@ -1,7 +1,10 @@
-"use client";
-
 import React from "react";
+import { Metadata } from "next";
 import { useQuery } from "@tanstack/react-query";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+};
 import { axiosInstance } from "@/lib/axiosInstace";
 import { useAppStore } from "@/store/appStore";
 import { Button } from "@/components/ui/button";
