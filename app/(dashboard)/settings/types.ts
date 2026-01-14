@@ -122,7 +122,7 @@ export interface SubscriptionUsagePercentages {
 
 export interface Subscription {
   tier: "trial" | "starter" | "professional" | "business";
-  status: "active" | "inactive" | "trial" | "canceled" | "trialing";
+  status: "active" | "inactive" | "trial" | "canceled" | "on_trial";
   subscription_details: SubscriptionDetails | null;
   limits: SubscriptionLimits;
   usage: SubscriptionUsageData;

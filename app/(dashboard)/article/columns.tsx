@@ -22,6 +22,7 @@ import CustomDropdown from "@/components/ui/CustomDropdown";
 import { FreshnessScoreBadge } from "./components/FreshnessScoreBadge";
 import { useState } from "react";
 import { format } from "date-fns";
+import { CustomAlertDialog } from "@/components/ui/CustomAlertDialog";
 
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends unknown, TValue> {
@@ -203,6 +204,8 @@ export const columns: ColumnDef<Article, any>[] = [
       const router = useRouter();
       const isFetched = article.source === "fetched";
 
+      const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
       const handleDelete = async () => {
         try {
           await axiosInstance.delete(
@@ -257,26 +260,40 @@ export const columns: ColumnDef<Article, any>[] = [
           id: "delete",
           name: "Delete",
           icon: <Trash2 className="h-4 w-4 text-red-500" />,
-          action: handleDelete,
+          action: () => setDeleteDialogOpen(true),
         });
       }
 
       return (
-        <CustomDropdown
-          open={open}
-          onOpenChange={setOpen}
-          options={actions}
-          trigger={
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          }
-          onSelect={(option: any) => {
-            option.action();
-            setOpen(false);
-          }}
-        />
+        <>
+          <CustomDropdown
+            open={open}
+            onOpenChange={setOpen}
+            options={actions}
+            trigger={
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            }
+            onSelect={(option: any) => {
+              option.action();
+              setOpen(false);
+            }}
+          />
+          <CustomAlertDialog
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            title="Delete Article"
+            description="Are you sure you want to delete this article? This action cannot be undone."
+            confirmText="Delete"
+            variant="destructive"
+            onConfirm={() => {
+              handleDelete();
+              setDeleteDialogOpen(false);
+            }}
+          />
+        </>
       );
     },
     meta: {

@@ -50,16 +50,55 @@ interface Pagination {
 type Platform = "all" | "platform" | "fetched";
 type ViewType = "table" | "calendar";
 
-interface FetchArticlesParams {
-  source?: string;
-  status?: string;
-  page?: number;
-  per_page?: number;
-  start_date?: string;
-  end_date?: string;
-}
-
 // --- Constants ---
+
+const FRESHNESS_OPTIONS = [
+  { id: "all", name: "All Freshness", icon: null },
+  {
+    id: "fresh",
+    name: "Fresh Content",
+    color: { bg: "#ecfdf5", text: "#15803d", border: "#bbf7d0" }, // Green
+    icon: (
+      <div
+        className="w-2 h-2 rounded-full"
+        style={{ backgroundColor: "#15803d" }}
+      />
+    ),
+  },
+  {
+    id: "neutral",
+    name: "Neutral",
+    color: { bg: "#fefce8", text: "#a16207", border: "#fef08a" }, // Yellow
+    icon: (
+      <div
+        className="w-2 h-2 rounded-full"
+        style={{ backgroundColor: "#a16207" }}
+      />
+    ),
+  },
+  {
+    id: "decaying",
+    name: "Decaying",
+    color: { bg: "#fef2f2", text: "#b91c1c", border: "#fecaca" }, // Red
+    icon: (
+      <div
+        className="w-2 h-2 rounded-full"
+        style={{ backgroundColor: "#b91c1c" }}
+      />
+    ),
+  },
+  {
+    id: "not_analyzed",
+    name: "Not Analyzed",
+    color: { bg: "#f3f4f6", text: "#6b7280", border: "#e5e7eb" }, // Gray
+    icon: (
+      <div
+        className="w-2 h-2 rounded-full"
+        style={{ backgroundColor: "#6b7280" }}
+      />
+    ),
+  },
+];
 
 const PLATFORM_OPTIONS = [
   { id: "all", name: "All" },
@@ -85,6 +124,19 @@ const STATUS_OPTIONS = [
   })),
 ];
 
+// Update FetchArticlesParams
+interface FetchArticlesParams {
+  source?: string;
+  status?: string;
+  freshness?: string;
+  page?: number;
+  per_page?: number;
+  start_date?: string;
+  end_date?: string;
+}
+
+// ... existing code ...
+
 const ArticlePageContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -94,6 +146,7 @@ const ArticlePageContent = () => {
   // --- State from URL ---
   const platform = (searchParams.get("platform") as Platform) || "all";
   const status = searchParams.get("status") || "all";
+  const freshness = searchParams.get("freshness") || "all";
   const page = Number(searchParams.get("page")) || 1;
   const perPage = Number(searchParams.get("per_page")) || 25;
   const view = (searchParams.get("view") as ViewType) || "table";
@@ -102,12 +155,16 @@ const ArticlePageContent = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [platformDropdownOpen, setPlatformDropdownOpen] = useState(false);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  const [freshnessDropdownOpen, setFreshnessDropdownOpen] = useState(false);
 
   // --- Derived State ---
   const selectedPlatform =
     PLATFORM_OPTIONS.find((opt) => opt.id === platform) || PLATFORM_OPTIONS[0];
   const selectedStatus =
     STATUS_OPTIONS.find((opt) => opt.id === status) || STATUS_OPTIONS[0];
+  const selectedFreshness =
+    FRESHNESS_OPTIONS.find((opt) => opt.id === freshness) ||
+    FRESHNESS_OPTIONS[0];
 
   // --- Data Fetching ---
   const { data, isLoading } = useQuery<{
@@ -119,6 +176,7 @@ const ArticlePageContent = () => {
       blogs?.id,
       platform,
       status,
+      freshness,
       page,
       perPage,
       view,
@@ -135,6 +193,7 @@ const ArticlePageContent = () => {
       const params: FetchArticlesParams = {
         source: platform === "all" ? undefined : platform,
         status: status === "all" ? undefined : status,
+        freshness: freshness === "all" ? undefined : freshness,
       };
 
       if (view === "table") {
@@ -154,6 +213,7 @@ const ArticlePageContent = () => {
       return res?.data || { articles: [], pagination: {} };
     },
     enabled: !!blogs?.id,
+    placeholderData: (previousData) => previousData,
   });
 
   // --- Mutations ---
@@ -198,6 +258,11 @@ const ArticlePageContent = () => {
   const handleStatusChange = (option: any) => {
     updateParams({ status: option.id, page: 1 });
     setStatusDropdownOpen(false);
+  };
+
+  const handleFreshnessChange = (option: any) => {
+    updateParams({ freshness: option.id, page: 1 });
+    setFreshnessDropdownOpen(false);
   };
 
   const handleViewChange = (newView: ViewType) => {
@@ -260,6 +325,32 @@ const ArticlePageContent = () => {
             }
           />
 
+          {/* Freshness Filter */}
+          <CustomDropdown
+            open={freshnessDropdownOpen}
+            onOpenChange={setFreshnessDropdownOpen}
+            options={FRESHNESS_OPTIONS}
+            value={freshness}
+            onSelect={handleFreshnessChange}
+            trigger={
+              <Button
+                variant="outline"
+                className="h-9 bg-white hover:bg-white font-inter text-sm rounded-md border-none flex items-center gap-2 px-3"
+              >
+                {selectedFreshness?.color && (
+                  <div
+                    className="w-2 h-2 rounded-full mr-1"
+                    style={{ backgroundColor: selectedFreshness.color.text }} // Use text color for the dot
+                  />
+                )}
+                <span className="font-medium text-gray-700">
+                  {selectedFreshness?.name}
+                </span>
+                <ChevronDown className="h-4 w-4 text-gray-500" />
+              </Button>
+            }
+          />
+
           {/* View Toggle */}
           <div className="bg-white p-1 rounded-md border border-none flex items-center gap-1">
             <Button
@@ -282,6 +373,8 @@ const ArticlePageContent = () => {
             </Button>
           </div>
         </div>
+
+        {/* ... Create Article Button ... */}
 
         {role !== "viewer" && (
           <Button

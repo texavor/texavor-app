@@ -57,6 +57,8 @@ import CustomPagination from "@/components/ui/CustomPagination";
 
 // ... existing imports
 
+import { CustomAlertDialog } from "@/components/ui/CustomAlertDialog";
+
 export default function SavedResultsClient() {
   const router = useRouter();
   const { blogs } = useAppStore(); // Get blogs for ID check
@@ -74,6 +76,8 @@ export default function SavedResultsClient() {
     null
   );
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
   const { data: resultsResponse, isLoading } = useSavedResults({
     type: activeTab === "all" ? undefined : activeTab,
@@ -182,9 +186,8 @@ export default function SavedResultsClient() {
                   className="text-red-600 focus:text-red-600"
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (confirm("Are you sure you want to delete this item?")) {
-                      deleteResult.mutate(result.id);
-                    }
+                    setItemToDelete(result.id);
+                    setDeleteDialogOpen(true);
                   }}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
@@ -258,6 +261,21 @@ export default function SavedResultsClient() {
         open={isSheetOpen}
         onOpenChange={setIsSheetOpen}
         result={selectedResult}
+      />
+
+      <CustomAlertDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Item"
+        description="Are you sure you want to delete this saved item? This action cannot be undone."
+        confirmText="Delete"
+        variant="destructive"
+        onConfirm={() => {
+          if (itemToDelete) {
+            deleteResult.mutate(itemToDelete);
+            setDeleteDialogOpen(false);
+          }
+        }}
       />
     </div>
   );

@@ -23,7 +23,7 @@ export const useFreshnessAnalysis = (
         `/api/v1/blogs/${blogId}/articles/${articleId}/check_freshness`
       );
 
-      toast.info("Analyzing content freshness...");
+      // toast.info("Analyzing content freshness...");
 
       // 2. Start Polling
       pollInterval.current = setInterval(async () => {
@@ -52,7 +52,7 @@ export const useFreshnessAnalysis = (
             if (onUpdate) onUpdate(data);
             // Clear interval reference
             pollInterval.current = null;
-            toast.success("Freshness analysis complete!");
+            // toast.success("Freshness analysis complete!");
           }
 
           if (attempts >= MAX_ATTEMPTS) {

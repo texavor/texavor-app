@@ -2,27 +2,24 @@
 
 import { useState } from "react";
 import { PRICING_TIERS, BillingPeriodType } from "@/lib/pricing";
-import { useCreateCheckoutSession } from "@/app/(dashboard)/settings/hooks/useSubscriptionApi";
-import { redirectToCheckout } from "@/lib/stripe";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSubscription } from "@/hooks/useSubscription";
 
 export default function PricingClientPage() {
   const [billingPeriod, setBillingPeriod] =
     useState<BillingPeriodType>("yearly");
   const [loadingTier, setLoadingTier] = useState<string | null>(null);
-  const { mutateAsync: createCheckoutSession } = useCreateCheckoutSession();
+  const { subscribe } = useSubscription();
 
-  const handleSubscribe = async (priceId: string, tierKey: string) => {
+  const handleSubscribe = async (tierKey: string) => {
     setLoadingTier(tierKey);
     try {
-      await redirectToCheckout(
-        {
-          priceId,
-          successUrl: `${window.location.origin}/subscription/success`,
-          cancelUrl: `${window.location.origin}/subscription/failure`,
-        },
-        createCheckoutSession
+      // tierKey is 'starter', 'professional', or 'business'
+      // billingPeriod is 'monthly' or 'yearly'
+      await subscribe(
+        tierKey as "starter" | "professional" | "business",
+        billingPeriod
       );
     } finally {
       setLoadingTier(null);
@@ -119,12 +116,7 @@ export default function PricingClientPage() {
             </div>
 
             <Button
-              onClick={() =>
-                handleSubscribe(
-                  PRICING_TIERS.starter[billingPeriod].priceId,
-                  "starter"
-                )
-              }
+              onClick={() => handleSubscribe("starter")}
               disabled={loadingTier === "starter"}
               className="w-full bg-[#0A2918] hover:bg-[#0A2918]/90"
             >
@@ -174,12 +166,7 @@ export default function PricingClientPage() {
             </div>
 
             <Button
-              onClick={() =>
-                handleSubscribe(
-                  PRICING_TIERS.professional[billingPeriod].priceId,
-                  "professional"
-                )
-              }
+              onClick={() => handleSubscribe("professional")}
               disabled={loadingTier === "professional"}
               variant="secondary"
               className="w-full bg-white text-[#0A2918] hover:bg-white/90"
@@ -225,12 +212,7 @@ export default function PricingClientPage() {
             </div>
 
             <Button
-              onClick={() =>
-                handleSubscribe(
-                  PRICING_TIERS.business[billingPeriod].priceId,
-                  "business"
-                )
-              }
+              onClick={() => handleSubscribe("business")}
               disabled={loadingTier === "business"}
               className="w-full bg-[#0A2918] hover:bg-[#0A2918]/90"
             >
@@ -242,7 +224,7 @@ export default function PricingClientPage() {
         {/* Footer */}
         <div className="mt-12 text-center">
           <p className="font-inter text-gray-600">
-            All plans include a 7-day free trial. No credit card required.
+            All plans include a 14-day free trial. No credit card required.
           </p>
           <p className="font-inter text-sm text-gray-500 mt-2">
             Need a custom plan?{" "}

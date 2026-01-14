@@ -132,13 +132,12 @@ const AuthChecker = () => {
       }
 
       // Check if blog is still processing
-      if (
-        data.blogs?.find(
-          (ele: any) =>
-            ele?.status === "pending" || ele?.status === "processing"
-        )
-      ) {
-        router.push("/onboarding/processing");
+      const processingBlog = data.blogs?.find(
+        (ele: any) => ele?.status === "pending" || ele?.status === "processing"
+      );
+
+      if (processingBlog) {
+        router.push(`/onboarding?blog=${processingBlog.id}`);
         return;
       }
 
@@ -159,7 +158,7 @@ const AuthChecker = () => {
           !isSubscriptionPage &&
           (subscriptionTier === "trial" ||
             (subscriptionStatus !== "active" &&
-              subscriptionStatus !== "trialing"))
+              subscriptionStatus !== "on_trial"))
         ) {
           router.push("/pricing");
         }

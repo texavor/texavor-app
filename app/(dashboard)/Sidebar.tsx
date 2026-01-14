@@ -137,9 +137,9 @@ const SidebarItem = ({
   const button = (
     <Button
       variant={isActive ? "secondary" : "ghost"}
-      className={`flex gap-2 cursor-pointer w-full ${
+      className={`flex gap-2 cursor-pointer w-full hover:bg-[#f9f4f0] ${
         isSideOpen ? "justify-start" : "justify-center"
-      } ${isActive ? "bg-secondary" : ""}`}
+      } ${isActive ? "bg-[#f9f4f0]" : ""}`}
     >
       <div className={isActive ? "text-[#104127]" : ""}>{icon}</div>
       {isSideOpen && <p className="font-poppins font-base">{title}</p>}
@@ -287,7 +287,7 @@ const AppSidebar = () => {
   return (
     <div
       className={`h-screen flex flex-col justify-between p-4 gap-4 transition-all ease-in-out duration-300 ${
-        isSideOpen ? "w-[250px]" : "w-[78px]"
+        isSideOpen ? "min-w-[250px]" : "w-[78px]"
       }`}
     >
       {/* --- TOP BLOG CARD --- */}

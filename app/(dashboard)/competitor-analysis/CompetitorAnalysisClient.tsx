@@ -190,24 +190,15 @@ export default function CompetitorAnalysisClient() {
         <AddCompetitorSheet blogId={blogs.id} onSuccess={loadCompetitors} />
       </div>
 
-      {competitors.length === 0 && !loading ? (
-        <div className="text-center py-12 border rounded-lg bg-muted/10">
-          <p className="text-muted-foreground mb-4">
-            You haven't added any competitors yet.
-          </p>
-          <AddCompetitorSheet blogId={blogs.id} onSuccess={loadCompetitors} />
-        </div>
-      ) : (
-        <CustomTable
-          columns={columns}
-          data={competitors}
-          isLoading={loading}
-          onClick={(row: Competitor) => {
-            router.push(`/competitor-analysis/${row.id}`);
-          }}
-          className="cursor-pointer"
-        />
-      )}
+      <CustomTable
+        columns={columns}
+        data={competitors}
+        isLoading={loading}
+        onClick={(row: Competitor) => {
+          router.push(`/competitor-analysis/${row.id}`);
+        }}
+        className="cursor-pointer"
+      />
 
       <AlertDialog
         open={!!deleteId}

@@ -27,11 +27,11 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
     description: "Perfect for individuals and small blogs",
     monthly: {
       price: 29,
-      priceId: "price_1SXzX9SucOCMoXUrWaXeeNYx", // TODO: Replace with actual Stripe price ID
+      priceId: process.env.LEMONSQUEEZY_STARTER_MONTHLY_VARIANT_ID!,
     },
     yearly: {
       price: 249,
-      priceId: "price_1SXzWRSucOCMoXUrPD12PB6W", // TODO: Replace with actual Stripe price ID
+      priceId: process.env.LEMONSQUEEZY_STARTER_YEARLY_VARIANT_ID!,
       savings: 99,
     },
     features: [
@@ -39,6 +39,9 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
       "30 outlines/month",
       "60 topic ideas/month",
       "200 keyword queries/month",
+      "30 AI images/month",
+      "30 AI thumbnails/month",
+      "2 team members",
       "2 integrations",
       "3 authors",
       "5 competitors",
@@ -51,11 +54,11 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
     recommended: true,
     monthly: {
       price: 79,
-      priceId: "price_1SXzY4SucOCMoXUrrMQLMe33", // TODO: Replace with actual Stripe price ID
+      priceId: process.env.LEMONSQUEEZY_PRO_MONTHLY_VARIANT_ID!,
     },
     yearly: {
       price: 749,
-      priceId: "price_1SXzYhSucOCMoXUr8BIglE6e", // TODO: Replace with actual Stripe price ID
+      priceId: process.env.LEMONSQUEEZY_PRO_YEARLY_VARIANT_ID!,
       savings: 199,
     },
     features: [
@@ -63,6 +66,9 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
       "150 outlines/month",
       "300 topic ideas/month",
       "800 keyword queries/month",
+      "150 AI images/month",
+      "150 AI thumbnails/month",
+      "5 team members",
       "Unlimited integrations",
       "10 authors",
       "15 competitors",
@@ -75,11 +81,11 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
     description: "For large teams and agencies",
     monthly: {
       price: 149,
-      priceId: "price_1SXzZRSucOCMoXUrctu6icY8", // TODO: Replace with actual Stripe price ID
+      priceId: process.env.LEMONSQUEEZY_BUSINESS_MONTHLY_VARIANT_ID!,
     },
     yearly: {
       price: 1399,
-      priceId: "price_1SXzaESucOCMoXUrvrDsFkyA", // TODO: Replace with actual Stripe price ID
+      priceId: process.env.LEMONSQUEEZY_BUSINESS_YEARLY_VARIANT_ID!,
       savings: 389,
     },
     features: [
@@ -87,6 +93,9 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
       "400 outlines/month",
       "800 topic ideas/month",
       "2,000 keyword queries/month",
+      "400 AI images/month",
+      "400 AI thumbnails/month",
+      "10 team members",
       "Unlimited integrations",
       "Unlimited authors",
       "Unlimited competitors",

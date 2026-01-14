@@ -45,7 +45,7 @@ export const useFreshnessAnalysis = (
 
       if (!triggerRes.ok) throw new Error("Failed to start analysis");
 
-      toast.info("Analyzing content freshness...");
+      // toast.info("Analyzing content freshness...");
 
       // 2. Start Polling
       pollInterval.current = setInterval(async () => {
@@ -69,7 +69,7 @@ export const useFreshnessAnalysis = (
             clearInterval(pollInterval.current!);
             setIsAnalyzing(false);
             onUpdate(data);
-            toast.success("Freshness analysis complete!");
+            // toast.success("Freshness analysis complete!");
           }
 
           if (attempts >= MAX_ATTEMPTS) {

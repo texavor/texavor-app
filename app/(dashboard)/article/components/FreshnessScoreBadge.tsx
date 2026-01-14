@@ -1,7 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2, RefreshCw, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Loader2,
+  RefreshCw,
+  AlertTriangle,
+  CheckCircle2,
+  MinusCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -10,8 +16,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { axiosInstance } from "@/lib/axiosInstace";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useFreshnessAnalysis } from "@/hooks/useFreshnessAnalysis";
 import { useQueryClient } from "@tanstack/react-query";
@@ -31,6 +35,11 @@ export function FreshnessScoreBadge({
 }: FreshnessScoreBadgeProps) {
   const [article, setArticle] = useState(initialArticle);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    setArticle(initialArticle);
+  }, [initialArticle]);
+
   const { checkFreshness, isAnalyzing } = useFreshnessAnalysis(
     article.blog_id,
     article.id,
@@ -41,7 +50,6 @@ export function FreshnessScoreBadge({
         decay_risk: updatedArticle.decay_risk,
         needs_freshness_update: updatedArticle.needs_freshness_update,
       }));
-      // Invalidate articles list to reflect changes globally
       queryClient.invalidateQueries({ queryKey: ["articles"] });
     }
   );
@@ -53,7 +61,7 @@ export function FreshnessScoreBadge({
 
   const { freshness_score, needs_freshness_update, decay_risk } = article;
 
-  // Case 1: Never Analyzed
+  // 1. Not Analyzed
   if (freshness_score === null || freshness_score === undefined) {
     return (
       <Button
@@ -73,7 +81,7 @@ export function FreshnessScoreBadge({
     );
   }
 
-  // Case 2: Stale Content (needs update or low score)
+  // 2. Decaying (< 50%)
   if (needs_freshness_update || freshness_score < 50) {
     return (
       <TooltipProvider>
@@ -98,7 +106,32 @@ export function FreshnessScoreBadge({
     );
   }
 
-  // Case 3: Fresh Content
+  // 3. Neutral (50% - 79%)
+  if (freshness_score < 80) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>
+            <Badge
+              variant="secondary"
+              className={cn(
+                "gap-1.5 pr-2.5 h-7",
+                "bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200"
+              )}
+            >
+              <MinusCircle className="w-3.5 h-3.5" />
+              {freshness_score.toFixed(0)}%
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Score is average. Consider improving.</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  // 4. Fresh (80% +)
   return (
     <TooltipProvider>
       <Tooltip>

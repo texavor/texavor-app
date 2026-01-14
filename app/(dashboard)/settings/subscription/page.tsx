@@ -8,10 +8,9 @@ import { ScoreMeter } from "@/components/ScoreMeter";
 import { useGetSubscription } from "../hooks/useSubscriptionApi";
 import { useGetUsage } from "../hooks/useUsageApi";
 import { useRouter } from "next/navigation";
-import { Calendar, CreditCard, XCircle, RefreshCw } from "lucide-react";
-import { CancelSubscriptionDialog } from "./CancelSubscriptionDialog";
-import { ReactivateSubscriptionDialog } from "./ReactivateSubscriptionDialog";
+import { Calendar, CreditCard, XCircle } from "lucide-react";
 import { useState } from "react";
+import { useSubscription } from "@/hooks/useSubscription";
 
 import { useAppStore } from "@/store/appStore";
 
@@ -22,8 +21,7 @@ export default function SubscriptionPage() {
   const { data: usageData, isLoading: isUsageLoading } = useGetUsage(blogs?.id);
   const isLoading = isSubLoading || isUsageLoading;
   const router = useRouter();
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [showReactivateDialog, setShowReactivateDialog] = useState(false);
+  const { manageSubscription, loading } = useSubscription();
 
   if (isLoading) {
     return (
@@ -180,25 +178,15 @@ export default function SubscriptionPage() {
                   Upgrade Now
                 </Button>
               ) : (
-                <>
-                  {subscription?.subscription_details?.cancel_at_period_end ? (
-                    <Button
-                      onClick={() => setShowReactivateDialog(true)}
-                      className="bg-[#0A2918] hover:bg-[#0A2918]/90"
-                    >
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Reactivate Subscription
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={() => setShowCancelDialog(true)}
-                      variant="outline"
-                      className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 shadow-none"
-                    >
-                      Cancel Subscription
-                    </Button>
-                  )}
-                </>
+                <Button
+                  onClick={manageSubscription}
+                  disabled={loading}
+                  variant="outline"
+                  className="border-gray-200"
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  {loading ? "Loading..." : "Manage Subscription"}
+                </Button>
               )}
             </div>
           </Card>
@@ -406,26 +394,6 @@ export default function SubscriptionPage() {
           </Card>
         </div>
       </div>
-
-      {/* Cancel Subscription Dialog */}
-      <CancelSubscriptionDialog
-        open={showCancelDialog}
-        onOpenChange={setShowCancelDialog}
-        blogId={blogs?.id}
-        currentPeriodEnd={
-          subscription?.subscription_details?.current_period_end
-        }
-      />
-
-      {/* Reactivate Subscription Dialog */}
-      <ReactivateSubscriptionDialog
-        open={showReactivateDialog}
-        onOpenChange={setShowReactivateDialog}
-        blogId={blogs?.id}
-        currentPeriodEnd={
-          subscription?.subscription_details?.current_period_end
-        }
-      />
     </div>
   );
 }

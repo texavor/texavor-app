@@ -48,7 +48,7 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({
     if (platform.logo_url) {
       return (
         <img
-          src={platform.logo_url}
+          src={`/integration/${platform.id}.png`}
           alt={`${platform.name} logo`}
           className="h-10 w-10 object-contain"
         />
