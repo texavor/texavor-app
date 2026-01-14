@@ -47,7 +47,7 @@ export default function IntegrationsClientPage() {
           <Skeleton className="h-8 w-48 bg-[#f9f4f0]" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="border-none shadow-md">
+              <Card key={i} className="border-none shadow-xs">
                 <CardHeader className="flex flex-row items-start gap-4 space-y-0 pb-2">
                   <Skeleton className="w-12 h-12 rounded-lg bg-[#f9f4f0]" />
                   <div className="space-y-2 flex-1">

@@ -530,7 +530,7 @@ export default function ArticleDetailsSheet({
           }),
           ...(data.article.tags && { tags: data.article.tags }),
         }));
-        toast.success("Generated successfully");
+        // toast.success("Generated successfully");
       }
     },
     onError: () => {
@@ -944,7 +944,7 @@ export default function ArticleDetailsSheet({
 
                 return (
                   <div className="space-y-2">
-                    <Label className="text-foreground/80">Cross-Post To</Label>
+                    <Label className="text-foreground/80">Post To</Label>
                     <div className="space-y-2 rounded-md border p-3">
                       {connectedIntegrations.map((platform) => {
                         const integrationId =
@@ -992,7 +992,7 @@ export default function ArticleDetailsSheet({
                             </div>
 
                             {/* Inline Author Selector - Only show if checked and supports authors */}
-                            {isChecked && platform.supports_authors && (
+                            {/* {isChecked && platform.supports_authors && (
                               <AuthorSelector
                                 blogId={blogs?.id || ""}
                                 integrationId={integrationId}
@@ -1013,7 +1013,7 @@ export default function ArticleDetailsSheet({
                                   });
                                 }}
                               />
-                            )}
+                            )} */}
                           </div>
                         );
                       })}
@@ -1078,12 +1078,21 @@ export default function ArticleDetailsSheet({
               </Button>
             </>
           ) : (
-            <Button
-              onClick={() => handleSave("publish_or_schedule")}
-              className="w-full bg-[#104127] hover:bg-[#0A2918]"
-            >
-              {publishMode === "schedule" ? "Schedule" : "Publish Now"}
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2 w-full">
+              <Button
+                onClick={() => handleSave("publish_or_schedule")}
+                className="w-full bg-[#104127] hover:bg-[#0A2918] flex-1"
+              >
+                {publishMode === "schedule" ? "Schedule" : "Publish Now"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleSave("save_draft")}
+                className="w-full mt-2 sm:mt-0 sm:w-auto flex-1"
+              >
+                Save Changes
+              </Button>
+            </div>
           )}
         </SheetFooter>
       </SheetContent>

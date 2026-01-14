@@ -362,9 +362,13 @@ export default function ArticleClientPage() {
     // Don't save if there's no content
     if (!title?.trim() && !content?.trim()) return;
 
+    // Use settings from store, but override title/content/content_html with local updated state
+    const { article_publications, ...safeSettings } = settingsFormData;
+
     // Update existing article
     await updateMutation.mutateAsync({
       article: {
+        ...safeSettings,
         title: title || "",
         content: content || "",
         content_html: contentHtml || "",

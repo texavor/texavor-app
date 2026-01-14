@@ -36,7 +36,7 @@ export default function SupportClientPage() {
         columns={columns as any}
         data={data || []}
         isLoading={isLoading}
-        onClick={handleRowClick}
+        // onClick={() => {}}
       />
       <CreateTicketDialog open={open} onOpenChange={setOpen} />
       <TicketDetailSheet

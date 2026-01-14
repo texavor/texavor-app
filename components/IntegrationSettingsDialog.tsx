@@ -72,19 +72,6 @@ const platformSettings: Record<
       optionsKey: "authors",
     },
     {
-      key: "post_status",
-      label: "Post Status",
-      type: "select",
-      placeholder: "Select status",
-      description: "Default status for published articles",
-      options: [
-        { label: "Publish", value: "publish" },
-        { label: "Draft", value: "draft" },
-        { label: "Private", value: "private" },
-        { label: "Pending", value: "pending" },
-      ],
-    },
-    {
       key: "default_category",
       label: "Category ID",
       type: "text",
@@ -387,11 +374,20 @@ export default function IntegrationSettingsDialog({
                     : normalizedPlatform;
 
                 options = authorsData
-                  .filter(
-                    (a: any) =>
+                  .filter((a: any) => {
+                    const isStrictPlatform =
+                      normalizedPlatform === "wordpress" ||
+                      normalizedPlatform === "webflow";
+
+                    if (isStrictPlatform) {
+                      return a.external_platform === targetPlatform;
+                    }
+
+                    return (
                       a.external_platform === targetPlatform ||
                       a.platform_defaults?.includes(targetPlatform)
-                  )
+                    );
+                  })
                   .map((a: any) => ({
                     label: a.name,
                     value: a.external_id || a.id, // Use external_id if present

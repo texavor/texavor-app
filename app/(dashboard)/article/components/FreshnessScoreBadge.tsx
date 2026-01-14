@@ -13,6 +13,8 @@ import {
 import { axiosInstance } from "@/lib/axiosInstace";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useFreshnessAnalysis } from "@/hooks/useFreshnessAnalysis";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface FreshnessScoreBadgeProps {
   article: {
@@ -28,30 +30,25 @@ export function FreshnessScoreBadge({
   article: initialArticle,
 }: FreshnessScoreBadgeProps) {
   const [article, setArticle] = useState(initialArticle);
-  const [analyzing, setAnalyzing] = useState(false);
-
-  const handleAnalyze = async (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent row click
-    setAnalyzing(true);
-    try {
-      const res = await axiosInstance.post(
-        `/api/v1/blogs/${article.blog_id}/articles/${article.id}/check_freshness`
-      );
-
-      const data = res.data;
+  const queryClient = useQueryClient();
+  const { checkFreshness, isAnalyzing } = useFreshnessAnalysis(
+    article.blog_id,
+    article.id,
+    (updatedArticle) => {
       setArticle((prev) => ({
         ...prev,
-        freshness_score: data.freshness_score,
-        decay_risk: data.decay_risk,
-        needs_freshness_update: data.needs_update, // Map API response to local interface if needed
+        freshness_score: updatedArticle.freshness_score,
+        decay_risk: updatedArticle.decay_risk,
+        needs_freshness_update: updatedArticle.needs_freshness_update,
       }));
-      toast.success("Freshness analysis complete!");
-    } catch (error) {
-      console.error("Analysis failed", error);
-      toast.error("Failed to analyze freshness");
-    } finally {
-      setAnalyzing(false);
+      // Invalidate articles list to reflect changes globally
+      queryClient.invalidateQueries({ queryKey: ["articles"] });
     }
+  );
+
+  const handleAnalyze = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    checkFreshness();
   };
 
   const { freshness_score, needs_freshness_update, decay_risk } = article;
@@ -64,9 +61,9 @@ export function FreshnessScoreBadge({
         size="sm"
         className="h-7 text-xs gap-1.5 border-dashed"
         onClick={handleAnalyze}
-        disabled={analyzing}
+        disabled={isAnalyzing}
       >
-        {analyzing ? (
+        {isAnalyzing ? (
           <Loader2 className="w-3.5 h-3.5 animate-spin" />
         ) : (
           <RefreshCw className="w-3.5 h-3.5" />
