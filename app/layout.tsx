@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import ReactQueryProvider from "./ReactQueryProvider";
 import { UpgradePromptProvider } from "@/components/UpgradePromptProvider";
 import GlobalLoader from "@/components/GlobalLoader";
+import Script from "next/script";
 // import Script from "next/script";
 
 const poppins = Poppins({
@@ -57,6 +58,11 @@ export default function RootLayout({
           </UpgradePromptProvider>
         </ReactQueryProvider>
       </body>
+      <Script
+        src="https://cloud.umami.is/script.js"
+        data-website-id="631658d6-064e-4602-bd71-b9a6011aff8b"
+        strategy="afterInteractive"
+      />
     </html>
   );
 }
