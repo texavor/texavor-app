@@ -42,12 +42,6 @@ const getOpportunityColor = (score: number) => {
   return { bg: "#fef2f2", text: "#b91c1c", label: "Low" };
 };
 
-const getDifficultyColor = (difficulty: number) => {
-  if (difficulty >= 70) return { bg: "#fef2f2", text: "#b91c1c" };
-  if (difficulty >= 40) return { bg: "#fefce8", text: "#a16207" };
-  return { bg: "#ecfdf5", text: "#15803d" };
-};
-
 const getSourceColor = (source: string) => {
   const colors: Record<string, { bg: string; text: string }> = {
     semantic_similarity: { bg: "#ede9fe", text: "#6b21a8" },
@@ -216,35 +210,42 @@ export function KeywordDiscoveryTable({
     },
     {
       header: ({ column }) => (
-        <SortableHeader column={column}>Search Volume</SortableHeader>
+        <SortableHeader column={column}>Relevance</SortableHeader>
       ),
-      accessorKey: "search_volume",
-      cell: ({ row }) => (
-        <span className="font-medium text-gray-900 font-inter">
-          {row.original.search_volume?.toLocaleString() || "-"}
-        </span>
-      ),
+      accessorKey: "relevance_score",
+      cell: ({ row }) => {
+        const score = row.original.relevance_score;
+        return (
+          <span className="font-medium text-gray-900 font-inter">
+            {(score * 100).toFixed(0)}%
+          </span>
+        );
+      },
     },
     {
       header: ({ column }) => (
-        <SortableHeader column={column}>Difficulty</SortableHeader>
+        <SortableHeader column={column}>Authority</SortableHeader>
       ),
-      accessorKey: "difficulty",
+      accessorKey: "ai_authority_score",
       cell: ({ row }) => {
-        const difficulty = row.original.difficulty;
-        const color = getDifficultyColor(difficulty);
+        const score = row.original.ai_authority_score || 0;
+        let color = { bg: "#fef2f2", text: "#b91c1c" }; // Low (Red)
+        if (score >= 70)
+          color = { bg: "#ecfdf5", text: "#15803d" }; // High (Green)
+        else if (score >= 40) color = { bg: "#fefce8", text: "#a16207" }; // Medium (Yellow)
+
         return (
           <div className="flex items-center gap-2">
             <div
               className="px-2 py-1 rounded-md text-xs font-medium font-inter"
               style={{ backgroundColor: color.bg, color: color.text }}
             >
-              {difficulty}
+              {score}
             </div>
-            {difficulty >= 70 ? (
-              <TrendingUp className="h-3.5 w-3.5 text-red-600" />
+            {score >= 70 ? (
+              <TrendingUp className="h-3.5 w-3.5 text-green-600" />
             ) : (
-              <TrendingDown className="h-3.5 w-3.5 text-green-600" />
+              <TrendingDown className="h-3.5 w-3.5 text-red-600" />
             )}
           </div>
         );
@@ -351,7 +352,7 @@ export function KeywordDiscoveryTable({
       columns={columns}
       data={data}
       isLoading={isLoading}
-      className="bg-white rounded-lg border-none shadow-none max-h-[calc(100vh-150px)]"
+      className="bg-white rounded-lg border-none shadow-none max-h-[calc(100vh-160px)]"
     />
   );
 }

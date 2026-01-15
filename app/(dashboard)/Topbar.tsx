@@ -218,7 +218,7 @@ const Topbar = () => {
             <>
               {/* Articles */}
               <div className="flex items-center gap-2">
-                <FileText className="size-5 text-blue-600" />
+                <Paperclip className="size-5 text-blue-600" />
                 <div className="flex flex-col">
                   <p className="text-xs font-medium text-[#0A2918] font-poppins leading-tight">
                     Articles
@@ -250,7 +250,7 @@ const Topbar = () => {
 
               {/* Topics */}
               <div className="flex items-center gap-2">
-                <Sparkles className="size-5 text-green-600" />
+                <Microscope className="size-5 text-green-600" />
                 <div className="flex flex-col">
                   <p className="text-xs font-medium text-[#0A2918] font-poppins leading-tight">
                     Topics

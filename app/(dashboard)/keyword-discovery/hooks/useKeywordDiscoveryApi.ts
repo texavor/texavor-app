@@ -21,6 +21,7 @@ export interface KeywordDiscoveryKeyword {
   competitor_name?: string;
   seed_keyword?: string;
   ai_visibility_score?: number;
+  ai_authority_score?: number;
 }
 
 export interface KeywordDiscoveryData {

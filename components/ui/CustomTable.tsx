@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -61,7 +62,10 @@ export function CustomTable<TData, TValue>({
     <div className="w-full">
       <div className="rounded-xl overflow-hidden border bg-white">
         <div
-          className={`${className} relative max-h-[calc(100vh-226px)] overflow-y-auto no-scrollbar`}
+          className={cn(
+            "relative max-h-[calc(100vh-226px)] overflow-y-auto no-scrollbar",
+            className
+          )}
         >
           <Table>
             <TableHeader className="sticky top-0 bg-[#EEDED3] z-10 bg-white">
