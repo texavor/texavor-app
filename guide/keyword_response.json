@@ -1,0 +1,598 @@
+{
+    "id": "0bdd25e3-eec0-4b31-9c32-1c95af1299cb",
+    "status": "completed",
+    "trigger_type": "manual",
+    "total_keywords": 52,
+    "high_opportunity_count": 0,
+    "keywords": [
+        {
+            "cpc": 0,
+            "source": "google_autocomplete",
+            "keyword": {
+                "term": "how search engines operate",
+                "source": "google_autocomplete",
+                "ai_visibility_score": 7.0
+            },
+            "difficulty": 50,
+            "seed_keyword": "how search engines work",
+            "search_volume": 0,
+            "relevance_score": 0.5,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "google_autocomplete",
+            "keyword": {
+                "term": "how search engines work bbc bitesize",
+                "source": "google_autocomplete",
+                "ai_visibility_score": 8.0
+            },
+            "difficulty": 50,
+            "seed_keyword": "how search engines work",
+            "search_volume": 0,
+            "relevance_score": 0.5,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "google_autocomplete",
+            "keyword": {
+                "term": "how search engines work answers",
+                "source": "google_autocomplete",
+                "ai_visibility_score": 8.0
+            },
+            "difficulty": 50,
+            "seed_keyword": "how search engines work",
+            "search_volume": 0,
+            "relevance_score": 0.5,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "google_autocomplete",
+            "keyword": {
+                "term": "how search engines work video",
+                "source": "google_autocomplete",
+                "ai_visibility_score": 8.0
+            },
+            "difficulty": 50,
+            "seed_keyword": "how search engines work",
+            "search_volume": 0,
+            "relevance_score": 0.5,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "google_autocomplete",
+            "keyword": {
+                "term": "how search engines work for kids",
+                "source": "google_autocomplete",
+                "ai_visibility_score": 8.0
+            },
+            "difficulty": 50,
+            "seed_keyword": "how search engines work",
+            "search_volume": 0,
+            "relevance_score": 0.5,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "google_autocomplete",
+            "keyword": {
+                "term": "how search engines work ks2",
+                "source": "google_autocomplete",
+                "ai_visibility_score": 8.0
+            },
+            "difficulty": 50,
+            "seed_keyword": "how search engines work",
+            "search_volume": 0,
+            "relevance_score": 0.5,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "google_autocomplete",
+            "keyword": {
+                "term": "how search engines work understanding google and bing",
+                "source": "google_autocomplete",
+                "ai_visibility_score": 8.0
+            },
+            "difficulty": 50,
+            "seed_keyword": "how search engines work",
+            "search_volume": 0,
+            "relevance_score": 0.5,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "google_autocomplete",
+            "keyword": {
+                "term": "how search engines work pdf",
+                "source": "google_autocomplete",
+                "ai_visibility_score": 8.0
+            },
+            "difficulty": 50,
+            "seed_keyword": "how search engines work",
+            "search_volume": 0,
+            "relevance_score": 0.5,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "google_autocomplete",
+            "keyword": {
+                "term": "how search engines work crawling indexing and ranking",
+                "source": "google_autocomplete",
+                "ai_visibility_score": 8.0
+            },
+            "difficulty": 50,
+            "seed_keyword": "how search engines work",
+            "search_volume": 0,
+            "relevance_score": 0.5,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "google_autocomplete",
+            "keyword": {
+                "term": "how search engines work diagram",
+                "source": "google_autocomplete",
+                "ai_visibility_score": 8.0
+            },
+            "difficulty": 50,
+            "seed_keyword": "how search engines work",
+            "search_volume": 0,
+            "relevance_score": 0.5,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "google_autocomplete",
+            "keyword": {
+                "term": "bing ranking",
+                "source": "google_autocomplete",
+                "ai_visibility_score": 3.0
+            },
+            "difficulty": 50,
+            "seed_keyword": "Bing ranking factors",
+            "search_volume": 0,
+            "relevance_score": 0.5,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "google_autocomplete",
+            "keyword": {
+                "term": "bing ranking factors",
+                "source": "google_autocomplete",
+                "ai_visibility_score": 4.0
+            },
+            "difficulty": 50,
+            "seed_keyword": "Bing ranking factors",
+            "search_volume": 0,
+            "relevance_score": 0.5,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "google_autocomplete",
+            "keyword": {
+                "term": "google seo keywords",
+                "source": "google_autocomplete",
+                "ai_visibility_score": 4.0
+            },
+            "difficulty": 50,
+            "seed_keyword": "Google SEO",
+            "search_volume": 0,
+            "relevance_score": 0.5,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "google_autocomplete",
+            "keyword": {
+                "term": "google seo starter guide",
+                "source": "google_autocomplete",
+                "ai_visibility_score": 6.0
+            },
+            "difficulty": 50,
+            "seed_keyword": "Google SEO",
+            "search_volume": 0,
+            "relevance_score": 0.5,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "google_autocomplete",
+            "keyword": {
+                "term": "google seo certification",
+                "source": "google_autocomplete",
+                "ai_visibility_score": 4.0
+            },
+            "difficulty": 50,
+            "seed_keyword": "Google SEO",
+            "search_volume": 0,
+            "relevance_score": 0.5,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "google_autocomplete",
+            "keyword": {
+                "term": "google seo updates",
+                "source": "google_autocomplete",
+                "ai_visibility_score": 4.0
+            },
+            "difficulty": 50,
+            "seed_keyword": "Google SEO",
+            "search_volume": 0,
+            "relevance_score": 0.5,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "google_autocomplete",
+            "keyword": {
+                "term": "google seo course free with certificate",
+                "source": "google_autocomplete",
+                "ai_visibility_score": 5.0
+            },
+            "difficulty": 50,
+            "seed_keyword": "Google SEO",
+            "search_volume": 0,
+            "relevance_score": 0.5,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "google_autocomplete",
+            "keyword": {
+                "term": "google seo meaning",
+                "source": "google_autocomplete",
+                "ai_visibility_score": 4.0
+            },
+            "difficulty": 50,
+            "seed_keyword": "Google SEO",
+            "search_volume": 0,
+            "relevance_score": 0.5,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "google_autocomplete",
+            "keyword": {
+                "term": "google seo checker",
+                "source": "google_autocomplete",
+                "ai_visibility_score": 4.0
+            },
+            "difficulty": 50,
+            "seed_keyword": "Google SEO",
+            "search_volume": 0,
+            "relevance_score": 0.5,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "google_autocomplete",
+            "keyword": {
+                "term": "google seo tools",
+                "source": "google_autocomplete",
+                "ai_visibility_score": 4.0
+            },
+            "difficulty": 50,
+            "seed_keyword": "Google SEO",
+            "search_volume": 0,
+            "relevance_score": 0.5,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "google_autocomplete",
+            "keyword": {
+                "term": "google seo course",
+                "source": "google_autocomplete",
+                "ai_visibility_score": 4.0
+            },
+            "difficulty": 50,
+            "seed_keyword": "Google SEO",
+            "search_volume": 0,
+            "relevance_score": 0.5,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "google_autocomplete",
+            "keyword": {
+                "term": "google seo",
+                "source": "google_autocomplete",
+                "ai_visibility_score": 3.0
+            },
+            "difficulty": 50,
+            "seed_keyword": "Google SEO",
+            "search_volume": 0,
+            "relevance_score": 0.5,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "how to rank higher on Bing",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "search engine API comparison",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "IndexNow benefits for publishers",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "open-source CMS for SEO",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "what is search engine pinging",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "how to optimize blog articles",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "Bing webmaster tools guide",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "Google search algorithm updates",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "best practices for IndexNow",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "how to ping search engines",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "API for search engine indexing",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "what does Googlebot do",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "SEO for open-source projects",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "IndexNow implementation tutorial",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "how to improve search rankings",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "Bing vs Google SEO",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "optimize articles for SEO",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "Googlebot crawl budget",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "best publishing platforms",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "how to use IndexNow",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "search engine optimization",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "API for web crawling",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "ping search engines",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "what is Googlebot",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "open-source SEO tools",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "publishing SEO tips",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "how search engines work",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "IndexNow API guide",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "Bing ranking factors",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        },
+        {
+            "cpc": 0,
+            "source": "ai_prediction",
+            "keyword": "Google SEO",
+            "difficulty": 50,
+            "search_volume": 0,
+            "relevance_score": 0.6,
+            "opportunity_score": 0
+        }
+    ],
+    "metadata": {
+        "sources": {
+            "ai_prediction": 30,
+            "google_autocomplete": 22
+        },
+        "avg_search_volume": 0,
+        "avg_opportunity_score": 0.0
+    },
+    "completed_at": "2026-01-15T10:05:25.174Z",
+    "created_at": "2026-01-15T10:04:48.841Z",
+    "filtered_keywords_count": 52
+}

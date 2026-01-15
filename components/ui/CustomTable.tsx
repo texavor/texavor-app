@@ -28,7 +28,7 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   isLoading?: boolean;
-  onClick: any;
+  onClick?: (row: TData) => void;
   className?: string;
   getRowClassName?: (row: TData) => string;
 }
@@ -37,7 +37,7 @@ export function CustomTable<TData, TValue>({
   columns,
   data,
   isLoading,
-  onClick = null,
+  onClick,
   className = "",
   getRowClassName,
 }: DataTableProps<TData, TValue>) {
@@ -61,7 +61,7 @@ export function CustomTable<TData, TValue>({
     <div className="w-full">
       <div className="rounded-xl overflow-hidden border bg-white">
         <div
-          className={`relative max-h-[calc(100vh-226px)] overflow-y-auto no-scrollbar ${className}`}
+          className={`${className} relative max-h-[calc(100vh-226px)] overflow-y-auto no-scrollbar`}
         >
           <Table>
             <TableHeader className="sticky top-0 bg-[#EEDED3] z-10 bg-white">
@@ -102,7 +102,7 @@ export function CustomTable<TData, TValue>({
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
-                    onClick={() => onClick(row?.original)}
+                    onClick={onClick ? () => onClick(row.original) : undefined}
                     className={`${
                       onClick ? "cursor-pointer" : ""
                     } hover:bg-gray-50 transition-colors ${

@@ -123,7 +123,7 @@ export default function PricingClientPage() {
         {/* Pricing Cards Grid - All 3 Tiers */}
         <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {/* Starter Plan */}
-          <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200 flex flex-col">
+          <div className="bg-white rounded-2xl p-8 shadow-xs border border-gray-200 flex flex-col">
             <h3 className="font-poppins font-semibold text-2xl text-[#0A2918] mb-2">
               {PRICING_TIERS.starter.name}
             </h3>
@@ -219,7 +219,7 @@ export default function PricingClientPage() {
           </div>
 
           {/* Business Plan */}
-          <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200 flex flex-col">
+          <div className="bg-white rounded-2xl p-8 shadow-xs border border-gray-200 flex flex-col">
             <h3 className="font-poppins font-semibold text-2xl text-[#0A2918] mb-2">
               {PRICING_TIERS.business.name}
             </h3>

@@ -21,6 +21,7 @@ import {
   Bookmark,
   ImageIcon,
   Users,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,10 +49,16 @@ const SideBarOption = [
     href: "/article",
   },
   {
+    icon: <Sparkles className="h-4 w-4" />,
+    title: "Keyword Discovery",
+    href: "/keyword-discovery",
+  },
+  {
     icon: <Binoculars className="h-4 w-4" />,
     title: "Keyword Research",
     href: "/keyword-research",
   },
+
   {
     icon: <Microscope className="h-4 w-4" />,
     title: "Topic Generation",
@@ -253,6 +260,7 @@ const AppSidebar = () => {
     if (
       [
         "/keyword-research",
+        "/keyword-discovery",
         "/topic-generation",
         "/outline-generation",
         "/competitor-analysis",
