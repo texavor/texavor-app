@@ -232,10 +232,58 @@ export function LoginContent() {
 }
 
 import { Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+
+function LoginSkeleton() {
+  return (
+    <div className="mx-auto grid w-[450px] gap-6 p-10">
+      <div className="grid gap-2">
+        {/* Title skeleton */}
+        <Skeleton className="h-9 w-32" />
+        {/* Subtitle skeleton */}
+        <Skeleton className="h-5 w-full" />
+      </div>
+
+      <div className="grid gap-4">
+        {/* Email input skeleton */}
+        <Skeleton className="h-10 w-full" />
+
+        {/* Password input skeleton */}
+        <Skeleton className="h-10 w-full" />
+
+        {/* Forgot password link skeleton */}
+        <div className="text-right">
+          <Skeleton className="h-4 w-32 ml-auto" />
+        </div>
+
+        {/* Login button skeleton */}
+        <Skeleton className="h-10 w-full" />
+      </div>
+
+      {/* Divider */}
+      <div className="relative my-4">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-gray-400" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <Skeleton className="h-5 w-28" />
+        </div>
+      </div>
+
+      {/* Google button skeleton */}
+      <Skeleton className="h-10 w-full" />
+
+      {/* Sign up link skeleton */}
+      <div className="mt-4 text-center">
+        <Skeleton className="h-4 w-48 mx-auto" />
+      </div>
+    </div>
+  );
+}
 
 export default function LoginClientPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<LoginSkeleton />}>
       <LoginContent />
     </Suspense>
   );
