@@ -5,13 +5,22 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { startOfMonth, endOfMonth, format } from "date-fns";
-import { Calendar, LayoutList, ChevronDown, Plus, Loader2 } from "lucide-react";
+import {
+  Calendar,
+  LayoutList,
+  ChevronDown,
+  Plus,
+  Loader2,
+  Search,
+} from "lucide-react";
 
 import { useAppStore } from "@/store/appStore";
 import { axiosInstance } from "@/lib/axiosInstace";
 import { ARTICLE_STATUS_COLORS } from "@/lib/constants";
+import { useDebounce } from "@/hooks/use-debounce";
 
 import { CustomTable } from "@/components/ui/CustomTable";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { usePermissions } from "@/hooks/usePermissions";
 import CustomPagination from "@/components/ui/CustomPagination";
@@ -45,6 +54,7 @@ interface Pagination {
   per_page: number;
   count: number;
   pages: number;
+  per_page_count?: number;
 }
 
 type Platform = "all" | "platform" | "fetched";
@@ -133,6 +143,7 @@ interface FetchArticlesParams {
   per_page?: number;
   start_date?: string;
   end_date?: string;
+  q?: string;
 }
 
 // ... existing code ...
@@ -156,6 +167,8 @@ const ArticlePageContent = () => {
   const [platformDropdownOpen, setPlatformDropdownOpen] = useState(false);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [freshnessDropdownOpen, setFreshnessDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
   // --- Derived State ---
   const selectedPlatform =
@@ -180,6 +193,7 @@ const ArticlePageContent = () => {
       page,
       perPage,
       view,
+      debouncedSearchQuery,
       // For calendar view, we depend on the current month displayed
       view === "calendar" ? format(currentDate, "yyyy-MM") : null,
     ],
@@ -194,6 +208,7 @@ const ArticlePageContent = () => {
         source: platform === "all" ? undefined : platform,
         status: status === "all" ? undefined : status,
         freshness: freshness === "all" ? undefined : freshness,
+        q: debouncedSearchQuery || undefined,
       };
 
       if (view === "table") {
@@ -376,20 +391,32 @@ const ArticlePageContent = () => {
 
         {/* ... Create Article Button ... */}
 
-        {role !== "viewer" && (
-          <Button
-            className="h-9 font-inter gap-2 shadow-sm"
-            onClick={() => createMutation.mutate()}
-            disabled={createMutation.isPending}
-          >
-            {createMutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4" />
-            )}
-            Create Article
-          </Button>
-        )}
+        {/* Create Article Button & Search */}
+        <div className="flex items-center gap-3">
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Search articles..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-white border-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors h-9"
+            />
+          </div>
+          {role !== "viewer" && (
+            <Button
+              className="h-9 font-inter gap-2 shadow-sm"
+              onClick={() => createMutation.mutate()}
+              disabled={createMutation.isPending}
+            >
+              {createMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
+              Create Article
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Content */}
