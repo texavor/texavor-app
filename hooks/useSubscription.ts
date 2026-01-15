@@ -13,6 +13,7 @@ export const useSubscription = () => {
       const { data } = await axiosInstance.post("/api/v1/checkout", {
         plan,
         interval,
+        redirect_url: `${window.location.origin}/subscription/success`,
       });
       if (data.checkout_url) {
         window.location.href = data.checkout_url;

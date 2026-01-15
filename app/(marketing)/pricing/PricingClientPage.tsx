@@ -2,15 +2,46 @@
 
 import { useState } from "react";
 import { PRICING_TIERS, BillingPeriodType } from "@/lib/pricing";
-import { Check } from "lucide-react";
+import { Check, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+import { toast } from "sonner";
 
 export default function PricingClientPage() {
   const [billingPeriod, setBillingPeriod] =
     useState<BillingPeriodType>("yearly");
   const [loadingTier, setLoadingTier] = useState<string | null>(null);
   const { subscribe } = useSubscription();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      await axios.post(
+        "/api/logout",
+        {},
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }
+      );
+      toast.success("Logout Successful!");
+    } catch (error) {
+      console.error("Logout failed", error);
+    } finally {
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("access_expires_at");
+      localStorage.removeItem("user");
+
+      // Manually clear the cookie to prevent middleware loop
+      document.cookie =
+        "_texavor_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
+      window.location.href = "/login";
+    }
+  };
 
   const handleSubscribe = async (tierKey: string) => {
     setLoadingTier(tierKey);
@@ -29,6 +60,18 @@ export default function PricingClientPage() {
   return (
     <div className="min-h-screen bg-[#f9f4f0] py-20 px-4">
       <div className="max-w-6xl mx-auto">
+        {/* Logout Button - Top Right */}
+        <div className="flex justify-end mb-4">
+          <Button
+            onClick={handleLogout}
+            variant="ghost"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-white"
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="font-inter text-sm">Logout</span>
+          </Button>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="font-poppins font-bold text-5xl text-[#0A2918] mb-3">
