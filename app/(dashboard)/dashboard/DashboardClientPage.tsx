@@ -118,9 +118,6 @@ const DashboardClientPage = () => {
 
       {/* Overview Section */}
       <div className="space-y-4 pb-4">
-        <h2 className="text-lg font-bold font-poppins text-[#0A2918]">
-          Overview
-        </h2>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column: Activity Chart & Recent Activity */}
           <div className="lg:col-span-2 space-y-6">

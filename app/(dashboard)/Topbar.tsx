@@ -19,7 +19,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import axios from "axios";
 import { toast } from "sonner";
-import { useGetUsage } from "./settings/hooks/useUsageApi";
 
 // Page title mapping based on routes
 const PAGE_TITLES: Record<string, string> = {
@@ -79,7 +78,6 @@ const Topbar = () => {
   const router = useRouter();
   const pathname = usePathname();
   const { clear, user, mainLoading, blogs } = useAppStore();
-  const { data: usage, isLoading: isLoadingUsage } = useGetUsage(blogs?.id);
   const { role } = usePermissions();
 
   // ... (keep getPageTitle, getBreadcrumbs, handleLogout)
@@ -195,8 +193,8 @@ const Topbar = () => {
 
   return (
     <div className="flex items-start gap-4 w-full py-4">
-      {/* First Div */}
-      <div className="w-3/12">
+      {/* First Div - Breadcrumbs (Expanded) */}
+      <div className="flex-1">
         <div className="bg-white w-full rounded-xl px-4 h-12 flex items-center">
           <Breadcrumb>
             <BreadcrumbList>{getBreadcrumbs()}</BreadcrumbList>
@@ -204,86 +202,8 @@ const Topbar = () => {
         </div>
       </div>
 
-      {/* Second Div */}
-      <div className="w-5/12 max-h-12 min-h-12">
-        <div className="bg-white rounded-xl p-2 flex items-center justify-around max-h-12 min-h-12">
-          {isLoadingUsage ? (
-            <div className="flex items-center gap-4 w-full justify-around">
-              <Skeleton className="h-8 w-24 bg-[#f9f4f0]" />
-              <Skeleton className="h-8 w-24 bg-[#f9f4f0]" />
-              <Skeleton className="h-8 w-24 bg-[#f9f4f0]" />
-              <Skeleton className="h-8 w-24 bg-[#f9f4f0]" />
-            </div>
-          ) : (
-            <>
-              {/* Articles */}
-              <div className="flex items-center gap-2">
-                <Paperclip className="size-5 text-blue-600" />
-                <div className="flex flex-col">
-                  <p className="text-xs font-medium text-[#0A2918] font-poppins leading-tight">
-                    Articles
-                  </p>
-                  <p className="font-poppins text-xs font-medium font-inter leading-tight">
-                    {usage?.current_month?.articles_created || 0} /{" "}
-                    {usage?.current_month?.articles_limit === -1
-                      ? "∞"
-                      : usage?.current_month?.articles_limit || 0}
-                  </p>
-                </div>
-              </div>
-
-              {/* Outlines */}
-              <div className="flex items-center gap-2">
-                <ListTree className="size-5 text-orange-600" />
-                <div className="flex flex-col">
-                  <p className="text-xs font-medium text-[#0A2918] font-poppins leading-tight">
-                    Outlines
-                  </p>
-                  <p className="font-poppins text-xs font-medium font-inter leading-tight">
-                    {usage?.current_month?.outlines_created || 0} /{" "}
-                    {usage?.current_month?.outlines_limit === -1
-                      ? "∞"
-                      : usage?.current_month?.outlines_limit || 0}
-                  </p>
-                </div>
-              </div>
-
-              {/* Topics */}
-              <div className="flex items-center gap-2">
-                <Microscope className="size-5 text-green-600" />
-                <div className="flex flex-col">
-                  <p className="text-xs font-medium text-[#0A2918] font-poppins leading-tight">
-                    Topics
-                  </p>
-                  <p className="font-poppins text-xs font-medium font-inter leading-tight">
-                    {usage?.current_month?.topics_generated || 0} /{" "}
-                    {usage?.current_month?.topics_limit === -1
-                      ? "∞"
-                      : usage?.current_month?.topics_limit || 0}
-                  </p>
-                </div>
-              </div>
-
-              {/* Images */}
-              <div className="flex items-center gap-2">
-                <Image className="size-5 text-pink-600" />
-                <div className="flex flex-col">
-                  <p className="text-xs font-medium text-[#0A2918] font-poppins leading-tight">
-                    Images
-                  </p>
-                  <p className="font-poppins text-xs font-medium font-inter leading-tight">
-                    {usage?.current_month?.image_generations || 0} /{" "}
-                    {usage?.current_month?.image_generations_limit === -1
-                      ? "∞"
-                      : usage?.current_month?.image_generations_limit || 0}
-                  </p>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-      <div className="bg-white p-2 rounded-xl w-4/12 h-12 flex flex-col justify-center">
+      {/* Third Div - User Profile */}
+      <div className="bg-white p-2 rounded-xl w-[320px] h-12 flex flex-col justify-center shrink-0">
         <div className="flex items-center justify-between w-full cursor-pointer px-2">
           {mainLoading ? (
             <div className="flex items-center gap-2">

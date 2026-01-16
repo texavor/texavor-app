@@ -37,7 +37,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { usePermissions } from "@/hooks/usePermissions";
 
-const SideBarOption = [
+const SideBarGeneral = [
   {
     icon: <LayoutDashboardIcon className="h-4 w-4" />,
     title: "Dashboard",
@@ -49,6 +49,14 @@ const SideBarOption = [
     href: "/article",
   },
   {
+    icon: <Bookmark className="h-4 w-4" />,
+    title: "Saved",
+    href: "/saved",
+  },
+];
+
+const SideBarResearch = [
+  {
     icon: <Sparkles className="h-4 w-4" />,
     title: "Keyword Discovery",
     href: "/keyword-discovery",
@@ -58,7 +66,6 @@ const SideBarOption = [
     title: "Keyword Research",
     href: "/keyword-research",
   },
-
   {
     icon: <Microscope className="h-4 w-4" />,
     title: "Topic Generation",
@@ -73,11 +80,6 @@ const SideBarOption = [
     icon: <Target className="h-4 w-4" />,
     title: "Competitor Analysis",
     href: "/competitor-analysis",
-  },
-  {
-    icon: <Bookmark className="h-4 w-4" />,
-    title: "Saved",
-    href: "/saved",
   },
 ];
 
@@ -144,12 +146,16 @@ const SidebarItem = ({
   const button = (
     <Button
       variant={isActive ? "secondary" : "ghost"}
-      className={`flex gap-2 cursor-pointer w-full hover:bg-[#f9f4f0] ${
-        isSideOpen ? "justify-start" : "justify-center"
+      className={`flex cursor-pointer w-full hover:bg-[#f9f4f0] ${
+        isSideOpen ? "justify-start gap-2" : "justify-center"
       } ${isActive ? "bg-[#f9f4f0]" : ""}`}
     >
-      <div className={isActive ? "text-[#104127]" : ""}>{icon}</div>
-      {isSideOpen && <p className="font-poppins font-base">{title}</p>}
+      <div className={`shrink-0 ${isActive ? "text-[#104127]" : ""}`}>
+        {icon}
+      </div>
+      {isSideOpen && (
+        <p className="font-poppins font-base whitespace-nowrap">{title}</p>
+      )}
       {external && isSideOpen && (
         <ExternalLink className="size-3 stroke-2 text-black ml-auto" />
       )}
@@ -254,26 +260,18 @@ const AppSidebar = () => {
     }
   };
 
-  // Filter Main Options
-  const filteredMainOptions = SideBarOption.filter((opt) => {
-    // Research tools
-    if (
-      [
-        "/keyword-research",
-        "/keyword-discovery",
-        "/topic-generation",
-        "/outline-generation",
-        "/competitor-analysis",
-      ].includes(opt.href)
-    ) {
-      return research_tools;
-    }
-    // Saved page - hide for viewers as they can't save
+  // Filter General Options
+  const filteredGeneralOptions = SideBarGeneral.filter((opt) => {
+    // Saved page - hide for viewers
     if (opt.href === "/saved" && role === "viewer") {
       return false;
     }
-
     return true;
+  });
+
+  // Filter Research Options (already pre-filtered by list definition, but check permissions)
+  const filteredResearchOptions = SideBarResearch.filter((opt) => {
+    return research_tools;
   });
 
   // Filter Settings Options
@@ -308,8 +306,8 @@ const AppSidebar = () => {
                 <Skeleton className="w-[100px] h-[20px] rounded-xl bg-[#f9f4f0]" />
               </div>
             ) : (
-              <div className="flex gap-2 items-center">
-                <Avatar className="rounded-full">
+              <div className="flex gap-2 items-center overflow-hidden">
+                <Avatar className="rounded-full shrink-0">
                   <AvatarImage
                     src={`${blogs?.website_url}/favicon.ico`}
                     className="h-6 w-6"
@@ -318,7 +316,7 @@ const AppSidebar = () => {
                     {blogs?.name?.slice(0, 2)?.toUpperCase() || "BL"}
                   </AvatarFallback>
                 </Avatar>
-                <p className="font-medium font-poppins truncate max-w-[130px]">
+                <p className="font-medium font-poppins truncate flex-1">
                   {blogs?.name || "Blog"}
                 </p>
               </div>
@@ -331,32 +329,33 @@ const AppSidebar = () => {
             </div>
           </div>
         ) : (
-          <div className="space-y-2">
-            <div className="flex justify-center">
-              <Avatar className="rounded-full">
-                <AvatarImage
-                  src={`${blogs?.website_url}/favicon.ico`}
-                  className="h-6 w-6"
-                />
-                <AvatarFallback className="bg-[#f9f4f0] rounded-full p-1 font-medium text-sm">
-                  {blogs?.name?.slice(0, 2)?.toUpperCase() || "BL"}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-            <div
-              className="cursor-pointer flex justify-center"
-              onClick={() => setIsSideOpen(!isSideOpen)}
-            >
-              <ArrowRightToLine className="h-4 w-4 stroke-2 text-gray-600 hover:text-gray-600" />
-            </div>
+          <div
+            className="flex justify-center items-center cursor-pointer group"
+            onClick={() => setIsSideOpen(!isSideOpen)}
+          >
+            <Avatar className="rounded-full group-hover:opacity-80 transition-opacity">
+              <AvatarImage
+                src={`${blogs?.website_url}/favicon.ico`}
+                className="h-6 w-6"
+              />
+              <AvatarFallback className="bg-[#f9f4f0] rounded-full p-1 font-medium text-sm">
+                {blogs?.name?.slice(0, 2)?.toUpperCase() || "BL"}
+              </AvatarFallback>
+            </Avatar>
           </div>
         )}
       </div>
 
       {/* --- MAIN NAVIGATION --- */}
-      <div className="bg-white p-2 rounded-xl w-full flex-grow overflow-y-auto overflow-x-hidden">
+      <div className="bg-white p-2 rounded-xl w-full flex-grow overflow-y-auto overflow-x-hidden no-scrollbar">
+        {/* General Group */}
+        {isSideOpen && (
+          <p className="px-4 py-2 text-xs font-semibold text-gray-500 font-poppins">
+            GENERAL
+          </p>
+        )}
         <div className="space-y-1 flex flex-col pb-2">
-          {filteredMainOptions.map((sidebar) => (
+          {filteredGeneralOptions.map((sidebar) => (
             <SidebarItem
               key={sidebar.title}
               {...sidebar}
@@ -369,13 +368,41 @@ const AppSidebar = () => {
           ))}
         </div>
 
-        {/* Separator after Main Options - Always visible if there are main options (which is always true) */}
-        <div className="border-b-[1px] px-2" />
+        {/* Research Group */}
+        {research_tools && filteredResearchOptions.length > 0 && (
+          <>
+            {!isSideOpen && <div className="border-b-[1px] mx-2 my-2" />}
+            {isSideOpen && (
+              <p className="px-4 py-2 text-xs font-semibold text-gray-500 font-poppins mt-2">
+                RESEARCH
+              </p>
+            )}
+            <div className="space-y-1 flex flex-col pb-2">
+              {filteredResearchOptions.map((sidebar) => (
+                <SidebarItem
+                  key={sidebar.title}
+                  {...sidebar}
+                  isSideOpen={isSideOpen}
+                  isActive={
+                    pathname === sidebar.href ||
+                    pathname.startsWith(`${sidebar.href}/`)
+                  }
+                />
+              ))}
+            </div>
+          </>
+        )}
 
-        {/* Settings Group - Only render if there are settings options */}
+        {/* Settings Group */}
         {filteredSettingsOptions.length > 0 && (
           <>
-            <div className="space-y-1 flex flex-col py-2">
+            {!isSideOpen && <div className="border-b-[1px] mx-2 my-2" />}
+            {isSideOpen && (
+              <p className="px-4 py-2 text-xs font-semibold text-gray-500 font-poppins mt-2">
+                SETTINGS
+              </p>
+            )}
+            <div className="space-y-1 flex flex-col pb-2">
               {filteredSettingsOptions.map((sidebar) => (
                 <SidebarItem
                   key={sidebar.title}
@@ -388,11 +415,17 @@ const AppSidebar = () => {
                 />
               ))}
             </div>
-            <div className="border-b-[1px] px-2" />
           </>
         )}
 
-        <div className="space-y-1 flex flex-col pt-2">
+        {/* Support/External Group */}
+        {!isSideOpen && <div className="border-b-[1px] mx-2 my-2" />}
+        {isSideOpen && (
+          <p className="px-4 py-2 text-xs font-semibold text-gray-500 font-poppins mt-2">
+            SUPPORT
+          </p>
+        )}
+        <div className="space-y-1 flex flex-col pb-2">
           {SideBarOptionExternal?.map((sidebar) => (
             <SidebarItem
               key={sidebar.title}
@@ -416,7 +449,7 @@ const AppSidebar = () => {
             }`}
             onClick={handleLogout}
           >
-            <LogOutIcon className="size-4" />
+            <LogOutIcon className="size-4 shrink-0" />
             {isSideOpen && <p className="font-poppins text-normal">Logout</p>}
           </Button>
         </TooltipTrigger>
