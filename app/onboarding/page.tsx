@@ -47,8 +47,9 @@ function OnboardingContent() {
         const res = await axiosInstance.get(`/api/v1/blogs/${id}`);
         if (res.data.status === "active") {
           clearInterval(interval);
-          // Invalidate auth-check query to ensure AuthChecker sees the new blog status
-          queryClient.invalidateQueries({ queryKey: ["auth-check"] });
+          // Reset auth-check query to remove stale data and force fresh fetch
+          // This prevents AuthChecker from serving stale empty-blog data while fetching
+          queryClient.resetQueries({ queryKey: ["auth-check"] });
           toast.success("Onboarding complete! Redirecting to dashboard...");
           setTimeout(() => {
             router.push("/dashboard");

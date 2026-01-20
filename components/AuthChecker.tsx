@@ -41,12 +41,13 @@ const AuthChecker = () => {
     queryKey: ["auth-check"],
     queryFn: async () => {
       const res = await axiosInstance.get<AuthData>(`${baseURL}/me`);
+      console.log("AuthChecker: /me response:", res.data);
       return res.data;
     },
     enabled: !isExcludedPath,
     staleTime: Infinity,
     retry: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true, // Allow refetch on focus to help with debugging
   });
 
   // Fetch subscription data separately
@@ -75,7 +76,7 @@ const AuthChecker = () => {
         return { members: [], meta: { current_user_permissions: [] } };
       try {
         const response = await axiosInstance.get(
-          `/api/v1/teams/${currentTeam.id}/members`
+          `/api/v1/teams/${currentTeam.id}/members`,
         );
         // Handle migration period where API might return array or object
         if (Array.isArray(response.data)) {
@@ -127,16 +128,18 @@ const AuthChecker = () => {
 
       // Check if user has blogs first
       if (data.blogs?.length === 0) {
+        console.log("AuthChecker: No blogs found. Redirecting to onboarding.");
         router.push("/onboarding");
         return;
       }
 
       // Check if blog is still processing
       const processingBlog = data.blogs?.find(
-        (ele: any) => ele?.status === "pending" || ele?.status === "processing"
+        (ele: any) => ele?.status === "pending" || ele?.status === "processing",
       );
 
       if (processingBlog) {
+        console.log("AuthChecker: Blog processing. Redirecting to onboarding.");
         router.push(`/onboarding?blog=${processingBlog.id}`);
         return;
       }
