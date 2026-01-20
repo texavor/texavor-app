@@ -6,7 +6,7 @@ export const useSubscription = () => {
 
   const subscribe = async (
     plan: "starter" | "professional" | "business",
-    interval: "monthly" | "yearly"
+    interval: "monthly" | "yearly",
   ) => {
     try {
       setLoading(true);
@@ -30,7 +30,7 @@ export const useSubscription = () => {
       setLoading(true);
       const { data } = await axiosInstance.post("/api/v1/checkout/portal");
       if (data.portal_url) {
-        window.location.href = data.portal_url;
+        window.open(data.portal_url, "_blank");
       }
     } catch (error) {
       console.error("Portal failed", error);

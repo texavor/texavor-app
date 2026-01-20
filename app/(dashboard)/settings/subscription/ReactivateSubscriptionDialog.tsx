@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
-import { useReactivateSubscription } from "../hooks/useSubscriptionApi";
+import { useResumeSubscription } from "../hooks/useSubscriptionApi";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -28,12 +28,12 @@ export function ReactivateSubscriptionDialog({
   currentPeriodEnd,
 }: ReactivateSubscriptionDialogProps) {
   const queryClient = useQueryClient();
-  const { mutateAsync: reactivateSubscription, isPending } =
-    useReactivateSubscription(blogId);
+  const { mutateAsync: resumeSubscription, isPending } =
+    useResumeSubscription(blogId);
 
   const handleReactivate = async () => {
     try {
-      await reactivateSubscription();
+      await resumeSubscription();
       queryClient.invalidateQueries({ queryKey: ["subscription", blogId] });
       toast.success("Subscription reactivated", {
         description: "Your subscription will continue automatically.",
@@ -64,7 +64,7 @@ export function ReactivateSubscriptionDialog({
               <CheckCircle className="w-5 h-5 text-green-600" />
             </div>
             <DialogTitle className="font-poppins text-xl">
-              Reactivate Subscription
+              Resume Subscription
             </DialogTitle>
           </div>
           <DialogDescription className="font-inter text-gray-600 pt-2">
@@ -109,7 +109,7 @@ export function ReactivateSubscriptionDialog({
             disabled={isPending}
             className="bg-[#0A2918] hover:bg-[#0A2918]/90"
           >
-            {isPending ? "Reactivating..." : "Reactivate Subscription"}
+            {isPending ? "Resuming..." : "Resume Subscription"}
           </Button>
         </DialogFooter>
       </DialogContent>

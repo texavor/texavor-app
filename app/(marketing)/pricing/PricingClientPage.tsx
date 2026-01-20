@@ -24,7 +24,7 @@ export default function PricingClientPage() {
         {},
         {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
-        }
+        },
       );
       toast.success("Logout Successful!");
     } catch (error) {
@@ -50,7 +50,7 @@ export default function PricingClientPage() {
       // billingPeriod is 'monthly' or 'yearly'
       await subscribe(
         tierKey as "starter" | "professional" | "business",
-        billingPeriod
+        billingPeriod,
       );
     } finally {
       setLoadingTier(null);
@@ -60,17 +60,7 @@ export default function PricingClientPage() {
   return (
     <div className="min-h-screen bg-[#f9f4f0] py-20 px-4">
       <div className="max-w-6xl mx-auto">
-        {/* Logout Button - Top Right */}
-        <div className="flex justify-end mb-4">
-          <Button
-            onClick={handleLogout}
-            variant="ghost"
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-white"
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="font-inter text-sm">Logout</span>
-          </Button>
-        </div>
+        {/* Logout Button Moved to Footer */}
 
         {/* Header */}
         <div className="text-center mb-12">
@@ -96,7 +86,7 @@ export default function PricingClientPage() {
           <button
             onClick={() =>
               setBillingPeriod(
-                billingPeriod === "monthly" ? "yearly" : "monthly"
+                billingPeriod === "monthly" ? "yearly" : "monthly",
               )
             }
             className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${
@@ -278,6 +268,17 @@ export default function PricingClientPage() {
               Contact us
             </a>
           </p>
+
+          <div className="mt-8 flex justify-center">
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
+              className="flex items-center gap-2 bg-red-500 hover:bg-red-500 text-white"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="font-inter text-sm">Logout</span>
+            </Button>
+          </div>
         </div>
       </div>
     </div>

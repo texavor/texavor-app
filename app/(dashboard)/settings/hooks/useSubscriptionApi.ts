@@ -36,7 +36,7 @@ export const useCreateCheckoutSession = () => {
           price_id: priceId,
           success_url: successUrl,
           cancel_url: cancelUrl,
-        }
+        },
       );
       return response.data;
     },
@@ -51,22 +51,23 @@ export const useCreateCustomerPortal = () => {
         "/api/v1/stripe/customer_portal",
         {
           return_url: returnUrl,
-        }
+        },
       );
       return response.data;
     },
   });
 };
 
-// Cancel subscription at period end
+// Cancel subscription
 export const useCancelSubscription = (blogId?: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async () => {
-      const response = await axiosInstance.post(
-        "/api/v1/stripe/subscriptions/cancel"
-      );
+      const url = blogId
+        ? `/api/v1/blogs/${blogId}/subscription`
+        : "/api/v1/subscription";
+      const response = await axiosInstance.delete(url);
       return response.data;
     },
     onSuccess: () => {
@@ -76,15 +77,16 @@ export const useCancelSubscription = (blogId?: string) => {
   });
 };
 
-// Reactivate canceled subscription
-export const useReactivateSubscription = (blogId?: string) => {
+// Resume subscription
+export const useResumeSubscription = (blogId?: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async () => {
-      const response = await axiosInstance.post(
-        "/api/v1/stripe/subscriptions/reactivate"
-      );
+      const url = blogId
+        ? `/api/v1/blogs/${blogId}/subscription/resume`
+        : "/api/v1/subscription/resume";
+      const response = await axiosInstance.post(url);
       return response.data;
     },
     onSuccess: () => {

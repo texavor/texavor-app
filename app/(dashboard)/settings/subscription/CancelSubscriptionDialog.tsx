@@ -37,11 +37,18 @@ export function CancelSubscriptionDialog({
       queryClient.invalidateQueries({ queryKey: ["subscription", blogId] });
 
       const formattedDate = currentPeriodEnd
-        ? new Date(currentPeriodEnd).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })
+        ? (() => {
+            const d = new Date(currentPeriodEnd);
+            const day = d.getDate();
+            const month = d.toLocaleString("en-US", { month: "long" });
+            const year = d.getFullYear();
+            const getOrdinal = (n: number) => {
+              const s = ["th", "st", "nd", "rd"];
+              const v = n % 100;
+              return n + (s[(v - 20) % 10] || s[v] || s[0]);
+            };
+            return `${getOrdinal(day)} ${month}, ${year}`;
+          })()
         : "the end of the current period";
 
       toast.success("Subscription canceled", {
@@ -66,7 +73,7 @@ export function CancelSubscriptionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] border-none shadow-none">
+      <DialogContent className="bg-white sm:max-w-[500px] border-none shadow-none">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-orange-100 rounded-full">
@@ -90,8 +97,8 @@ export function CancelSubscriptionDialog({
               <span className="font-semibold">{formattedEndDate}</span>
             </p>
             <p className="font-inter text-sm text-gray-700">
-              <span className="font-semibold">• After cancellation:</span>{" "}
-              You'll be downgraded to the free trial plan with limited features
+              <span className="font-semibold">• After cancellation:</span> You
+              will not be able to access Texavor
             </p>
             <p className="font-inter text-sm text-gray-700">
               <span className="font-semibold">• Your data:</span> All your

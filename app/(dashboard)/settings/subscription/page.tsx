@@ -5,12 +5,16 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ScoreMeter } from "@/components/ScoreMeter";
-import { useGetSubscription } from "../hooks/useSubscriptionApi";
+import {
+  useGetSubscription,
+  useResumeSubscription,
+} from "../hooks/useSubscriptionApi";
 import { useGetUsage } from "../hooks/useUsageApi";
 import { useRouter } from "next/navigation";
 import { Calendar, CreditCard, XCircle } from "lucide-react";
 import { useState } from "react";
 import { useSubscription } from "@/hooks/useSubscription";
+import { CancelSubscriptionDialog } from "./CancelSubscriptionDialog";
 
 import { useAppStore } from "@/store/appStore";
 
@@ -22,6 +26,9 @@ export default function SubscriptionPage() {
   const isLoading = isSubLoading || isUsageLoading;
   const router = useRouter();
   const { manageSubscription, loading } = useSubscription();
+  const { mutate: resumeSubscription, isPending: isResumeLoading } =
+    useResumeSubscription(blogs?.id);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   if (isLoading) {
     return (
@@ -74,6 +81,21 @@ export default function SubscriptionPage() {
     competitors: "Competitors",
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = date.toLocaleString("en-US", { month: "long" });
+    const year = date.getFullYear();
+
+    const getOrdinal = (n: number) => {
+      const s = ["th", "st", "nd", "rd"];
+      const v = n % 100;
+      return n + (s[(v - 20) % 10] || s[v] || s[0]);
+    };
+
+    return `${getOrdinal(day)} ${month}, ${year}`;
+  };
+
   return (
     <div>
       <div className="mb-6">
@@ -96,8 +118,8 @@ export default function SubscriptionPage() {
             <div className="flex items-center gap-4 mb-6">
               <Badge
                 className={`${getTierColor(
-                  subscription?.tier || "trial"
-                )} text-lg px-4 py-2 capitalize`}
+                  subscription?.tier || "trial",
+                )} text-lg px-4 py-1 capitalize`}
               >
                 {subscription?.tier} Plan
               </Badge>
@@ -105,12 +127,14 @@ export default function SubscriptionPage() {
                 variant={
                   subscription?.status === "active"
                     ? "default"
-                    : subscription?.status === "trialing"
-                    ? "outline" // Use outline or a custom class for trialing
-                    : "secondary"
+                    : subscription?.status === "trialing" ||
+                        subscription?.status === "on_trial"
+                      ? "outline" // Use outline or a custom class for trialing
+                      : "secondary"
                 }
                 className={`capitalize ${
-                  subscription?.status === "trialing"
+                  subscription?.status === "trialing" ||
+                  subscription?.status === "on_trial"
                     ? "border-orange-500 text-orange-600 bg-orange-50"
                     : ""
                 }`}
@@ -127,12 +151,13 @@ export default function SubscriptionPage() {
                   <span className="font-inter">
                     {subscription.subscription_details.cancel_at_period_end
                       ? "Subscription ends on "
-                      : subscription.status === "trialing"
-                      ? "Trial ends on "
-                      : "Renews on "}
-                    {new Date(
-                      subscription.subscription_details.current_period_end
-                    ).toLocaleDateString()}
+                      : subscription.status === "trialing" ||
+                          subscription.status === "on_trial"
+                        ? "Trial ends on "
+                        : "Renews on "}
+                    {formatDate(
+                      subscription.subscription_details.current_period_end,
+                    )}
                   </span>
                   <span className="text-gray-500">
                     ({subscription.subscription_details.days_until_renewal}{" "}
@@ -144,14 +169,14 @@ export default function SubscriptionPage() {
                     <XCircle className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
                     <div className="space-y-1">
                       <p className="text-sm text-orange-900 font-semibold">
-                        Subscription Canceled
+                        Cancellation Scheduled
                       </p>
                       <p className="text-sm text-orange-700">
                         Your subscription will end on{" "}
-                        {new Date(
-                          subscription.subscription_details.current_period_end
-                        ).toLocaleDateString()}
-                        . You'll be downgraded to the free trial plan after this
+                        {formatDate(
+                          subscription.subscription_details.current_period_end,
+                        )}
+                        . You will not be able to access Texavor after this
                         date.
                       </p>
                     </div>
@@ -169,7 +194,8 @@ export default function SubscriptionPage() {
                 */}
               {subscription?.tier === "trial" ||
               (subscription?.status !== "active" &&
-                subscription?.status !== "trialing") ? (
+                subscription?.status !== "trialing" &&
+                subscription?.status !== "on_trial") ? (
                 <Button
                   onClick={() => router.push("/pricing")}
                   className="bg-[#0A2918] hover:bg-[#0A2918]/90"
@@ -178,17 +204,47 @@ export default function SubscriptionPage() {
                   Upgrade Now
                 </Button>
               ) : (
-                <Button
-                  onClick={manageSubscription}
-                  disabled={loading}
-                  variant="outline"
-                  className="border-gray-200"
-                >
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  {loading ? "Loading..." : "Manage Subscription"}
-                </Button>
+                <>
+                  <Button
+                    onClick={manageSubscription}
+                    disabled={loading}
+                    variant="outline"
+                    className="border-gray-200"
+                  >
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    {loading ? "Loading..." : "Manage Subscription"}
+                  </Button>
+                  {!subscription?.subscription_details
+                    ?.cancel_at_period_end && (
+                    <Button
+                      onClick={() => setShowCancelDialog(true)}
+                      variant="ghost"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      Cancel Subscription
+                    </Button>
+                  )}
+                  {subscription?.subscription_details?.cancel_at_period_end && (
+                    <Button
+                      onClick={() => resumeSubscription()}
+                      disabled={isResumeLoading}
+                      variant="ghost"
+                      className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                    >
+                      {isResumeLoading ? "Resuming..." : "Resume Subscription"}
+                    </Button>
+                  )}
+                </>
               )}
             </div>
+            <CancelSubscriptionDialog
+              open={showCancelDialog}
+              onOpenChange={setShowCancelDialog}
+              blogId={blogs?.id}
+              currentPeriodEnd={
+                subscription?.subscription_details?.current_period_end
+              }
+            />
           </Card>
 
           {/* Upgrade CTA for Trial Users */}
@@ -341,7 +397,7 @@ export default function SubscriptionPage() {
                       <span className="font-inter text-sm font-medium text-gray-900">
                         {usageData.current_month.integrations_used} /{" "}
                         {formatLimit(
-                          usageData.current_month.integrations_limit
+                          usageData.current_month.integrations_limit,
                         )}
                       </span>
                     </div>

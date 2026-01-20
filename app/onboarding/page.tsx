@@ -299,7 +299,7 @@ function OnboardingContent() {
                 className="bg-white text-black font-inter px-3"
               />
             </div>
-            <div className="space-y-4">
+           {false && <div className="space-y-4">
               <Label className="font-inter text-[#7A7A7A] font-medium">
                 Competitors
               </Label>
@@ -361,7 +361,7 @@ function OnboardingContent() {
                 <Plus className="h-4 w-4 mr-2" />
                 Add Competitor
               </Button>
-            </div>
+            </div>}
             <div className="flex gap-4 justify-between w-full">
               <Button
                 onClick={() => setStep(1)}
