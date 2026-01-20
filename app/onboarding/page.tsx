@@ -46,8 +46,10 @@ function OnboardingContent() {
         const res = await axiosInstance.get(`/api/v1/blogs/${id}`);
         if (res.data.status === "active") {
           clearInterval(interval);
-          toast.success("Onboarding complete!");
-          router.push("/dashboard");
+          toast.success("Onboarding complete! Redirecting to dashboard...");
+          setTimeout(() => {
+            router.push("/dashboard");
+          }, 10000);
         }
       } catch (err) {
         clearInterval(interval);
@@ -299,69 +301,71 @@ function OnboardingContent() {
                 className="bg-white text-black font-inter px-3"
               />
             </div>
-           {false && <div className="space-y-4">
-              <Label className="font-inter text-[#7A7A7A] font-medium">
-                Competitors
-              </Label>
-              {competitors.map((competitor, index) => {
-                const faviconUrl = getFaviconUrl(competitor);
-                return (
-                  <div key={index} className="flex items-center gap-2">
-                    <div className="h-10 w-10 flex-shrink-0 rounded-md border bg-white flex items-center justify-center overflow-hidden no-scrollbar">
-                      {faviconUrl && competitor ? (
-                        <img
-                          src={faviconUrl}
-                          alt="Favicon"
-                          className="h-6 w-6 object-contain"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display =
-                              "none";
-                            (
-                              e.target as HTMLImageElement
-                            ).nextElementSibling?.classList.remove("hidden");
-                          }}
+            {false && (
+              <div className="space-y-4">
+                <Label className="font-inter text-[#7A7A7A] font-medium">
+                  Competitors
+                </Label>
+                {competitors.map((competitor, index) => {
+                  const faviconUrl = getFaviconUrl(competitor);
+                  return (
+                    <div key={index} className="flex items-center gap-2">
+                      <div className="h-10 w-10 flex-shrink-0 rounded-md border bg-white flex items-center justify-center overflow-hidden no-scrollbar">
+                        {faviconUrl && competitor ? (
+                          <img
+                            src={faviconUrl}
+                            alt="Favicon"
+                            className="h-6 w-6 object-contain"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display =
+                                "none";
+                              (
+                                e.target as HTMLImageElement
+                              ).nextElementSibling?.classList.remove("hidden");
+                            }}
+                          />
+                        ) : null}
+                        <Globe
+                          className={`h-5 w-5 text-gray-400 ${
+                            faviconUrl && competitor ? "hidden" : ""
+                          }`}
                         />
-                      ) : null}
-                      <Globe
-                        className={`h-5 w-5 text-gray-400 ${
-                          faviconUrl && competitor ? "hidden" : ""
-                        }`}
+                      </div>
+                      <Input
+                        type="url"
+                        value={competitor}
+                        onChange={(e) =>
+                          handleCompetitorChange(index, e.target.value)
+                        }
+                        placeholder="https://competitor.com"
+                        className="bg-white text-black font-inter px-3"
                       />
+                      {competitors.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="hover:bg-transparent"
+                          onClick={() => handleRemoveCompetitor(index)}
+                        >
+                          <X className="h-4 w-4 text-black" />
+                        </Button>
+                      )}
                     </div>
-                    <Input
-                      type="url"
-                      value={competitor}
-                      onChange={(e) =>
-                        handleCompetitorChange(index, e.target.value)
-                      }
-                      placeholder="https://competitor.com"
-                      className="bg-white text-black font-inter px-3"
-                    />
-                    {competitors.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="hover:bg-transparent"
-                        onClick={() => handleRemoveCompetitor(index)}
-                      >
-                        <X className="h-4 w-4 text-black" />
-                      </Button>
-                    )}
-                  </div>
-                );
-              })}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddCompetitor}
-                className="bg-white text-black font-inter hover:bg-white"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Competitor
-              </Button>
-            </div>}
+                  );
+                })}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddCompetitor}
+                  className="bg-white text-black font-inter hover:bg-white"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Competitor
+                </Button>
+              </div>
+            )}
             <div className="flex gap-4 justify-between w-full">
               <Button
                 onClick={() => setStep(1)}
