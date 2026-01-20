@@ -31,10 +31,19 @@ import {
   FileText,
   Check,
   FileEdit,
+  Book,
+  Sparkles,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { axiosInstance } from "@/lib/axiosInstace";
 import { useAppStore } from "@/store/appStore";
+import { ResearchBriefSheet } from "./ResearchBriefSheet";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface OutlineEditorProps {
   initialData: OutlineData;
@@ -113,14 +122,44 @@ const SortableSectionItem = ({
             onChange={(e) =>
               onUpdate(index, { ...section, heading: e.target.value })
             }
-            className="font-semibold text-lg border-transparent hover:border-gray-200 focus:border-green-500 px-2 h-9"
+            className="font-semibold text-lg border-transparent hover:border-gray-200 focus:border-green-500 px-2 h-9 flex-1"
             placeholder="Section Heading"
           />
+          {section.citations && section.citations.length > 0 && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1 bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs font-medium cursor-help">
+                    <Book size={12} />
+                    <span>{section.citations.length}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs p-3">
+                  <p className="font-semibold mb-1 text-xs">Sources:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    {section.citations.map((c, i) => (
+                      <li key={i} className="text-xs truncate">
+                        <a
+                          href={c.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="hover:underline"
+                        >
+                          {c.title}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
           <Button
             variant="ghost"
             size="icon"
             onClick={() => onRemove(index)}
-            className="text-gray-400 hover:text-red-500 ml-auto"
+            className="text-gray-400 hover:text-red-500"
           >
             <Trash2 size={18} />
           </Button>
@@ -173,13 +212,12 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
   const { blogs } = useAppStore();
   const [data, setData] = useState<OutlineData>(initialData);
   const [showSavedMessage, setShowSavedMessage] = useState(false);
+  const [showResearch, setShowResearch] = useState(false);
 
   // Mutation to create article from outline
   const createArticleMutation = useMutation({
     mutationFn: async () => {
       let outlineId = data?.id;
-
-      console.log("Initial outline ID:", outlineId);
 
       // If outline hasn't been saved yet, save it first
       if (!outlineId) {
@@ -187,8 +225,6 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
           ...data,
           sections: items.map((i) => i.section),
         };
-
-        console.log("Saving outline first...", outlineToSave);
 
         // Save using the saved_results API
         const saveRes = await axiosInstance.post(
@@ -212,27 +248,18 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
                 target_keywords: outlineToSave.target_keywords,
                 tone: outlineToSave.tone,
                 target_audience: outlineToSave.target_audience,
+                research_brief: outlineToSave.research_brief, // Include Research Brief
               },
             },
-          }
+          },
         );
 
-        console.log("Save response:", saveRes?.data);
         // Extract the saved_result ID from the response
         outlineId = saveRes?.data?.data?.id || saveRes?.data?.id;
-        console.log("Extracted outline ID:", outlineId);
 
         // Update local data with the saved outline ID
         setData((prev) => ({ ...prev, id: outlineId }));
       }
-
-      console.log("Creating article with saved_result_id:", outlineId);
-      console.log("Article payload:", {
-        title: data.title || "Untitled Article",
-        content: data.meta_description || "",
-        saved_result_id: outlineId,
-        source: "texavor",
-      });
 
       // Now create the article with the outline ID
       const res = await axiosInstance.post(
@@ -242,7 +269,7 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
           content: data.meta_description || "",
           saved_result_id: outlineId,
           source: "texavor",
-        }
+        },
       );
       return res?.data;
     },
@@ -258,11 +285,8 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
       const timer = setTimeout(() => setShowSavedMessage(false), 2000);
       return () => clearTimeout(timer);
     }
-    // If just finished saving (was saving, now not), triggering logic handled in button click or just assume false->true->false cycle
-    // We can just rely on the parent changing isSaving from true to false
   }, [isSaving, showSavedMessage]);
 
-  // Use a ref to track previous value because we can't inspect previous prop in useEffect directly without it
   const prevIsSaving = React.useRef(isSaving);
   useEffect(() => {
     if (prevIsSaving.current && !isSaving) {
@@ -271,12 +295,18 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
     prevIsSaving.current = isSaving;
   }, [isSaving]);
 
-  // Only sync ID if it changes (e.g. after save), do not reset other state to avoid loops
+  // Only sync ID if it changes (e.g. after save)
   useEffect(() => {
     if (initialData.id && initialData.id !== data.id) {
       setData((prev) => ({ ...prev, id: initialData.id }));
     }
-  }, [initialData.id, data.id]);
+    if (initialData.research_brief && !data.research_brief) {
+      setData((prev) => ({
+        ...prev,
+        research_brief: initialData.research_brief,
+      }));
+    }
+  }, [initialData.id, data.id, initialData.research_brief]);
 
   // Refactored State Management for Sections
   const [items, setItems] = useState<{ id: string; section: OutlineSection }[]>(
@@ -284,10 +314,10 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
       initialData.sections.map((s) => ({
         id: `section-${Math.random().toString(36).substr(2, 9)}`,
         section: s,
-      }))
+      })),
   );
 
-  // Notify parent of changes whenever data or items change
+  // Notify parent of changes
   useEffect(() => {
     if (onChange) {
       onChange({
@@ -301,13 +331,13 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
     data.introduction,
     data.conclusion,
     items,
-  ]); // Watch specific fields to avoid loops if we watched 'data' directly and it was derived
+  ]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const handleDragEndReal = (event: DragEndEvent) => {
@@ -351,10 +381,28 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
 
   return (
     <div className="space-y-6 w-full pb-10">
+      <ResearchBriefSheet
+        open={showResearch}
+        onOpenChange={setShowResearch}
+        data={data.research_brief}
+      />
+
       {/* Header / Meta Info */}
       <div className="bg-white p-6 rounded-xl shadow-none border-none space-y-4">
         <div className="space-y-3">
           <div className="flex gap-2 justify-end">
+            {/* Toggle Research Brief */}
+            {data.research_brief && (
+              <Button
+                variant="outline"
+                onClick={() => setShowResearch(true)}
+                className="text-blue-700 bg-blue-50 border-blue-100 hover:bg-blue-100 shadow-none font-medium"
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                View Research Brief
+              </Button>
+            )}
+
             <Button
               onClick={handleSave}
               disabled={isSaving}
@@ -372,12 +420,12 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
                   ? "Updating..."
                   : "Saving..."
                 : showSavedMessage
-                ? isEditMode
-                  ? "Updated!"
-                  : "Saved!"
-                : isEditMode
-                ? "Update"
-                : "Save"}
+                  ? isEditMode
+                    ? "Updated!"
+                    : "Saved!"
+                  : isEditMode
+                    ? "Update"
+                    : "Save"}
             </Button>
             {isEditMode && linkedArticle ? (
               <Button
@@ -436,85 +484,89 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
         </div>
       </div>
 
-      {/* Introduction */}
-      <Card
-        id="outline-intro"
-        className="border-none shadow-none bg-white scroll-mt-20"
-      >
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold text-gray-800 flex items-center gap-2">
-            <FileText size={18} className="text-blue-500" /> Introduction
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            value={data.introduction || ""}
-            onChange={(e) => setData({ ...data, introduction: e.target.value })}
-            className="resize-none text-sm text-gray-600 font-inter border-gray-200 focus:border-green-500 min-h-[100px]"
-            placeholder="Write an introduction..."
-          />
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        {/* Introduction */}
+        <Card
+          id="outline-intro"
+          className="border-none shadow-none bg-white scroll-mt-20"
+        >
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold text-gray-800 flex items-center gap-2">
+              <FileText size={18} className="text-blue-500" /> Introduction
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              value={data.introduction || ""}
+              onChange={(e) =>
+                setData({ ...data, introduction: e.target.value })
+              }
+              className="resize-none text-sm text-gray-600 font-inter border-gray-200 focus:border-green-500 min-h-[100px]"
+              placeholder="Write an introduction..."
+            />
+          </CardContent>
+        </Card>
 
-      {/* Sections (Draggable) */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900 font-poppins">
-            Outline Sections
-          </h3>
-          <Button
-            size="sm"
-            onClick={addSection}
-            className="bg-[#104127] text-white hover:bg-[#0d3320] shadow-none border-none"
+        {/* Sections (Draggable) */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900 font-poppins">
+              Outline Sections
+            </h3>
+            <Button
+              size="sm"
+              onClick={addSection}
+              className="bg-[#104127] text-white hover:bg-[#0d3320] shadow-none border-none"
+            >
+              <Plus size={16} className="mr-1" /> Add Section
+            </Button>
+          </div>
+
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEndReal}
           >
-            <Plus size={16} className="mr-1" /> Add Section
-          </Button>
+            <SortableContext
+              items={items.map((i) => i.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-4">
+                {items.map((item, index) => (
+                  <SortableSectionItem
+                    key={item.id}
+                    id={item.id}
+                    section={item.section}
+                    index={index}
+                    onUpdate={updateSection}
+                    onRemove={removeSection}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         </div>
 
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEndReal}
+        {/* Conclusion */}
+        <Card
+          id="outline-conclusion"
+          className="border-none shadow-none bg-white scroll-mt-20"
         >
-          <SortableContext
-            items={items.map((i) => i.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <div className="space-y-4">
-              {items.map((item, index) => (
-                <SortableSectionItem
-                  key={item.id}
-                  id={item.id}
-                  section={item.section}
-                  index={index}
-                  onUpdate={updateSection}
-                  onRemove={removeSection}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold text-gray-800 flex items-center gap-2">
+              <FileText size={18} className="text-purple-500" /> Conclusion
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              value={data.conclusion || ""}
+              onChange={(e) => setData({ ...data, conclusion: e.target.value })}
+              className="resize-none text-sm text-gray-600 font-inter border-gray-200 focus:border-green-500 min-h-[100px]"
+              placeholder="Write a conclusion..."
+            />
+          </CardContent>
+        </Card>
       </div>
-
-      {/* Conclusion */}
-      <Card
-        id="outline-conclusion"
-        className="border-none shadow-none bg-white scroll-mt-20"
-      >
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold text-gray-800 flex items-center gap-2">
-            <FileText size={18} className="text-purple-500" /> Conclusion
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            value={data.conclusion || ""}
-            onChange={(e) => setData({ ...data, conclusion: e.target.value })}
-            className="resize-none text-sm text-gray-600 font-inter border-gray-200 focus:border-green-500 min-h-[100px]"
-            placeholder="Write a conclusion..."
-          />
-        </CardContent>
-      </Card>
     </div>
   );
 };

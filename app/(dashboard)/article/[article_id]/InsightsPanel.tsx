@@ -6,11 +6,17 @@ import { Button } from "@/components/ui/button";
 import { ScoreMeter, Gauge } from "@/components/ScoreMeter";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
+import { Loader2, Book } from "lucide-react";
 import {
   useOutlineApi,
   OutlineData,
 } from "../../outline-generation/hooks/useOutlineApi";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface InsightsPanelProps {
   showMetrics: boolean;
@@ -36,7 +42,7 @@ const InsightsPanel = ({
   const [outlineTopic, setOutlineTopic] = useState(articleTitle || "");
   const { generateOutline } = useOutlineApi();
   const [generatedOutline, setGeneratedOutline] = useState<OutlineData | null>(
-    null
+    null,
   );
 
   // Update topic when article title changes
@@ -76,12 +82,13 @@ const InsightsPanel = ({
       {
         topic: outlineTopic,
         article_id: articleId,
+        deep_research: true,
       },
       {
         onSuccess: (data: OutlineData) => {
           setGeneratedOutline(data);
         },
-      }
+      },
     );
   };
 
@@ -322,7 +329,7 @@ const InsightsPanel = ({
                             >
                               {keyword}
                             </span>
-                          )
+                          ),
                         )}
                       </div>
                     )}
@@ -358,9 +365,50 @@ const InsightsPanel = ({
                             {idx + 1}.
                           </span>
                           <div className="flex-1">
-                            <h5 className="text-sm font-semibold text-gray-900 mb-1">
-                              {section.heading}
-                            </h5>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h5 className="text-sm font-semibold text-gray-900">
+                                {section.heading}
+                              </h5>
+                              {section.citations &&
+                                section.citations.length > 0 && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div className="flex items-center gap-1 bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded text-[10px] font-medium cursor-help border border-blue-100/50">
+                                          <Book size={10} />
+                                          <span>
+                                            {section.citations.length}
+                                          </span>
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent className="max-w-xs p-3">
+                                        <p className="font-semibold mb-1 text-xs">
+                                          Sources:
+                                        </p>
+                                        <ul className="list-disc list-inside space-y-1">
+                                          {section.citations.map(
+                                            (c: any, i: number) => (
+                                              <li
+                                                key={i}
+                                                className="text-xs truncate"
+                                              >
+                                                <a
+                                                  href={c.url}
+                                                  target="_blank"
+                                                  rel="noreferrer"
+                                                  className="hover:underline"
+                                                >
+                                                  {c.title}
+                                                </a>
+                                              </li>
+                                            ),
+                                          )}
+                                        </ul>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                            </div>
                             {section.key_points &&
                               section.key_points.length > 0 && (
                                 <ul className="space-y-1 pl-2">
@@ -377,7 +425,7 @@ const InsightsPanel = ({
                                           {point}
                                         </span>
                                       </li>
-                                    )
+                                    ),
                                   )}
                                 </ul>
                               )}

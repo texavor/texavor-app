@@ -2,7 +2,7 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Search, Info } from "lucide-react";
+import { Loader2, Search, Info, Sparkles } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import {
   Tooltip,
@@ -12,7 +12,11 @@ import {
 } from "@/components/ui/tooltip";
 
 interface OutlineFormProps {
-  onSubmit: (data: { topic: string; aeo_optimization: boolean }) => void;
+  onSubmit: (data: {
+    topic: string;
+    aeo_optimization: boolean;
+    deep_research: boolean;
+  }) => void;
   isPending: boolean;
   initialValues?: {
     topic: string;
@@ -31,16 +35,26 @@ export const OutlineForm: React.FC<OutlineFormProps> = ({
       aeo_optimization: initialValues?.aeo_optimization || false,
     },
     onSubmit: async ({ value }) => {
-      onSubmit(value);
+      onSubmit({ ...value, deep_research: true });
     },
   });
 
   return (
     <div className="bg-white rounded-xl p-4 space-y-2">
-      <p className="font-poppins text-black font-medium">Generate Outline</p>
-      <p className="font-inter text-[#7A7A7A] text-sm font-normal">
-        Enter a topic to generate a comprehensive article outline.
-      </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <p className="font-poppins text-black font-medium">
+            Generate Outline
+          </p>
+          <p className="font-inter text-[#7A7A7A] text-sm font-normal">
+            Enter a topic to generate a comprehensive article outline.
+          </p>
+        </div>
+        <div className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs font-semibold font-inter flex items-center gap-1 border border-blue-100">
+          <Sparkles className="w-3 h-3" />
+          Deep Research Active
+        </div>
+      </div>
 
       <form
         onSubmit={(e) => {

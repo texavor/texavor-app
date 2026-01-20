@@ -4,9 +4,17 @@ import { useAppStore } from "@/store/appStore";
 import { toast } from "sonner";
 import { savedResultsService } from "@/lib/api/savedResults";
 
+export interface ResearchBrief {
+  market_gaps: string[];
+  key_statistics: string[];
+  common_questions: string[];
+  sources: { title: string; url: string; key_takeaway: string }[];
+}
+
 export interface OutlineSection {
   heading: string;
   key_points: string[];
+  citations?: { title: string; url: string }[];
 }
 
 export interface OutlineData {
@@ -22,6 +30,7 @@ export interface OutlineData {
   target_audience?: string;
   created_at?: string;
   topic: string;
+  research_brief?: ResearchBrief;
 }
 
 export interface GenerateOutlineRequest {
@@ -30,6 +39,7 @@ export interface GenerateOutlineRequest {
   target_audience?: string;
   article_id?: string;
   aeo_optimization?: boolean;
+  deep_research?: boolean;
 }
 
 export const useOutlineApi = () => {
@@ -41,7 +51,7 @@ export const useOutlineApi = () => {
     mutationFn: async (data: GenerateOutlineRequest) => {
       const response = await axiosInstance.post(
         `/api/v1/blogs/${blogs?.id}/outline_generation`,
-        data
+        data,
       );
       return {
         ...response.data.data,
@@ -151,7 +161,7 @@ export const useOutlineApi = () => {
               target_audience: outline.target_audience,
             },
           },
-        }
+        },
       );
       return {
         id: response.data.data.id,
