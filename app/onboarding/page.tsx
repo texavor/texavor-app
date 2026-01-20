@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus, X, Globe } from "lucide-react";
 import { Toaster, toast } from "sonner";
 import { axiosInstance } from "@/lib/axiosInstace";
@@ -27,6 +27,7 @@ function OnboardingContent() {
   const [step, setStep] = useState(1);
   const [processing, setProcessing] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   // Step 1 fields
   const [name, setName] = useState("");
@@ -46,6 +47,8 @@ function OnboardingContent() {
         const res = await axiosInstance.get(`/api/v1/blogs/${id}`);
         if (res.data.status === "active") {
           clearInterval(interval);
+          // Invalidate auth-check query to ensure AuthChecker sees the new blog status
+          queryClient.invalidateQueries({ queryKey: ["auth-check"] });
           toast.success("Onboarding complete! Redirecting to dashboard...");
           setTimeout(() => {
             router.push("/dashboard");
