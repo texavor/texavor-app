@@ -44,7 +44,7 @@ export default function CompetitorDetailPage() {
   const [competitor, setCompetitor] = useState<Competitor | null>(null);
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<string | null>(
-    null
+    null,
   );
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
@@ -98,7 +98,7 @@ export default function CompetitorDetailPage() {
       console.error("Failed to start analysis:", error);
       if (error.response?.status === 429) {
         toast.error(
-          error.response.data.message || "Weekly analysis limit reached."
+          error.response.data.message || "Weekly analysis limit reached.",
         );
         if (error.response.data.limit !== undefined) {
           setLimits({
@@ -133,7 +133,7 @@ export default function CompetitorDetailPage() {
         // Use analysis_status endpoint to check if analysis is complete
         const statusData = await competitorApi.getAnalysisStatus(
           blogs.id,
-          competitor.id
+          competitor.id,
         );
 
         const status = statusData.analysis_status;
@@ -171,7 +171,7 @@ export default function CompetitorDetailPage() {
         } else {
           setIsPollingNewAnalysis(false);
           toast.error(
-            "Analysis is taking longer than expected. Please refresh the page."
+            "Analysis is taking longer than expected. Please refresh the page.",
           );
         }
       } catch (error) {
@@ -206,7 +206,7 @@ export default function CompetitorDetailPage() {
         const data = await competitorApi.getAnalysisDetails(
           blogs.id,
           competitorId,
-          selectedAnalysisId
+          selectedAnalysisId,
         );
 
         if (!isPolling) return;
@@ -225,7 +225,7 @@ export default function CompetitorDetailPage() {
           // Analysis finished, update the local state to reflect the change
           // This avoids an extra API call to getAnalyses
           setAnalyses((prev) =>
-            prev.map((a) => (a.id === data.analysis.id ? data.analysis : a))
+            prev.map((a) => (a.id === data.analysis.id ? data.analysis : a)),
           );
           setLoadingAnalysis(false);
         }
@@ -263,7 +263,7 @@ export default function CompetitorDetailPage() {
 
   // Helper function to determine status from analysis
   const getAnalysisStatus = (
-    analysis: Analysis | null
+    analysis: Analysis | null,
   ): "pending" | "analyzing" | "completed" | "failed" | null => {
     if (!analysis) return null;
 
@@ -343,7 +343,7 @@ export default function CompetitorDetailPage() {
                   </div>
                 )}
               </div>
-              <p className="text-gray-500 text-base max-w-xl">
+              <p className="text-gray-500 text-base max-w-xl line-clamp-2">
                 {competitor.description || "No description available."}
               </p>
             </div>
@@ -451,9 +451,8 @@ export default function CompetitorDetailPage() {
               {selectedAnalysisId
                 ? analyses.find((a) => a.id === selectedAnalysisId)
                   ? `${new Date(
-                      analyses.find(
-                        (a) => a.id === selectedAnalysisId
-                      )!.created_at
+                      analyses.find((a) => a.id === selectedAnalysisId)!
+                        .created_at,
                     ).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
@@ -495,16 +494,20 @@ export default function CompetitorDetailPage() {
           analysesHistory={analyses}
         />
       ) : (
-        <div className="text-center py-16 rounded-xl bg-muted/10">
-          <div className="mx-auto max-w-md space-y-3">
-            <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-              <BarChart className="w-6 h-6 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold">No Analysis Data</h3>
-            <p className="text-sm text-muted-foreground">
-              Run a new analysis to get started with competitor insights.
-            </p>
+        <div className="flex flex-col items-center justify-center py-12 rounded-xl bg-white border border-dashed border-gray-200">
+          <div className="relative w-64 h-64 mb-4">
+            <img
+              src="/empty-state.png"
+              alt="No Analysis Data"
+              className="w-full h-full object-contain opacity-80"
+            />
           </div>
+          <h3 className="text-lg font-semibold text-[#0A2918]">
+            No Analysis Data
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1 text-center max-w-sm">
+            Run a new analysis to get started with competitor insights.
+          </p>
         </div>
       )}
     </div>

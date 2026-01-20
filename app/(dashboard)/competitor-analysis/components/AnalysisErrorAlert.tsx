@@ -11,7 +11,7 @@ export default function AnalysisErrorAlert({
 }: AnalysisErrorAlertProps) {
   return (
     <div
-      className={`relative bg-gradient-to-r from-amber-50 via-amber-50/80 to-amber-50/60 border border-amber-200/60 rounded-xl p-4 flex gap-3 items-start shadow-sm ${className}`}
+      className={`relative bg-gradient-to-r from-amber-50 via-amber-50/80 to-amber-50/60 border border-none rounded-xl p-4 flex gap-3 items-start shadow-none ${className}`}
     >
       <div className="flex-shrink-0 mt-0.5">
         <div className="p-2 bg-amber-100 rounded-lg">
@@ -24,7 +24,7 @@ export default function AnalysisErrorAlert({
             Analysis Failed
           </h4>
         </div>
-        <p className="text-sm text-amber-800 leading-relaxed break-words">
+        <p className="text-sm text-amber-800 leading-relaxed truncate">
           {errorMessage}
         </p>
       </div>

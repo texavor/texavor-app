@@ -33,12 +33,13 @@ export default function AddCompetitorSheet({
   const [formData, setFormData] = useState<CompetitorCreateData>({
     name: "",
     website_url: "",
+    sitemap_url: "",
     rss_feed_url: "",
     description: "",
   });
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -55,6 +56,7 @@ export default function AddCompetitorSheet({
       setFormData({
         name: "",
         website_url: "",
+        sitemap_url: "",
         rss_feed_url: "",
         description: "",
       });
@@ -151,6 +153,28 @@ export default function AddCompetitorSheet({
                 <p className="text-[11px] text-muted-foreground">
                   If known, providing the RSS feed URL can improve analysis
                   accuracy.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="sitemap_url"
+                  className="text-foreground/80 font-inter"
+                >
+                  Sitemap URL <span className="text-gray-400">(Optional)</span>
+                </Label>
+                <Input
+                  id="sitemap_url"
+                  name="sitemap_url"
+                  value={formData.sitemap_url}
+                  onChange={handleChange}
+                  placeholder="https://techcrunch.com/sitemap.xml"
+                  type="url"
+                  className="font-inter"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Leave blank to auto-detect. Useful if the sitemap is at a
+                  non-standard location.
                 </p>
               </div>
 

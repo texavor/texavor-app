@@ -262,7 +262,7 @@ export default function PricingClientPage() {
           <p className="font-inter text-sm text-gray-500 mt-2">
             Need a custom plan?{" "}
             <a
-              href="/contact"
+              href="mailto:hello@texavor.com"
               className="text-[#0A2918] hover:underline font-medium"
             >
               Contact us

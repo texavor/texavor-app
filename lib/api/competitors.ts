@@ -5,6 +5,7 @@ export interface Competitor {
   name: string;
   website_url: string;
   domain: string;
+  sitemap_url?: string;
   rss_feed_url?: string;
   description?: string;
   active: boolean;
@@ -136,6 +137,7 @@ export interface KeywordsAnalysis {
 export interface CompetitorCreateData {
   name: string;
   website_url: string;
+  sitemap_url?: string;
   rss_feed_url?: string;
   description?: string;
 }
@@ -143,6 +145,7 @@ export interface CompetitorCreateData {
 export interface CompetitorUpdateData {
   name?: string;
   website_url?: string;
+  sitemap_url?: string;
   rss_feed_url?: string;
   description?: string;
   active?: boolean;
@@ -152,7 +155,7 @@ export const competitorApi = {
   // List all competitors
   async list(blogId: string) {
     const response = await axiosInstance.get(
-      `/api/v1/blogs/${blogId}/competitors`
+      `/api/v1/blogs/${blogId}/competitors`,
     );
     return response.data;
   },
@@ -161,7 +164,7 @@ export const competitorApi = {
   async create(blogId: string, data: CompetitorCreateData) {
     const response = await axiosInstance.post(
       `/api/v1/blogs/${blogId}/competitors`,
-      { competitor: data }
+      { competitor: data },
     );
     return response.data;
   },
@@ -170,11 +173,11 @@ export const competitorApi = {
   async update(
     blogId: string,
     competitorId: string,
-    data: CompetitorUpdateData
+    data: CompetitorUpdateData,
   ) {
     const response = await axiosInstance.patch(
       `/api/v1/blogs/${blogId}/competitors/${competitorId}`,
-      { competitor: data }
+      { competitor: data },
     );
     return response.data;
   },
@@ -182,7 +185,7 @@ export const competitorApi = {
   // Delete competitor
   async delete(blogId: string, competitorId: string) {
     const response = await axiosInstance.delete(
-      `/api/v1/blogs/${blogId}/competitors/${competitorId}`
+      `/api/v1/blogs/${blogId}/competitors/${competitorId}`,
     );
     return response.data;
   },
@@ -190,7 +193,7 @@ export const competitorApi = {
   // Trigger analysis
   async analyze(blogId: string, competitorId: string) {
     const response = await axiosInstance.post(
-      `/api/v1/blogs/${blogId}/competitors/${competitorId}/analyze`
+      `/api/v1/blogs/${blogId}/competitors/${competitorId}/analyze`,
     );
     return response.data;
   },
@@ -198,7 +201,7 @@ export const competitorApi = {
   // Get analysis status (for polling)
   async getAnalysisStatus(blogId: string, competitorId: string) {
     const response = await axiosInstance.get(
-      `/api/v1/blogs/${blogId}/competitors/${competitorId}/analysis_status`
+      `/api/v1/blogs/${blogId}/competitors/${competitorId}/analysis_status`,
     );
     return response.data;
   },
@@ -206,7 +209,7 @@ export const competitorApi = {
   // Get analysis history
   async getAnalyses(blogId: string, competitorId: string) {
     const response = await axiosInstance.get(
-      `/api/v1/blogs/${blogId}/competitors/${competitorId}/analyses`
+      `/api/v1/blogs/${blogId}/competitors/${competitorId}/analyses`,
     );
     return response.data;
   },
@@ -215,10 +218,10 @@ export const competitorApi = {
   async getAnalysisDetails(
     blogId: string,
     competitorId: string,
-    analysisId: string
+    analysisId: string,
   ) {
     const response = await axiosInstance.get(
-      `/api/v1/blogs/${blogId}/competitors/${competitorId}/analyses/${analysisId}`
+      `/api/v1/blogs/${blogId}/competitors/${competitorId}/analyses/${analysisId}`,
     );
     return response.data;
   },
@@ -226,7 +229,7 @@ export const competitorApi = {
   // Check analysis limits
   async getLimits(blogId: string, competitorId: string) {
     const response = await axiosInstance.get<AnalysisLimit>(
-      `/api/v1/blogs/${blogId}/competitors/${competitorId}/analysis_limits`
+      `/api/v1/blogs/${blogId}/competitors/${competitorId}/analysis_limits`,
     );
     return response.data;
   },

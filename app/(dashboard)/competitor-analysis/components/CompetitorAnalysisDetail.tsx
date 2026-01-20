@@ -64,8 +64,8 @@ export default function CompetitorAnalysisDetail({
                   (content_quality_score || 0) >= 70
                     ? "bg-green-100"
                     : (content_quality_score || 0) >= 40
-                    ? "bg-orange-100"
-                    : "bg-red-100"
+                      ? "bg-orange-100"
+                      : "bg-red-100",
                 )}
               >
                 <div
@@ -74,8 +74,8 @@ export default function CompetitorAnalysisDetail({
                     (content_quality_score || 0) >= 70
                       ? "text-green-600"
                       : (content_quality_score || 0) >= 40
-                      ? "text-orange-600"
-                      : "text-red-600"
+                        ? "text-orange-600"
+                        : "text-red-600",
                   )}
                 >
                   <FileText className="w-full h-full" />
@@ -105,8 +105,8 @@ export default function CompetitorAnalysisDetail({
                   (overall_score || 0) >= 70
                     ? "bg-blue-100"
                     : (overall_score || 0) >= 40
-                    ? "bg-orange-100"
-                    : "bg-red-100"
+                      ? "bg-orange-100"
+                      : "bg-red-100",
                 )}
               >
                 <div
@@ -115,8 +115,8 @@ export default function CompetitorAnalysisDetail({
                     (overall_score || 0) >= 70
                       ? "text-blue-600"
                       : (overall_score || 0) >= 40
-                      ? "text-orange-600"
-                      : "text-red-600"
+                        ? "text-orange-600"
+                        : "text-red-600",
                   )}
                 >
                   <TrendingUp className="w-full h-full" />
@@ -144,8 +144,8 @@ export default function CompetitorAnalysisDetail({
                   (seo_score || 0) >= 70
                     ? "bg-green-100"
                     : (seo_score || 0) >= 40
-                    ? "bg-orange-100"
-                    : "bg-red-100"
+                      ? "bg-orange-100"
+                      : "bg-red-100",
                 )}
               >
                 <div
@@ -154,8 +154,8 @@ export default function CompetitorAnalysisDetail({
                     (seo_score || 0) >= 70
                       ? "text-green-600"
                       : (seo_score || 0) >= 40
-                      ? "text-orange-600"
-                      : "text-red-600"
+                        ? "text-orange-600"
+                        : "text-red-600",
                   )}
                 >
                   <Globe className="w-full h-full" />
@@ -180,7 +180,7 @@ export default function CompetitorAnalysisDetail({
               <div
                 className={cn(
                   "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
-                  "bg-green-100"
+                  "bg-green-100",
                 )}
               >
                 <div className={cn("w-6 h-6", "text-green-600")}>
@@ -270,7 +270,7 @@ export default function CompetitorAnalysisDetail({
                       <div className="flex items-baseline gap-2">
                         <span className="text-4xl font-bold text-gray-900">
                           {content_analysis.publishing_frequency.articles_per_month.toFixed(
-                            1
+                            1,
                           )}
                         </span>
                         <span className="text-sm text-muted-foreground">
@@ -295,9 +295,9 @@ export default function CompetitorAnalysisDetail({
                           }
                           className="capitalize"
                         >
-                          {content_analysis.publishing_frequency.frequency_rating.replace(
+                          {content_analysis.publishing_frequency.frequency_rating?.replace(
                             "_",
-                            " "
+                            " ",
                           )}
                         </Badge>
                       </div>
@@ -315,7 +315,7 @@ export default function CompetitorAnalysisDetail({
                               "very_high",
                             ];
                             const currentIndex = levels.indexOf(
-                              currentLevel || "low"
+                              currentLevel || "low",
                             );
                             const isActive = index <= currentIndex;
 
@@ -328,15 +328,15 @@ export default function CompetitorAnalysisDetail({
                                     ? index === 0
                                       ? "bg-red-400"
                                       : index === 1
-                                      ? "bg-orange-400"
-                                      : index === 2
-                                      ? "bg-green-400"
-                                      : "bg-emerald-500"
-                                    : "bg-gray-100"
+                                        ? "bg-orange-400"
+                                        : index === 2
+                                          ? "bg-green-400"
+                                          : "bg-emerald-500"
+                                    : "bg-gray-100",
                                 )}
                               />
                             );
-                          }
+                          },
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground pt-1">
@@ -369,7 +369,9 @@ export default function CompetitorAnalysisDetail({
                       .sort(([, a], [, b]) => b - a)
                       .map(([type, count], index) => {
                         const maxCount = Math.max(
-                          ...Object.values(content_analysis.content_types || {})
+                          ...Object.values(
+                            content_analysis.content_types || {},
+                          ),
                         );
                         const percentage = (count / maxCount) * 100;
 
