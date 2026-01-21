@@ -40,6 +40,7 @@ interface ConnectIntegrationSheetProps {
   platform: Platform | null;
   onSuccess: (integrationId: string | number) => void;
   connectMutation: any; // Using any for now to avoid complex type matching with React Query
+  disconnectMutation: any;
 }
 
 export default function ConnectIntegrationSheet({
@@ -48,6 +49,7 @@ export default function ConnectIntegrationSheet({
   platform,
   onSuccess,
   connectMutation,
+  disconnectMutation,
 }: ConnectIntegrationSheetProps) {
   const { blogs } = useAppStore();
   const [formData, setFormData] = useState<any>({});
@@ -945,10 +947,13 @@ export default function ConnectIntegrationSheet({
                   if (platform?.is_connected) {
                     try {
                       await connectMutation.mutateAsync({
-                        platform: platform.id,
-                        settings: {
-                          primary: checked,
+                        data: {
+                          platform: platform.id,
+                          settings: {
+                            primary: checked,
+                          },
                         },
+                        integrationId: platform.integration_id,
                       });
                       toast.success("Primary status updated");
                     } catch (error) {
@@ -988,7 +993,34 @@ export default function ConnectIntegrationSheet({
           </form>
         </div>
 
-        <SheetFooter className="p-6 border-t sm:justify-between bg-white">
+        <SheetFooter className="p-6 border-t flex flex-col sm:flex-row gap-3 sm:justify-between bg-white">
+          {platform?.is_connected && (
+            <Button
+              type="button"
+              variant="destructive"
+              className="w-full sm:w-auto"
+              disabled={disconnectMutation.isPending}
+              onClick={async () => {
+                if (
+                  confirm(
+                    "Are you sure you want to disconnect this integration? This action cannot be undone.",
+                  )
+                ) {
+                  try {
+                    await disconnectMutation.mutateAsync(
+                      platform.integration_id,
+                    );
+                    onOpenChange(false);
+                    // toast.success("Disconnected successfully"); // Handled by mutation
+                  } catch (error) {
+                    // toast.error("Failed to disconnect"); // Handled by mutation
+                  }
+                }
+              }}
+            >
+              Disconnect
+            </Button>
+          )}
           <Button
             type="submit"
             form="connect-form"

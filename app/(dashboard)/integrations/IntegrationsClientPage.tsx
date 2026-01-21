@@ -24,7 +24,7 @@ export default function IntegrationsClientPage() {
     useIntegrationsApi();
 
   const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(
-    null
+    null,
   );
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
@@ -102,7 +102,7 @@ export default function IntegrationsClientPage() {
 
           {/* Add Custom Webhook Card */}
           {allPlatforms.filter(
-            (p) => p.platform === "custom_webhook" || p.id === "custom_webhook"
+            (p) => p.platform === "custom_webhook" || p.id === "custom_webhook",
           ).length < 5 && (
             <Card
               className="flex flex-col justify-center items-center h-full min-h-[200px] border-none shadow-none cursor-pointer group bg-white"
@@ -139,6 +139,7 @@ export default function IntegrationsClientPage() {
         platform={selectedPlatform}
         onSuccess={() => setIsSheetOpen(false)}
         connectMutation={connectIntegration}
+        disconnectMutation={disconnectIntegration}
       />
     </div>
   );
