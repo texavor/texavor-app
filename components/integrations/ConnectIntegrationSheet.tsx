@@ -24,6 +24,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { CustomAlertDialog } from "@/components/ui/CustomAlertDialog";
 import { MediumForm } from "./forms/MediumForm";
 import { DevtoForm } from "./forms/DevtoForm";
 import { HashnodeForm } from "./forms/HashnodeForm";
@@ -62,6 +63,8 @@ export default function ConnectIntegrationSheet({
   const [discoveredData, setDiscoveredData] = useState<any>(null);
   const [isDiscovering, setIsDiscovering] = useState(false);
   const [showDiscoveryFields, setShowDiscoveryFields] = useState(false);
+
+  const [isDisconnectAlertOpen, setIsDisconnectAlertOpen] = useState(false);
 
   // Shopify blog selection state
   const [shopifyBlogs, setShopifyBlogs] = useState<
@@ -1000,23 +1003,7 @@ export default function ConnectIntegrationSheet({
               variant="destructive"
               className="w-full sm:w-auto"
               disabled={disconnectMutation.isPending}
-              onClick={async () => {
-                if (
-                  confirm(
-                    "Are you sure you want to disconnect this integration? This action cannot be undone.",
-                  )
-                ) {
-                  try {
-                    await disconnectMutation.mutateAsync(
-                      platform.integration_id,
-                    );
-                    onOpenChange(false);
-                    // toast.success("Disconnected successfully"); // Handled by mutation
-                  } catch (error) {
-                    // toast.error("Failed to disconnect"); // Handled by mutation
-                  }
-                }
-              }}
+              onClick={() => setIsDisconnectAlertOpen(true)}
             >
               Disconnect
             </Button>
@@ -1024,7 +1011,7 @@ export default function ConnectIntegrationSheet({
           <Button
             type="submit"
             form="connect-form"
-            className="w-full bg-[#104127] hover:bg-[#0A2918] text-white font-inter"
+            className="w-full sm:w-auto bg-[#104127] hover:bg-[#0A2918] text-white font-inter"
             disabled={connectMutation.isPending || isDiscovering}
           >
             {isDiscovering ? (
@@ -1039,6 +1026,26 @@ export default function ConnectIntegrationSheet({
             )}
           </Button>
         </SheetFooter>
+
+        <CustomAlertDialog
+          open={isDisconnectAlertOpen}
+          onOpenChange={setIsDisconnectAlertOpen}
+          title="Disconnect Integration?"
+          description="Are you sure you want to disconnect this integration? This action cannot be undone and may affect your published articles."
+          confirmText="Disconnect"
+          variant="destructive"
+          onConfirm={async () => {
+            if (platform?.integration_id) {
+              try {
+                await disconnectMutation.mutateAsync(platform.integration_id);
+                setIsDisconnectAlertOpen(false);
+                onOpenChange(false);
+              } catch (error) {
+                // Error handled by mutation
+              }
+            }
+          }}
+        />
       </SheetContent>
     </Sheet>
   );

@@ -41,7 +41,7 @@ export default function ThumbnailStylesPage() {
     queryKey: ["thumbnailStyles", blogs?.id],
     queryFn: async () => {
       const response = await axiosInstance.get(
-        `/api/v1/blogs/${blogs?.id}/thumbnail_styles`
+        `/api/v1/blogs/${blogs?.id}/thumbnail_styles`,
       );
       return response.data;
     },
@@ -56,7 +56,7 @@ export default function ThumbnailStylesPage() {
     queryKey: ["thumbnailStatus", blogs?.id],
     queryFn: async () => {
       const response = await axiosInstance.get(
-        `/api/v1/blogs/${blogs?.id}/thumbnail_styles/status`
+        `/api/v1/blogs/${blogs?.id}/thumbnail_styles/status`,
       );
       return response.data;
     },
@@ -102,7 +102,7 @@ export default function ThumbnailStylesPage() {
     mutationFn: async () => {
       const response = await axiosInstance.post(
         `/api/v1/blogs/${blogs?.id}/thumbnail_styles/analyze`,
-        {}
+        {},
       );
       return response.data;
     },
@@ -129,7 +129,7 @@ export default function ThumbnailStylesPage() {
     mutationFn: async (styleId: string) => {
       const response = await axiosInstance.post(
         `/api/v1/blogs/${blogs?.id}/thumbnail_styles/select`,
-        { style_id: styleId }
+        { style_id: styleId },
       );
       return response.data;
     },
@@ -145,7 +145,7 @@ export default function ThumbnailStylesPage() {
     mutationFn: async (dimensions: { width: number; height: number }) => {
       const response = await axiosInstance.patch(
         `/api/v1/blogs/${blogs?.id}/thumbnail_styles/update_settings`,
-        dimensions
+        dimensions,
       );
       return response.data;
     },
@@ -359,7 +359,11 @@ export default function ThumbnailStylesPage() {
           </div>
         ) : styles.length === 0 ? (
           <div className="text-center py-12">
-            <Sparkles className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <img
+              src="/empty-state.png"
+              alt="No Styles Generated"
+              className="w-48 h-auto mx-auto mb-4"
+            />
             <h3 className="text-lg font-semibold text-gray-700 mb-2">
               No Styles Generated Yet
             </h3>
