@@ -28,6 +28,8 @@ import {
 } from "lucide-react";
 import CustomDropdown from "@/components/ui/CustomDropdown";
 import { Skeleton } from "@/components/ui/skeleton";
+import { uploadImage } from "@/lib/imageService";
+import { toast } from "sonner";
 
 /**
  * Enhanced props to include layout elements previously found in the parent page.
@@ -90,6 +92,38 @@ const Editor = ({
   }, [onSave, readOnly]);
   const [isGeneratingPDF, setIsGeneratingPDF] = React.useState(false);
 
+  // Handle image upload from paste or drop
+  const handleImageUpload = async (file: File) => {
+    // Validate file
+    const validTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Invalid image format. Supported: PNG, JPG, JPEG, WebP");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image too large (max 10MB)");
+      return;
+    }
+
+    try {
+      // Show loading indicator
+      const loadingToast = toast.loading("Uploading image...");
+
+      // Upload image
+      const url = await uploadImage(file);
+
+      // Insert image at current cursor position
+      editor?.chain().focus().setImage({ src: url }).run();
+
+      // Dismiss loading toast
+      toast.dismiss(loadingToast);
+      toast.success("Image uploaded successfully");
+    } catch (error) {
+      console.error("Image upload failed:", error);
+      toast.error("Failed to upload image");
+    }
+  };
+
   const handleExport = async (option: any) => {
     setIsExportOpen(false);
 
@@ -142,7 +176,7 @@ const Editor = ({
           contentHTML.trim() === ""
         ) {
           alert(
-            "No content to export. Please add some content to your article."
+            "No content to export. Please add some content to your article.",
           );
           setIsGeneratingPDF(false);
           return;
@@ -173,7 +207,7 @@ const Editor = ({
                     {
                       params: { url: src },
                       responseType: "blob",
-                    }
+                    },
                   );
 
                   // Convert blob to Base64
@@ -192,7 +226,7 @@ const Editor = ({
               } catch (err) {
                 // Keep original src as fallback
               }
-            })
+            }),
           );
 
           return doc.body.innerHTML;
@@ -234,7 +268,7 @@ const Editor = ({
             content={processedContent}
             title={titleText}
             coverUrl={processedCoverUrl}
-          />
+          />,
         ).toBlob();
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -256,7 +290,7 @@ const Editor = ({
       } catch (error) {
         console.error("Failed to generate PDF:", error);
         alert(
-          "Failed to generate PDF. Please ensure content is valid and try again."
+          "Failed to generate PDF. Please ensure content is valid and try again.",
         );
       } finally {
         setIsGeneratingPDF(false);
@@ -314,6 +348,35 @@ const Editor = ({
         spellcheck: "false",
         "data-gramm": "false", // Disable Grammarly
         translate: "no", // Disable translation
+      },
+      handleDrop: (view, event, _slice, moved) => {
+        if (readOnly) return false;
+        if (!moved && event.dataTransfer?.files?.length) {
+          const file = event.dataTransfer.files[0];
+          if (file.type.startsWith("image/")) {
+            event.preventDefault();
+            handleImageUpload(file);
+            return true;
+          }
+        }
+        return false;
+      },
+      handlePaste: (view, event) => {
+        if (readOnly) return false;
+        const items = event.clipboardData?.items;
+        if (items) {
+          for (const item of items) {
+            if (item.type.startsWith("image/")) {
+              event.preventDefault();
+              const file = item.getAsFile();
+              if (file) {
+                handleImageUpload(file);
+              }
+              return true;
+            }
+          }
+        }
+        return false;
       },
     },
     editable: !readOnly,
@@ -551,7 +614,7 @@ const Editor = ({
         </div>
 
         <div
-          className="px-6 pb-10 max-w-4xl mx-auto w-full flex-grow"
+          className="px-6 pb-[50vh] max-w-4xl mx-auto w-full flex-grow"
           suppressHydrationWarning
         >
           <EditorContent editor={editor} />

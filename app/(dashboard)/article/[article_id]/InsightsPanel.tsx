@@ -83,6 +83,7 @@ const InsightsPanel = ({
         topic: outlineTopic,
         article_id: articleId,
         deep_research: true,
+        aeo_optimization: true,
       },
       {
         onSuccess: (data: OutlineData) => {
@@ -133,9 +134,9 @@ const InsightsPanel = ({
                   <p className="text-sm font-semibold text-black font-poppins">
                     Readability Score
                   </p>
-                  <p className="text-sm font-inter">{readability}/10</p>
+                  <p className="text-sm font-inter">{readability}/100</p>
                 </div>
-                <ScoreMeter value={readability / 10} />
+                <ScoreMeter value={readability / 100} />
               </div>
 
               {/* SEO Details */}

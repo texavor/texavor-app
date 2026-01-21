@@ -93,7 +93,7 @@ export default function ConnectIntegrationSheet({
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (!response.ok) throw new Error("Failed to fetch blogs");
@@ -241,7 +241,7 @@ export default function ConnectIntegrationSheet({
           // Load custom headers
           if (platform.settings.headers) {
             const headers = Object.entries(platform.settings.headers).map(
-              ([key, value]) => ({ key, value: value as string })
+              ([key, value]) => ({ key, value: value as string }),
             );
             setCustomHeaders(headers);
           }
@@ -252,7 +252,7 @@ export default function ConnectIntegrationSheet({
             Object.entries(platform.settings.field_mapping).forEach(
               ([key, value]) => {
                 mapping[value as string] = key;
-              }
+              },
             );
             setMappingData(mapping);
           }
@@ -261,7 +261,7 @@ export default function ConnectIntegrationSheet({
             Object.entries(platform.settings.field_mapping).forEach(
               ([key, value]) => {
                 mapping[value as string] = key;
-              }
+              },
             );
             setMappingData(mapping);
           }
@@ -287,7 +287,7 @@ export default function ConnectIntegrationSheet({
       | React.ChangeEvent<
           HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
         >
-      | { target: { name: string; value: any } }
+      | { target: { name: string; value: any } },
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -327,7 +327,7 @@ export default function ConnectIntegrationSheet({
               blog_id: selectedBlogId,
               blog_handle: selectedBlog.handle,
             }),
-          }
+          },
         );
 
         if (!response.ok) {
@@ -538,7 +538,7 @@ export default function ConnectIntegrationSheet({
                 body: JSON.stringify({
                   integration: { settings: settingsPayload },
                 }),
-              }
+              },
             );
 
             if (!response.ok) throw new Error("Failed to save settings");
@@ -572,7 +572,7 @@ export default function ConnectIntegrationSheet({
               setIsDiscovering(true);
               const discoveryResult = await discoverIntegrationSettings(
                 blogId,
-                integrationId
+                integrationId,
               );
 
               if (discoveryResult.success && discoveryResult.discovered) {
@@ -593,7 +593,7 @@ export default function ConnectIntegrationSheet({
                 // If `platform` is from a list in parent, this might update it in memory.
                 // Better approach: Use a ref or state variable.
 
-                toast.message("Additional options fetched.");
+                // toast.message("Additional options fetched.");
                 return;
               }
             } else {
@@ -621,7 +621,7 @@ export default function ConnectIntegrationSheet({
         // Auto-fetch authors for supported platforms
         if (
           ["medium", "devto", "hashnode", "custom_webhook"].includes(
-            platform.id
+            platform.id,
           )
         ) {
           try {
@@ -630,7 +630,7 @@ export default function ConnectIntegrationSheet({
               result.integration_id || result.integration?.id || result.id;
             if (blogId && integrationId) {
               await fetchFromPlatform(blogId, integrationId);
-              toast.success("Authors fetched successfully");
+              // toast.success("Authors fetched successfully");
             }
           } catch (error) {
             console.error("Failed to auto-fetch authors:", error);
@@ -790,7 +790,7 @@ export default function ConnectIntegrationSheet({
       if (blogId && integrationId) {
         const discoveryResult = await discoverIntegrationSettings(
           blogId,
-          integrationId
+          integrationId,
         );
         if (discoveryResult.success && discoveryResult.discovered) {
           setDiscoveredData(discoveryResult.discovered);

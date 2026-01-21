@@ -8,11 +8,13 @@ import {
   Heading2,
   Code,
   Sparkles,
+  Image as ImageIcon,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState, useEffect, useRef } from "react";
 import { LinkDialog } from "./LinkDialog";
 import { ImageGenerationDialog } from "./ImageGenerationDialog";
+import { ImageUploadDialog } from "./ImageUploadDialog";
 import {
   Tooltip,
   TooltipContent,
@@ -28,6 +30,7 @@ type CustomToolbarProps = {
 export const CustomToolbar = ({ editor, title }: CustomToolbarProps) => {
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
   const [isGenDialogOpen, setIsGenDialogOpen] = useState(false);
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [initialPrompt, setInitialPrompt] = useState("");
   const [initialStyle, setInitialStyle] = useState("natural");
   const [isVisible, setIsVisible] = useState(false);
@@ -106,6 +109,12 @@ export const CustomToolbar = ({ editor, title }: CustomToolbarProps) => {
     }
   };
 
+  const onInsertImage = (url: string, altText?: string) => {
+    if (url) {
+      editor?.chain().focus().setImage({ src: url, alt: altText }).run();
+    }
+  };
+
   const items = [
     {
       name: "Bold",
@@ -157,6 +166,13 @@ export const CustomToolbar = ({ editor, title }: CustomToolbarProps) => {
       isActive: editor.isActive("code"),
       icon: <Code className="w-4 h-4" />,
       tooltip: "Code",
+    },
+    {
+      name: "Image",
+      command: () => setIsImageDialogOpen(true),
+      isActive: false,
+      icon: <ImageIcon className="w-4 h-4" />,
+      tooltip: "Insert Image",
     },
   ];
 
@@ -246,6 +262,12 @@ export const CustomToolbar = ({ editor, title }: CustomToolbarProps) => {
         onInsert={onSetImage}
         initialPrompt={initialPrompt}
         initialStyle={initialStyle}
+      />
+
+      <ImageUploadDialog
+        isOpen={isImageDialogOpen}
+        onClose={() => setIsImageDialogOpen(false)}
+        onInsert={onInsertImage}
       />
     </>
   );
