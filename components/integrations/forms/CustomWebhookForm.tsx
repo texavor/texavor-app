@@ -28,6 +28,11 @@ const MAPPABLE_FIELDS = [
     description: "The full HTML content",
   },
   {
+    label: "Cover Image",
+    variable: "{{image_url}}",
+    description: "Article cover/featured image URL",
+  },
+  {
     label: "Slug",
     variable: "{{slug}}",
     description: "URL friendly slug",
@@ -104,7 +109,7 @@ export function CustomWebhookForm(props: CustomWebhookFormProps) {
         `/api/v1/blogs/${props.blogId}/integrations/${props.integrationId}/test_connection`,
         {
           test_article_id: testArticleId,
-        }
+        },
       );
 
       const data = response.data;
@@ -569,7 +574,7 @@ export function CustomWebhookForm(props: CustomWebhookFormProps) {
                     size="icon"
                     onClick={() => {
                       const newHeaders = customHeaders.filter(
-                        (_, i) => i !== index
+                        (_, i) => i !== index,
                       );
                       setCustomHeaders(newHeaders);
                     }}

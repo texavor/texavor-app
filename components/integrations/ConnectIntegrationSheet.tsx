@@ -1011,7 +1011,9 @@ export default function ConnectIntegrationSheet({
           <Button
             type="submit"
             form="connect-form"
-            className="w-full sm:w-auto bg-[#104127] hover:bg-[#0A2918] text-white font-inter"
+            className={`bg-[#104127] hover:bg-[#0A2918] text-white font-inter ${
+              platform?.is_connected ? "w-full sm:flex-1" : "w-full"
+            }`}
             disabled={connectMutation.isPending || isDiscovering}
           >
             {isDiscovering ? (
@@ -1021,6 +1023,8 @@ export default function ConnectIntegrationSheet({
               </>
             ) : showDiscoveryFields ? (
               "Save Settings"
+            ) : platform?.is_connected ? (
+              "Reconnect"
             ) : (
               "Connect"
             )}
