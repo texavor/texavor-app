@@ -105,22 +105,74 @@ const Editor = ({
       return;
     }
 
+    // 1. Create local preview URL
+    const previewUrl = URL.createObjectURL(file);
+
     try {
-      // Show loading indicator
-      const loadingToast = toast.loading("Uploading image...");
+      // 2. Insert image immediately with preview URL
+      // Using "Uploading..." as temporary alt text
+      editor
+        ?.chain()
+        .focus()
+        .setImage({ src: previewUrl, alt: "Uploading image..." })
+        .run();
 
-      // Upload image
-      const url = await uploadImage(file);
+      // Show unobtrusive loading toast
+      const loadingToast = toast.loading("Uploading image...", {
+        id: "upload-toast",
+      });
 
-      // Insert image at current cursor position
-      editor?.chain().focus().setImage({ src: url }).run();
+      // 3. Upload image in background
+      const serverUrl = await uploadImage(file);
 
-      // Dismiss loading toast
-      toast.dismiss(loadingToast);
-      toast.success("Image uploaded successfully");
+      // 4. Find the image node with previewUrl and swap it for serverUrl
+      if (editor) {
+        let found = false;
+        editor.view.state.doc.descendants((node, pos) => {
+          if (found) return false; // Stop if already found
+          if (node.type.name === "image" && node.attrs.src === previewUrl) {
+            // Found the preview image node
+            const transaction = editor.state.tr.setNodeMarkup(pos, undefined, {
+              ...node.attrs,
+              src: serverUrl,
+              // If user didn't change the alt text from our default, clear it or set to file name
+              alt:
+                node.attrs.alt === "Uploading image..." ? "" : node.attrs.alt,
+            });
+            editor.view.dispatch(transaction);
+            found = true;
+            return false;
+          }
+          return true;
+        });
+      }
+
+      // Success feedback
+      toast.success("Image uploaded", { id: "upload-toast" });
     } catch (error) {
       console.error("Image upload failed:", error);
-      toast.error("Failed to upload image");
+      toast.error("Failed to upload image", { id: "upload-toast" });
+
+      // 5. Cleanup on failure: Remove the preview image
+      if (editor) {
+        let found = false;
+        editor.view.state.doc.descendants((node, pos) => {
+          if (found) return false;
+          if (node.type.name === "image" && node.attrs.src === previewUrl) {
+            const transaction = editor.state.tr.delete(
+              pos,
+              pos + node.nodeSize,
+            );
+            editor.view.dispatch(transaction);
+            found = true;
+            return false;
+          }
+          return true;
+        });
+      }
+    } finally {
+      // Always revoke object URL to free memory
+      URL.revokeObjectURL(previewUrl);
     }
   };
 
