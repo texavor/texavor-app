@@ -63,11 +63,16 @@ export const useCancelSubscription = (blogId?: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (feedback?: {
+      reason_category: string;
+      reason_details?: string;
+    }) => {
       const url = blogId
         ? `/api/v1/blogs/${blogId}/subscription`
         : "/api/v1/subscription";
-      const response = await axiosInstance.delete(url);
+      const response = await axiosInstance.delete(url, {
+        data: feedback ? { feedback } : undefined,
+      });
       return response.data;
     },
     onSuccess: () => {

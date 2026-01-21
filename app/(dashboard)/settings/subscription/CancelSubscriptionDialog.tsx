@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import { AlertTriangle } from "lucide-react";
 import { useCancelSubscription } from "../hooks/useSubscriptionApi";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { CancellationFeedbackDialog } from "./CancellationFeedbackDialog";
 
 interface CancelSubscriptionDialogProps {
   open: boolean;
@@ -30,10 +32,20 @@ export function CancelSubscriptionDialog({
   const queryClient = useQueryClient();
   const { mutateAsync: cancelSubscription, isPending } =
     useCancelSubscription(blogId);
+  const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
 
-  const handleCancel = async () => {
+  const handleInitialCancel = () => {
+    // Close confirmation dialog and show feedback dialog
+    onOpenChange(false);
+    setShowFeedbackDialog(true);
+  };
+
+  const handleFinalCancel = async (feedback?: {
+    reason_category: string;
+    reason_details?: string;
+  }) => {
     try {
-      await cancelSubscription();
+      await cancelSubscription(feedback);
       queryClient.invalidateQueries({ queryKey: ["subscription", blogId] });
 
       const formattedDate = currentPeriodEnd
@@ -53,10 +65,8 @@ export function CancelSubscriptionDialog({
 
       toast.success("Subscription canceled", {
         description: `Your subscription will end on ${formattedDate}.`,
-        className: "text-gray-900",
-        descriptionClassName: "text-gray-700",
       });
-      onOpenChange(false);
+      setShowFeedbackDialog(false);
     } catch (error: any) {
       // Error toast is handled by axiosInstance
       console.error("Cancel subscription error:", error);
@@ -72,65 +82,72 @@ export function CancelSubscriptionDialog({
     : "the end of your billing period";
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white sm:max-w-[500px] border-none shadow-none">
-        <DialogHeader>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-orange-100 rounded-full">
-              <AlertTriangle className="w-5 h-5 text-orange-600" />
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="bg-white sm:max-w-[500px] border-none shadow-none">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-orange-100 rounded-full">
+                <AlertTriangle className="w-5 h-5 text-orange-600" />
+              </div>
+              <DialogTitle className="font-poppins text-xl">
+                Cancel Subscription
+              </DialogTitle>
             </div>
-            <DialogTitle className="font-poppins text-xl">
+            <DialogDescription className="font-inter text-gray-600 pt-2">
+              Are you sure you want to cancel your subscription? Here's what
+              will happen:
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-4">
+            <div className="p-4 bg-gray-50 rounded-lg space-y-2">
+              <p className="font-inter text-sm text-gray-700">
+                <span className="font-semibold">• Access until:</span> You'll
+                continue to have full access to all features until{" "}
+                <span className="font-semibold">{formattedEndDate}</span>
+              </p>
+              <p className="font-inter text-sm text-gray-700">
+                <span className="font-semibold">• After cancellation:</span> You
+                will not be able to access Texavor
+              </p>
+              <p className="font-inter text-sm text-gray-700">
+                <span className="font-semibold">• Your data:</span> All your
+                articles, outlines, and settings will be preserved
+              </p>
+            </div>
+
+            <p className="font-inter text-sm text-gray-500 italic">
+              You can reactivate your subscription anytime before{" "}
+              {formattedEndDate} to continue without interruption.
+            </p>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="border-none shadow-none"
+            >
+              Keep Subscription
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleInitialCancel}
+              className="bg-red-600 hover:bg-red-700"
+            >
               Cancel Subscription
-            </DialogTitle>
-          </div>
-          <DialogDescription className="font-inter text-gray-600 pt-2">
-            Are you sure you want to cancel your subscription? Here's what will
-            happen:
-          </DialogDescription>
-        </DialogHeader>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        <div className="space-y-3 py-4">
-          <div className="p-4 bg-gray-50 rounded-lg space-y-2">
-            <p className="font-inter text-sm text-gray-700">
-              <span className="font-semibold">• Access until:</span> You'll
-              continue to have full access to all features until{" "}
-              <span className="font-semibold">{formattedEndDate}</span>
-            </p>
-            <p className="font-inter text-sm text-gray-700">
-              <span className="font-semibold">• After cancellation:</span> You
-              will not be able to access Texavor
-            </p>
-            <p className="font-inter text-sm text-gray-700">
-              <span className="font-semibold">• Your data:</span> All your
-              articles, outlines, and settings will be preserved
-            </p>
-          </div>
-
-          <p className="font-inter text-sm text-gray-500 italic">
-            You can reactivate your subscription anytime before{" "}
-            {formattedEndDate} to continue without interruption.
-          </p>
-        </div>
-
-        <DialogFooter className="gap-2">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isPending}
-            className="border-none shadow-none"
-          >
-            Keep Subscription
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={handleCancel}
-            disabled={isPending}
-            className="bg-red-600 hover:bg-red-700"
-          >
-            {isPending ? "Canceling..." : "Cancel Subscription"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      <CancellationFeedbackDialog
+        open={showFeedbackDialog}
+        onOpenChange={setShowFeedbackDialog}
+        onConfirm={handleFinalCancel}
+        isPending={isPending}
+      />
+    </>
   );
 }
