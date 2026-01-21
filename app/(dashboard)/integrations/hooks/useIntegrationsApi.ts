@@ -24,7 +24,7 @@ export const useIntegrationsApi = () => {
     queryKey: ["platforms"],
     queryFn: async () => {
       const response = await axiosInstance.get(
-        "/api/v1/onboarding/integrations/platforms"
+        "/api/v1/onboarding/integrations/platforms",
       );
       return response.data.platforms as Platform[];
     },
@@ -36,7 +36,7 @@ export const useIntegrationsApi = () => {
     queryKey: ["integrations", blogs?.id],
     queryFn: async () => {
       const response = await axiosInstance.get(
-        `/api/v1/blogs/${blogs?.id}/integrations`
+        `/api/v1/blogs/${blogs?.id}/integrations`,
       );
       // The API returns the array under response.data.integrations
       const integrations = response.data.integrations || [];
@@ -47,10 +47,20 @@ export const useIntegrationsApi = () => {
 
   // 3. Connect Integration
   const connectIntegration = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async ({
+      data,
+      integrationId,
+    }: {
+      data: any;
+      integrationId?: string;
+    }) => {
+      const payload = {
+        ...data,
+        id: integrationId,
+      };
       const response = await axiosInstance.post(
         `/api/v1/blogs/${blogs?.id}/integrations`,
-        data
+        payload,
       );
       return response.data;
     },
@@ -68,7 +78,7 @@ export const useIntegrationsApi = () => {
   const disconnectIntegration = useMutation({
     mutationFn: async (integrationId: string) => {
       await axiosInstance.delete(
-        `/api/v1/blogs/${blogs?.id}/integrations/${integrationId}`
+        `/api/v1/blogs/${blogs?.id}/integrations/${integrationId}`,
       );
     },
     onSuccess: () => {
@@ -84,13 +94,13 @@ export const useIntegrationsApi = () => {
   // 5. List Collections (Webflow specific)
   const getCollections = (
     integrationId: string,
-    options: { enabled?: boolean } = {}
+    options: { enabled?: boolean } = {},
   ) =>
     useQuery({
       queryKey: ["collections", blogs?.id, integrationId],
       queryFn: async () => {
         const response = await axiosInstance.get(
-          `/api/v1/blogs/${blogs?.id}/integrations/${integrationId}/collections`
+          `/api/v1/blogs/${blogs?.id}/integrations/${integrationId}/collections`,
         );
         return response.data.collections as {
           id: string;

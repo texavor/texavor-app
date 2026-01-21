@@ -72,7 +72,10 @@ export function AuthorConfigurationSheet({
         },
       };
 
-      const result = await connectIntegration.mutateAsync(payload);
+      const result = await connectIntegration.mutateAsync({
+        data: payload,
+        integrationId: integration.integration_id,
+      });
       if (result.success) {
         toast.success(`${integration.name} author settings updated`);
         onSuccess();

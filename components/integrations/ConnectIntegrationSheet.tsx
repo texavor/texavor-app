@@ -555,7 +555,12 @@ export default function ConnectIntegrationSheet({
         }
       }
 
-      const result = await connectMutation.mutateAsync(payload);
+      const result = await connectMutation.mutateAsync({
+        data: payload,
+        integrationId: platform.is_connected
+          ? platform.integration_id
+          : undefined,
+      });
 
       if (result.success) {
         toast.success(`Connected to ${platform.name} successfully!`);
