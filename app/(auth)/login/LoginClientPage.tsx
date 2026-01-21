@@ -66,12 +66,12 @@ export function LoginContent() {
       } else if (
         blogs.find(
           (ele: any) =>
-            ele?.status === "pending" || ele?.status === "processing"
+            ele?.status === "pending" || ele?.status === "processing",
         )
       ) {
         const blog = blogs.find(
           (ele: any) =>
-            ele?.status === "pending" || ele?.status === "processing"
+            ele?.status === "pending" || ele?.status === "processing",
         );
         router.push(`/onboarding?blog=${blog?.id}`);
       } else {
@@ -176,7 +176,7 @@ export function LoginContent() {
         <div className="text-right">
           <Link
             href="/forgot-password"
-            className="text-sm text-[#271041] hover:underline font-inter"
+            className="text-sm text-[#104127] hover:underline font-inter"
           >
             Forgot Password?
           </Link>
@@ -222,7 +222,7 @@ export function LoginContent() {
         Don&apos;t have an account?{" "}
         <Link
           href="/register"
-          className="underline text-[#271041] font-medium font-inter"
+          className="underline text-[#104127] font-medium font-inter"
         >
           Sign up
         </Link>

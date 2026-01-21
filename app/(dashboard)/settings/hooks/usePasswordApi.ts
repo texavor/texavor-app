@@ -12,7 +12,7 @@ interface UpdatePasswordData {
 export const useUpdatePassword = () => {
   return useMutation({
     mutationFn: async (data: UpdatePasswordData) => {
-      const response = await axiosInstance.put("/api/v1/password", {
+      const response = await axiosInstance.put("/api/v1/password/change", {
         current_password: data.current_password,
         user: {
           password: data.password,

@@ -56,7 +56,7 @@ export default function PasswordPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Form Section */}
-        <Card className="p-6 border-none lg:col-span-2 h-fit">
+        <Card className="p-6 border-none lg:col-span-2 h-fit shadow-none">
           <div className="flex items-center gap-3 mb-6">
             <div className="h-10 w-10 rounded-full bg-[#104127]/10 flex items-center justify-center">
               <KeyRound className="h-5 w-5 text-[#104127]" />
@@ -204,7 +204,7 @@ export default function PasswordPage() {
 
         {/* Side Panel - Security Info */}
         <div className="space-y-6">
-          <Card className="p-6 border-none bg-[#104127]/5">
+          <Card className="p-6 border-none bg-primary/5">
             <div className="flex items-start gap-3 mb-4">
               <Shield className="h-5 w-5 text-[#104127] mt-0.5" />
               <h3 className="font-poppins font-semibold text-[#0A2918]">
@@ -229,7 +229,7 @@ export default function PasswordPage() {
             </ul>
           </Card>
 
-          <Card className="p-6 border-none">
+          <Card className="p-6 border-none shadow-none">
             <h3 className="font-poppins font-semibold text-[#0A2918] mb-2">
               Security Tips
             </h3>

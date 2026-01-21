@@ -89,7 +89,7 @@ function RegisterContent() {
           router.push(redirectTo);
         } else {
           router.push(
-            `/confirm-email?email=${encodeURIComponent(payload.user.email)}`
+            `/confirm-email?email=${encodeURIComponent(payload.user.email)}`,
           );
         }
       }
@@ -275,7 +275,7 @@ function RegisterContent() {
                 <Link
                   href="https://www.texavor.com/terms-and-conditions"
                   target="_blank"
-                  className="underline text-[#271041] font-medium font-inter"
+                  className="underline text-[#104127] font-medium font-inter"
                 >
                   Terms
                 </Link>
@@ -283,7 +283,7 @@ function RegisterContent() {
                 <Link
                   href="https://www.texavor.com/privacy-policy"
                   target="_blank"
-                  className="underline text-[#271041] font-medium font-inter"
+                  className="underline text-[#104127] font-medium font-inter"
                 >
                   Privacy Policy
                 </Link>
@@ -338,7 +338,7 @@ function RegisterContent() {
         Already Have An Account?{" "}
         <Link
           href="/login"
-          className="underline text-[#271041] font-medium font-inter"
+          className="underline text-[#104127] font-medium font-inter"
         >
           Login
         </Link>
