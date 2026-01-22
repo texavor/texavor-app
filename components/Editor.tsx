@@ -10,6 +10,7 @@ import { useAppStore } from "@/store/appStore";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import { CustomToolbar } from "./CustomToolbar";
+import { CustomHardBreak } from "./editor/extensions/CustomHardBreak";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
@@ -374,8 +375,12 @@ const Editor = ({
         heading: {
           levels: [1, 2, 3],
         },
+        hardBreak: false,
       }),
-      Image,
+      CustomHardBreak,
+      Image.configure({
+        inline: false,
+      }),
       Link.configure({
         openOnClick: false,
       }),
@@ -383,7 +388,7 @@ const Editor = ({
         html: false,
         tightLists: true,
         linkify: true,
-        breaks: true,
+        breaks: false,
         transformPastedText: true,
         transformCopiedText: true,
       }),
