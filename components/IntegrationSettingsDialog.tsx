@@ -19,7 +19,7 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axiosInstace";
 import { toast } from "sonner";
 import { discoverIntegrationSettings } from "@/lib/api/integrations";
-import { fetchAuthors } from "@/lib/api/authors";
+import { fetchAuthors, listIntegrationAuthors } from "@/lib/api/authors";
 import { useAppStore } from "@/store/appStore";
 import { CustomMultiSelect } from "@/components/ui/CustomMultiSelect";
 import CustomDropdown from "@/components/ui/CustomDropdown";
@@ -149,13 +149,13 @@ const platformSettings: Record<
       description: "Author to publish as",
       optionsKey: "authors",
     },
-    {
-      key: "category",
-      label: "Category",
-      type: "text",
-      placeholder: "e.g. key:value or category_name",
-      description: "Custom data to send with webhook",
-    },
+    // {
+    //   key: "category",
+    //   label: "Category",
+    //   type: "text",
+    //   placeholder: "e.g. key:value or category_name",
+    //   description: "Custom data to send with webhook",
+    // },
   ],
   hashnode: [
     {
@@ -281,6 +281,27 @@ export default function IntegrationSettingsDialog({
     },
     enabled: !!blogId,
   });
+
+  // Fetch integration-specific authors for custom webhooks to avoid merging logic issues
+  const { data: integrationAuthors } = useQuery({
+    queryKey: ["integration-authors", blogId, integrationId],
+    queryFn: async () => {
+      if (!blogId || !integrationId) return [];
+      const res = await listIntegrationAuthors(blogId, integrationId);
+      return res.authors || (res as any);
+    },
+    enabled:
+      !!blogId && !!integrationId && normalizedPlatform === "customwebhook",
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Decide which authors list to use:
+  // For customwebhook: use the specific integrationAuthors (if loaded)
+  // For others: use global authorsData
+  const activeAuthorsData =
+    normalizedPlatform === "customwebhook" && integrationAuthors
+      ? integrationAuthors
+      : authorsData;
 
   const discoveredData = discoveryData;
 
@@ -417,6 +438,13 @@ export default function IntegrationSettingsDialog({
                   normalizedPlatform === "customwebhook"
                     ? "custom_webhook"
                     : normalizedPlatform;
+
+                console.log("DEBUG: Filter Init", {
+                  normalizedPlatform,
+                  targetPlatform,
+                  integrationId,
+                  totalAuthors: authorsData.length,
+                });
 
                 options = authorsData
                   .filter((a: any) => {
