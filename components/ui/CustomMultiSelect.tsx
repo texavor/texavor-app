@@ -45,6 +45,14 @@ export function CustomMultiSelect({
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState("");
 
+  const stopWheelEventPropagation = (e: any) => {
+    e.stopPropagation();
+  };
+
+  const stopTouchMoveEventPropagation = (e: any) => {
+    e.stopPropagation();
+  };
+
   const handleUnselect = (item: string) => {
     onChange(selected.filter((i) => i !== item));
   };
@@ -82,7 +90,7 @@ export function CustomMultiSelect({
           className={cn(
             "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
             selected.length > 0 && "h-auto min-h-10",
-            className
+            className,
           )}
         >
           <div className="flex flex-wrap gap-1 flex-1 mr-2">
@@ -97,8 +105,9 @@ export function CustomMultiSelect({
                     className="font-inter text-xs px-2 py-0.5 gap-1 bg-white hover:bg-gray-50 border border-gray-200"
                   >
                     {label}
-                    <X
-                      className="h-3 w-3 text-muted-foreground hover:text-foreground cursor-pointer"
+                    <button
+                      type="button"
+                      className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                       onMouseDown={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -108,7 +117,9 @@ export function CustomMultiSelect({
                         e.stopPropagation();
                         handleUnselect(item);
                       }}
-                    />
+                    >
+                      <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                    </button>
                   </Badge>
                 );
               })
@@ -124,6 +135,8 @@ export function CustomMultiSelect({
       <PopoverContent
         className="w-[var(--radix-popover-trigger-width)] p-0 z-[1500]"
         align="start"
+        onWheel={stopWheelEventPropagation}
+        onTouchMove={stopTouchMoveEventPropagation}
       >
         <Command>
           <CommandInput
@@ -137,7 +150,7 @@ export function CustomMultiSelect({
                 // If we want to capture Enter for creation when no match:
                 if (
                   !options.find(
-                    (o) => o.label.toLowerCase() === inputValue.toLowerCase()
+                    (o) => o.label.toLowerCase() === inputValue.toLowerCase(),
                   )
                 ) {
                   e.preventDefault();
@@ -175,7 +188,7 @@ export function CustomMultiSelect({
                       "mr-2 h-4 w-4",
                       selected.includes(option.value)
                         ? "opacity-100"
-                        : "opacity-0"
+                        : "opacity-0",
                     )}
                   />
                   {option.label}

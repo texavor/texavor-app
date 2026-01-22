@@ -13,7 +13,7 @@ import {
   Trash2,
   HelpCircle,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatPlatformName } from "@/lib/utils";
 import {
   formatDistanceToNow,
   parseISO,
@@ -157,8 +157,8 @@ export default function PublicationStatusCard({
             <h4 className="font-medium text-sm text-gray-900 truncate">
               {displayName}
             </h4>
-            <p className="text-xs text-gray-500 capitalize">
-              {publication.integration.platform}
+            <p className="text-xs text-gray-500">
+              {formatPlatformName(publication.integration.platform)}
             </p>
           </div>
 
@@ -167,13 +167,13 @@ export default function PublicationStatusCard({
             className={cn(
               "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium",
               config.bgColor,
-              config.color
+              config.color,
             )}
           >
             <StatusIcon
               className={cn(
                 "h-3.5 w-3.5",
-                publication.status === "publishing" && "animate-spin"
+                publication.status === "publishing" && "animate-spin",
               )}
             />
             {config.label}
@@ -208,7 +208,7 @@ export default function PublicationStatusCard({
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 hover:underline"
               >
-                View on {publication.integration.platform}
+                View on {formatPlatformName(publication.integration.platform)}
                 <ExternalLink className="h-3 w-3" />
               </a>
             )}

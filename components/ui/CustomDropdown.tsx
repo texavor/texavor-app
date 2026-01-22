@@ -24,6 +24,15 @@ const CustomDropdown = ({
     onOpenChange(true);
   };
 
+  // Prevent scroll events from propagating to parent elements
+  const stopWheelEventPropagation = (e: React.WheelEvent) => {
+    e.stopPropagation();
+  };
+
+  const stopTouchMoveEventPropagation = (e: React.TouchEvent) => {
+    e.stopPropagation();
+  };
+
   if (isMobile) {
     // The BottomSheetSelect component is not found in the project.
     // Returning the trigger for now.
@@ -37,7 +46,11 @@ const CustomDropdown = ({
   return (
     <DropdownMenu open={open} onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
-      <DropdownMenuContent className="border-[1px] p-0 py-1 border-[#E4E4E7] min-w-[150px] w-auto z-[1400]">
+      <DropdownMenuContent
+        className="border-[1px] p-0 py-1 border-[#E4E4E7] min-w-[150px] w-auto z-[1400] max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto"
+        onWheel={stopWheelEventPropagation}
+        onTouchMove={stopTouchMoveEventPropagation}
+      >
         <DropdownMenuGroup className="space-y-[1px]">
           {options?.map((option: any) => {
             const isSelected =

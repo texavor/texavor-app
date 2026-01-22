@@ -193,6 +193,40 @@ const platformSettings: Record<
   ],
 };
 
+// Fallback tags for Dev.to when discovery API doesn't return tags
+const DEVTO_FALLBACK_TAGS = [
+  "webdev",
+  "javascript",
+  "programming",
+  "beginners",
+  "ai",
+  "tutorial",
+  "react",
+  "productivity",
+  "python",
+  "devops",
+  "archlinux",
+  "career",
+  "opensource",
+  "discuss",
+  "java",
+  "news",
+  "aws",
+  "node",
+  "blockchain",
+  "css",
+  "typescript",
+  "cloud",
+  "web3",
+  "rust",
+  "security",
+  "architecture",
+  "android",
+  "database",
+  "learning",
+  "machinelearning",
+];
+
 export default function IntegrationSettingsDialog({
   open,
   onOpenChange,
@@ -202,7 +236,7 @@ export default function IntegrationSettingsDialog({
 }: IntegrationSettingsDialogProps) {
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [dropdownsOpen, setDropdownsOpen] = useState<Record<string, boolean>>(
-    {}
+    {},
   );
   const { blogs } = useAppStore();
   const queryClient = useQueryClient();
@@ -233,7 +267,7 @@ export default function IntegrationSettingsDialog({
       !!blogId &&
       !!integrationId &&
       ["devto", "hashnode", "webflow", "wordpress", "customwebhook"].includes(
-        normalizedPlatform
+        normalizedPlatform,
       ),
     staleTime: 5 * 60 * 1000,
   });
@@ -265,7 +299,7 @@ export default function IntegrationSettingsDialog({
         const defaultAuthor = authorsData.find(
           (a: any) =>
             a.platform_defaults?.includes(normalizedPlatform) ||
-            a.platform_defaults?.includes(integration?.platform) // Check both normalized and raw
+            a.platform_defaults?.includes(integration?.platform), // Check both normalized and raw
         );
 
         if (defaultAuthor) {
@@ -285,7 +319,7 @@ export default function IntegrationSettingsDialog({
         `/api/v1/integrations/${integration?.id}`,
         {
           integration: { settings },
-        }
+        },
       );
       return res.data;
     },
@@ -431,9 +465,22 @@ export default function IntegrationSettingsDialog({
                         icon: org.profile_image, // Map profile_image to icon
                       })),
                     ];
+                  } else if (
+                    normalizedPlatform === "devto" &&
+                    setting.optionsKey === "tags"
+                  ) {
+                    // Use discovered tags if available, otherwise use fallback
+                    options =
+                      discovered.length > 0 ? discovered : DEVTO_FALLBACK_TAGS;
                   } else {
                     options = discovered;
                   }
+                } else if (
+                  normalizedPlatform === "devto" &&
+                  setting.optionsKey === "tags"
+                ) {
+                  // If no discovered data at all, use fallback tags
+                  options = DEVTO_FALLBACK_TAGS;
                 }
               }
 
@@ -496,7 +543,7 @@ export default function IntegrationSettingsDialog({
 
               if (setting.type === "custom-dropdown") {
                 const selectedOption = normalizedOptions.find(
-                  (o: any) => String(o.value) === String(formData[setting.key])
+                  (o: any) => String(o.value) === String(formData[setting.key]),
                 );
                 return (
                   <div key={setting.key} className="space-y-2">
