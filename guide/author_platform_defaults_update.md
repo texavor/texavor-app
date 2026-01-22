@@ -1,58 +1,39 @@
-# Author API Update Guide
+# Author API Update Guide (Revised)
 
 ## Overview
 
-We have updated the `platform_defaults` field in the Author API response to provide more granular details about the integrations where an author is set as default.
+We have simplified the Author API response by removing `platform_defaults` and replacing it with a direct `integration_id`.
 
 ## Changes
 
-### `platform_defaults`
+### [REMOVED] `platform_defaults`
 
-Previously, this field returned an array of platform strings:
+The ambiguous and complex `platform_defaults` array has been removed.
 
-```json
-"platform_defaults": [
-  "custom_webhook",
-  "devto"
-]
-```
+### [ADDED] `integration_id`
+
+We now expose an `integration_id` field directly on the Author object for imported authors.
 
 **New Response Format:**
-It now returns an array of objects containing the `integration_id`, `platform`, and a human-readable `name` (label).
 
 ```json
-"platform_defaults": [
-  {
-    "integration_id": "a0fa2b11-e61f-4a83-b8f1-61645ecfacde",
-    "platform": "custom_webhook",
-    "name": "Discord Announcements"
-  },
-  {
-    "integration_id": "483c5998-58a2-4db3-bf81-d12e7b258300",
-    "platform": "devto",
-    "name": "Dev.to"
-  }
-]
+{
+  "id": "...",
+  "name": "Suraj Vishwakarma",
+  "external_id": "123",
+  "external_platform": "custom_webhook",
+  "integration_id": "a0fa2b11-e61f-4a83-b8f1-61645ecfacde", // <--- THE FIX
+  "imported?": true
+}
 ```
 
-## Why this change?
+## Logic
 
-This allows the frontend to distinguish between multiple integrations of the same type (e.g., multiple custom webhooks) and display the user-defined label properly.
+1. The backend searches for a `PlatformAuthor` matching the `external_id` within the user's integrations.
+2. If found, it returns that integration's ID.
+3. If not found (fallback), it tries to find the first integration matching the `external_platform` type.
 
 ## Action Required
 
-- Feature: Updates handling of `author.platform_defaults` in frontend components.
-- Update any frontend code that relies on `platform_defaults` to check for strings.
-- Update UI components to use `item.platform` and `item.name` from the object.
-- If checking for "is default on platform X", you can now check:
-  ```javascript
-  const isDefault = author.platform_defaults.some(
-    (pd) => pd.platform === "devto",
-  );
-  ```
-  or strictly for a specific integration:
-  ```javascript
-  const isDefault = author.platform_defaults.some(
-    (pd) => pd.integration_id === myIntegrationId,
-  );
-  ```
+- Update frontend to use `author.integration_id` to identify which integration an imported author belongs to.
+- Remove any dependency on `platform_defaults`.

@@ -25,7 +25,7 @@ export const getColumns = (
     header: "Author",
     cell: ({ row }) => {
       const author = row.original;
-      const defaults = author.platform_defaults || [];
+
       return (
         <div className="flex items-center gap-3">
           <Avatar className="h-9 w-9 border border-gray-100">
@@ -42,14 +42,6 @@ export const getColumns = (
               <span className="text-[10px] text-muted-foreground">
                 @{author.username}
               </span>
-            )}
-            {defaults.length > 0 && (
-              <Badge
-                variant="default"
-                className="bg-emerald-600 hover:bg-emerald-700 capitalize font-normal px-2 py-0.5 h-4 text-[9px] w-fit mt-1"
-              >
-                Default
-              </Badge>
             )}
           </div>
         </div>
@@ -151,81 +143,7 @@ export const getColumns = (
       width: "25%",
     },
   },
-  {
-    accessorKey: "is_default",
-    header: "Default",
-    cell: ({ row }) => {
-      const author = row.original;
-      const isImported = author.role === "imported";
-      const isOwner = author.role === "owner";
-      const defaults = author.platform_defaults || [];
-      const hasDefault = defaults.length > 0;
 
-      if (!isImported && !isOwner) return null;
-
-      const formatPlatformName = (p: string) => {
-        return p
-          .split("_")
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(" ");
-      };
-
-      return (
-        <div className="flex items-center justify-center w-full">
-          {hasDefault ? (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Star className="w-5 h-5 text-amber-500 fill-amber-500 hover:scale-110 transition-transform cursor-pointer" />
-                </TooltipTrigger>
-                <TooltipContent className="bg-white border text-gray-700 p-2 shadow-lg">
-                  <div className="space-y-1">
-                    <p className="text-[10px] uppercase font-bold text-gray-400">
-                      Default for Platforms:
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {defaults.map((p) => {
-                        const key =
-                          typeof p === "string" ? p : p.integration_id;
-                        const label =
-                          typeof p === "string"
-                            ? formatPlatformName(p)
-                            : p.name || formatPlatformName(p.platform);
-                        return (
-                          <Badge
-                            key={key}
-                            variant="secondary"
-                            className="text-[9px] px-1.5 h-4 bg-amber-50 text-amber-700 border-amber-100"
-                          >
-                            {label}
-                          </Badge>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ) : (
-            isImported && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-gray-300 hover:text-amber-500 hover:bg-amber-50 transition-all duration-200"
-                onClick={() => onSetDefault(author)}
-                title="Set as platform default"
-              >
-                <Star className="w-4 h-4" />
-              </Button>
-            )
-          )}
-        </div>
-      );
-    },
-    meta: {
-      width: "10%",
-    },
-  },
   {
     id: "actions",
     header: "Action",
@@ -234,8 +152,7 @@ export const getColumns = (
       const isOwner = author.role === "owner";
       const [open, setOpen] = useState(false);
 
-      const defaults = author.platform_defaults || [];
-      const isDefault = defaults.length > 0;
+      const isDefault = author.is_default;
 
       const actions = [
         author.external_platform && !isDefault && !isOwner

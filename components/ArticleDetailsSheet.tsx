@@ -209,7 +209,7 @@ export default function ArticleDetailsSheet({
   // Initialization happens in page.tsx or persistent store logic.
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -217,7 +217,7 @@ export default function ArticleDetailsSheet({
 
   const handleDateChange = (
     field: "scheduled_at" | "published_at",
-    value: string
+    value: string,
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value || null }));
   };
@@ -229,7 +229,7 @@ export default function ArticleDetailsSheet({
         return {
           ...prev,
           article_publications: currentlySelected.filter(
-            (id) => id !== platformId
+            (id) => id !== platformId,
           ),
         };
       } else {
@@ -251,7 +251,7 @@ export default function ArticleDetailsSheet({
       (intId: string) => {
         // Find existing publication if any
         const existingPub = publications?.find(
-          (p) => p.integration_id === intId
+          (p) => p.integration_id === intId,
         );
         const authorId = selectedAuthors[intId];
 
@@ -273,7 +273,7 @@ export default function ArticleDetailsSheet({
           // The API expects publication_settings: { [platformName]: { organization_id: ... } }
           // We need to find the platform name.
           const platform = allIntegrations.find(
-            (i) => (i.integration_id || i.id) === intId
+            (i) => (i.integration_id || i.id) === intId,
           );
           if (platform) {
             const platformName = platform.platform || platform.id;
@@ -289,7 +289,7 @@ export default function ArticleDetailsSheet({
         }
 
         return attr;
-      }
+      },
     );
 
     const finalData: any = {
@@ -398,7 +398,7 @@ export default function ArticleDetailsSheet({
 
           // Add publication_settings structure
           const integration = allIntegrations.find(
-            (i) => (i.integration_id || i.id) === pub.integration_id
+            (i) => (i.integration_id || i.id) === pub.integration_id,
           );
 
           if (integration && s) {
@@ -415,7 +415,7 @@ export default function ArticleDetailsSheet({
           }
 
           return attr;
-        }
+        },
       );
       // .filter(Boolean); // map always returns object here
 
@@ -472,7 +472,7 @@ export default function ArticleDetailsSheet({
             onSuccess: () => {
               setAlertConfig((prev) => ({ ...prev, open: false }));
             },
-          }
+          },
         );
       },
     });
@@ -517,7 +517,7 @@ export default function ArticleDetailsSheet({
 
       const response = await axiosInstance.post(
         `/api/v1/blogs/${blogs.id}/articles/${formData.id}/generate_metadata`,
-        { targets }
+        { targets },
       );
       return response.data;
     },
@@ -753,7 +753,7 @@ export default function ArticleDetailsSheet({
                   >
                     {generateMetadataMutation.isPending &&
                     generateMetadataMutation.variables?.includes(
-                      "description"
+                      "description",
                     ) ? (
                       <Loader2 className="max-h-3 max-w-3 animate-spin" />
                     ) : (
@@ -898,18 +898,18 @@ export default function ArticleDetailsSheet({
 
                               const year = date.getFullYear();
                               const month = String(
-                                date.getMonth() + 1
+                                date.getMonth() + 1,
                               ).padStart(2, "0");
                               const day = String(date.getDate()).padStart(
                                 2,
-                                "0"
+                                "0",
                               );
                               const hours = String(date.getHours()).padStart(
                                 2,
-                                "0"
+                                "0",
                               );
                               const minutes = String(
-                                date.getMinutes()
+                                date.getMinutes(),
                               ).padStart(2, "0");
 
                               return `${year}-${month}-${day}T${hours}:${minutes}`;
@@ -937,7 +937,7 @@ export default function ArticleDetailsSheet({
               {/* Filter connected integrations first */}
               {(() => {
                 const connectedIntegrations = allIntegrations.filter(
-                  (i) => i.is_connected
+                  (i) => i.is_connected,
                 );
 
                 if (connectedIntegrations.length === 0) return null;
@@ -953,7 +953,7 @@ export default function ArticleDetailsSheet({
                         const isSelected =
                           formData.article_publications.includes(integrationId);
                         const hasPublication = publications?.some(
-                          (pub) => pub.integration_id === integrationId
+                          (pub) => pub.integration_id === integrationId,
                         );
                         const isChecked = isSelected || hasPublication;
 
@@ -992,7 +992,7 @@ export default function ArticleDetailsSheet({
                             </div>
 
                             {/* Inline Author Selector - Only show if checked and supports authors */}
-                            {/* {isChecked && platform.supports_authors && (
+                            {isChecked && platform.supports_authors && (
                               <AuthorSelector
                                 blogId={blogs?.id || ""}
                                 integrationId={integrationId}
@@ -1013,7 +1013,7 @@ export default function ArticleDetailsSheet({
                                   });
                                 }}
                               />
-                            )} */}
+                            )}
                           </div>
                         );
                       })}

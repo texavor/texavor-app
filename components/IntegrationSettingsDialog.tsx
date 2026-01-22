@@ -439,13 +439,6 @@ export default function IntegrationSettingsDialog({
                     ? "custom_webhook"
                     : normalizedPlatform;
 
-                console.log("DEBUG: Filter Init", {
-                  normalizedPlatform,
-                  targetPlatform,
-                  integrationId,
-                  totalAuthors: authorsData.length,
-                });
-
                 options = authorsData
                   .filter((a: any) => {
                     const isStrictPlatform =
@@ -465,45 +458,19 @@ export default function IntegrationSettingsDialog({
                     // The Author object usually has `integration_id` if it was imported from one.
 
                     if (targetPlatform === "custom_webhook") {
-                      // 1. Direct integration_id check (if exists on root)
+                      // Strict filter: Author MUST belong to this integration
                       if (
                         a.integration_id &&
                         a.integration_id === integrationId
                       ) {
                         return true;
                       }
-
-                      // 2. Check platform_defaults for this integration
-                      if (
-                        a.platform_defaults &&
-                        Array.isArray(a.platform_defaults)
-                      ) {
-                        const isDefaultForThis = a.platform_defaults.some(
-                          (pd: any) => {
-                            if (typeof pd === "string") return false; // fast fail for custom webhook needing strict integration check
-                            return (
-                              pd.integration_id === integrationId &&
-                              pd.platform === targetPlatform
-                            );
-                          },
-                        );
-                        if (isDefaultForThis) return true;
-                      }
-
-                      // 3. Fallback: If author has NO integration_id and matching platform,
-                      // we cannot strictly link it to this custom webhook instance.
-                      // To prevent merging, we should strictly require an integration ID match for custom webhooks.
+                      // For custom webhooks, merging is not allowed.
+                      // If no integration_id match, it's hidden.
                       return false;
                     }
 
-                    return (
-                      a.external_platform === targetPlatform ||
-                      a.platform_defaults?.some((pd: any) => {
-                        if (typeof pd === "string")
-                          return pd === targetPlatform;
-                        return pd.platform === targetPlatform;
-                      })
-                    );
+                    return a.external_platform === targetPlatform;
                   })
                   .map((a: any) => ({
                     label: a.name,

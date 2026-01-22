@@ -14,10 +14,7 @@ export interface Author {
   created_at: string;
   updated_at: string;
   is_default?: boolean;
-  platform_defaults?: (
-    | string
-    | { integration_id: string; platform: string; name: string }
-  )[];
+
   username?: string;
   display_name?: string;
   integration_id?: string;
