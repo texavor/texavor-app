@@ -73,7 +73,7 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
       "10 authors",
       "15 competitors",
       "Priority support (24h)",
-      "Full API access",
+      // "Full API access",
     ],
   },
   business: {
@@ -100,8 +100,8 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
       "Unlimited authors",
       "Unlimited competitors",
       "Priority support (12h)",
-      "Advanced API access",
-      "Custom integrations",
+      // "Advanced API access",
+      // "Custom integrations",
     ],
   },
 };
