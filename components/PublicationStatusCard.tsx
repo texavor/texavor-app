@@ -97,9 +97,8 @@ export default function PublicationStatusCard({
   const config = statusConfig[publication.status];
   const StatusIcon = config.icon;
   const isDev = process.env.NODE_ENV === "development";
-  const canRetry =
-    publication.status === "failed" && (isDev || publication.retry_count < 3);
-  const showRaiseQuery = publication.status === "failed" && !canRetry && !isDev;
+  const canRetry = publication.status === "failed";
+  const showRaiseQuery = false; // Always allow retry now
 
   const getTimestamp = () => {
     const dateStr = publication.published_at || publication.attempted_at;
@@ -192,7 +191,6 @@ export default function PublicationStatusCard({
             {publication.retry_count > 0 && (
               <p className="text-xs text-red-600 mt-1">
                 Retry attempts: {publication.retry_count}
-                {!isDev && "/3"}
               </p>
             )}
           </div>
