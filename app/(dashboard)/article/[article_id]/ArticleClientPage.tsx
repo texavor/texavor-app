@@ -96,7 +96,7 @@ export default function ArticleClientPage() {
     queryKey: ["article", existingId, blogs?.id],
     queryFn: async () => {
       const res = await axiosInstance.get(
-        `/api/v1/blogs/${blogs?.id}/articles/${existingId}`
+        `/api/v1/blogs/${blogs?.id}/articles/${existingId}`,
       );
       if (!res?.data) return null;
       return res.data;
@@ -144,7 +144,7 @@ export default function ArticleClientPage() {
           (p: any) => {
             if (typeof p === "string") return p;
             return p.integration?.id || p.integration_id || p.id;
-          }
+          },
         ),
         platform_settings: {
           ...(fetchedArticle.platform_settings || {}),
@@ -181,7 +181,7 @@ export default function ArticleClientPage() {
                     platform_author_id: p.platform_author_id, // Ensure author overrides
                   },
                 ];
-              })
+              }),
           ),
         },
         id: fetchedArticle.id,
@@ -219,7 +219,7 @@ export default function ArticleClientPage() {
     queryFn: async () => {
       try {
         const res = await axiosInstance.get(
-          `/api/v1/blogs/${blogs?.id}/articles/${existingId}/article_analyses`
+          `/api/v1/blogs/${blogs?.id}/articles/${existingId}/article_analyses`,
         );
         if (!res?.data) return null;
         return res.data;
@@ -258,7 +258,7 @@ export default function ArticleClientPage() {
 
       try {
         const res = await axiosInstance.get(
-          `/api/v1/blogs/${blogs?.id}/saved_results/${savedResultId}`
+          `/api/v1/blogs/${blogs?.id}/saved_results/${savedResultId}`,
         );
         return res?.data?.data || res?.data;
       } catch (error: any) {
@@ -274,7 +274,7 @@ export default function ArticleClientPage() {
     mutationFn: async (payload: any) => {
       return axiosInstance.patch(
         `/api/v1/blogs/${blogs.id}/articles/${articleId?.id}`,
-        payload
+        payload,
       );
     },
     onSuccess: (res, variables) => {
@@ -330,7 +330,7 @@ export default function ArticleClientPage() {
             article: {
               thumbnail_url: null,
             },
-          }
+          },
         );
       } catch (error) {
         console.error("Failed to remove cover:", error);
@@ -349,7 +349,7 @@ export default function ArticleClientPage() {
 
     try {
       const res = await axiosInstance?.post(
-        `/api/v1/blogs/${blogs.id}/articles/${articleId?.id}/article_analyses`
+        `/api/v1/blogs/${blogs.id}/articles/${articleId?.id}/article_analyses`,
       );
       setInsights(res?.data);
     } catch (error) {
@@ -377,7 +377,8 @@ export default function ArticleClientPage() {
   };
 
   // Show loading state until mounted on client or while fetching initial data
-  if (!mounted || isLoading) {
+  // Also wait for blogs.id to be available since custom hook relies on it
+  if (!mounted || isLoading || isLoadingPermissions || !blogs?.id) {
     return (
       <div className="p-6 space-y-4">
         <Skeleton className="h-12 w-full" />

@@ -417,6 +417,40 @@ export default function IntegrationSettingsDialog({
                       return a.external_platform === targetPlatform;
                     }
 
+                    // For custom webhooks, we must strict filter by integration ID if possible
+                    // The user's JSON shows "external_id" might be holding a unique ID (like "1", "2")
+                    // but the integration object passed to this dialog has an 'id'.
+                    // We need to check if we can verify which webhook this author belongs to.
+                    // The JSON shows `external_platform: "custom_webhook"`.
+                    // But maybe we should check if the author was imported from *this specific* integration?
+                    // The Author object usually has `integration_id` if it was imported from one.
+
+                    if (targetPlatform === "custom_webhook") {
+                      // If the author has an integration_id, it MUST match the current integration's ID
+                      if (a.integration_id) {
+                        return (
+                          a.integration_id === integrationId &&
+                          a.external_platform === targetPlatform
+                        );
+                      }
+                      // If no integration_id (maybe manual?), fall back to platform check?
+                      // But user says they are getting merged.
+                      // Looking at the user JSON, the authors have `external_id`: "1", "2".
+                      // And `external_platform`: "custom_webhook".
+                      // It's likely they ARE linked by integration_id in the backend, and we should filter by it if available.
+
+                      // Let's check if 'integrationId' is available in scope.
+                      // Yes, `IntegrationSettingsDialog` receives `integrationId` props?
+                      // Wait, it receives `integrationId` prop.
+
+                      return (
+                        a.external_platform === targetPlatform &&
+                        (a.integration_id
+                          ? a.integration_id === integrationId
+                          : true)
+                      );
+                    }
+
                     return (
                       a.external_platform === targetPlatform ||
                       a.platform_defaults?.includes(targetPlatform)
