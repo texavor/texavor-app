@@ -18,7 +18,7 @@ import {
 export const getColumns = (
   onEdit: (author: Author) => void,
   onDelete: (author: Author) => void,
-  onSetDefault: (author: Author) => void
+  onSetDefault: (author: Author) => void,
 ): ColumnDef<Author>[] => [
   {
     accessorKey: "name",
@@ -184,15 +184,23 @@ export const getColumns = (
                       Default for Platforms:
                     </p>
                     <div className="flex flex-wrap gap-1">
-                      {defaults.map((p) => (
-                        <Badge
-                          key={p}
-                          variant="secondary"
-                          className="text-[9px] px-1.5 h-4 bg-amber-50 text-amber-700 border-amber-100"
-                        >
-                          {formatPlatformName(p)}
-                        </Badge>
-                      ))}
+                      {defaults.map((p) => {
+                        const key =
+                          typeof p === "string" ? p : p.integration_id;
+                        const label =
+                          typeof p === "string"
+                            ? formatPlatformName(p)
+                            : p.name || formatPlatformName(p.platform);
+                        return (
+                          <Badge
+                            key={key}
+                            variant="secondary"
+                            className="text-[9px] px-1.5 h-4 bg-amber-50 text-amber-700 border-amber-100"
+                          >
+                            {label}
+                          </Badge>
+                        );
+                      })}
                     </div>
                   </div>
                 </TooltipContent>
