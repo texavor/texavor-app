@@ -273,7 +273,7 @@ export default function PricingClientPage() {
             <Button
               onClick={handleLogout}
               variant="ghost"
-              className="flex items-center gap-2 bg-red-500 hover:bg-red-500 text-white"
+              className="flex items-center gap-2 bg-red-500 hover:bg-red-500 text-white hover:text-white"
             >
               <LogOut className="h-4 w-4" />
               <span className="font-inter text-sm">Logout</span>
