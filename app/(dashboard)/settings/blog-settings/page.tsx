@@ -227,7 +227,7 @@ export default function BlogSettingsPage() {
                           target_audience: e.target.value,
                         })
                       }
-                      placeholder="e.g. Content marketers, Developers"
+                      placeholder="e.g. Business professionals, Content creators"
                     />
                   </div>
 

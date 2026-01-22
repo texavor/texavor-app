@@ -295,11 +295,11 @@ function RegisterContent() {
           selector={(state) => state.values.terms}
           children={(terms) => (
             <Button
-              disabled={!terms}
+              disabled={!terms || mutation.isPending}
               type="submit"
               className="w-full bg-[#104127] text-white hover:bg-[#104127] col-span-2"
             >
-              Create Account
+              {mutation.isPending ? "Creating Account..." : "Create Account"}
             </Button>
           )}
         />

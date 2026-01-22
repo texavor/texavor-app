@@ -184,8 +184,9 @@ export function LoginContent() {
         <Button
           type="submit"
           className="w-full bg-[#104127] text-white hover:bg-[#104127] font-poppins"
+          disabled={mutation.isPending}
         >
-          Login
+          {mutation.isPending ? "Logging in..." : "Login"}
         </Button>
       </form>
       <div className="relative my-4">
