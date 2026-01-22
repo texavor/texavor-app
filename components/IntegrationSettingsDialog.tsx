@@ -296,11 +296,22 @@ export default function IntegrationSettingsDialog({
           normalizedPlatform === "customwebhook")
       ) {
         // Find default author for this platform
-        const defaultAuthor = authorsData.find(
-          (a: any) =>
-            a.platform_defaults?.includes(normalizedPlatform) ||
-            a.platform_defaults?.includes(integration?.platform), // Check both normalized and raw
-        );
+        const defaultAuthor = authorsData.find((a: any) => {
+          if (!a.platform_defaults) return false;
+          // Check if platform_defaults contains a match
+          return a.platform_defaults.some((pd: any) => {
+            if (typeof pd === "string") {
+              // Backward compatibility
+              return pd === normalizedPlatform || pd === integration?.platform;
+            }
+            // New Object structure check
+            return (
+              (pd.platform === normalizedPlatform ||
+                pd.platform === integration?.platform) &&
+              (pd.integration_id ? pd.integration_id === integrationId : true)
+            );
+          });
+        });
 
         if (defaultAuthor) {
           // Use external_id if available (per user request) or id
@@ -426,34 +437,44 @@ export default function IntegrationSettingsDialog({
                     // The Author object usually has `integration_id` if it was imported from one.
 
                     if (targetPlatform === "custom_webhook") {
-                      // If the author has an integration_id, it MUST match the current integration's ID
-                      if (a.integration_id) {
-                        return (
-                          a.integration_id === integrationId &&
-                          a.external_platform === targetPlatform
-                        );
+                      // 1. Direct integration_id check (if exists on root)
+                      if (
+                        a.integration_id &&
+                        a.integration_id === integrationId
+                      ) {
+                        return true;
                       }
-                      // If no integration_id (maybe manual?), fall back to platform check?
-                      // But user says they are getting merged.
-                      // Looking at the user JSON, the authors have `external_id`: "1", "2".
-                      // And `external_platform`: "custom_webhook".
-                      // It's likely they ARE linked by integration_id in the backend, and we should filter by it if available.
 
-                      // Let's check if 'integrationId' is available in scope.
-                      // Yes, `IntegrationSettingsDialog` receives `integrationId` props?
-                      // Wait, it receives `integrationId` prop.
+                      // 2. Check platform_defaults for this integration
+                      if (
+                        a.platform_defaults &&
+                        Array.isArray(a.platform_defaults)
+                      ) {
+                        const isDefaultForThis = a.platform_defaults.some(
+                          (pd: any) => {
+                            if (typeof pd === "string") return false; // fast fail for custom webhook needing strict integration check
+                            return (
+                              pd.integration_id === integrationId &&
+                              pd.platform === targetPlatform
+                            );
+                          },
+                        );
+                        if (isDefaultForThis) return true;
+                      }
 
-                      return (
-                        a.external_platform === targetPlatform &&
-                        (a.integration_id
-                          ? a.integration_id === integrationId
-                          : true)
-                      );
+                      // 3. Fallback: If author has NO integration_id and matching platform,
+                      // we cannot strictly link it to this custom webhook instance.
+                      // To prevent merging, we should strictly require an integration ID match for custom webhooks.
+                      return false;
                     }
 
                     return (
                       a.external_platform === targetPlatform ||
-                      a.platform_defaults?.includes(targetPlatform)
+                      a.platform_defaults?.some((pd: any) => {
+                        if (typeof pd === "string")
+                          return pd === targetPlatform;
+                        return pd.platform === targetPlatform;
+                      })
                     );
                   })
                   .map((a: any) => ({

@@ -14,7 +14,10 @@ export interface Author {
   created_at: string;
   updated_at: string;
   is_default?: boolean;
-  platform_defaults?: string[];
+  platform_defaults?: (
+    | string
+    | { integration_id: string; platform: string; name: string }
+  )[];
   username?: string;
   display_name?: string;
   integration_id?: string;
@@ -50,20 +53,20 @@ export async function fetchAuthors(blogId: string): Promise<Author[]> {
 
 export async function fetchFromPlatform(
   blogId: string,
-  integrationId: string
+  integrationId: string,
 ): Promise<FetchAuthorsResponse> {
   const response = await axiosInstance.post(
-    `/api/v1/blogs/${blogId}/integrations/${integrationId}/fetch_authors`
+    `/api/v1/blogs/${blogId}/integrations/${integrationId}/fetch_authors`,
   );
   return response.data;
 }
 
 export async function listIntegrationAuthors(
   blogId: string,
-  integrationId: string
+  integrationId: string,
 ): Promise<FetchAuthorsResponse> {
   const response = await axiosInstance.get(
-    `/api/v1/blogs/${blogId}/integrations/${integrationId}/authors`
+    `/api/v1/blogs/${blogId}/integrations/${integrationId}/authors`,
   );
   return response.data;
 }
@@ -71,21 +74,21 @@ export async function listIntegrationAuthors(
 export async function setDefaultAuthor(
   blogId: string,
   integrationId: string,
-  authorId: string
+  authorId: string,
 ): Promise<{ success: boolean; author: Author }> {
   const response = await axiosInstance.patch(
-    `/api/v1/blogs/${blogId}/integrations/${integrationId}/authors/${authorId}/set_default`
+    `/api/v1/blogs/${blogId}/integrations/${integrationId}/authors/${authorId}/set_default`,
   );
   return response.data;
 }
 
 export async function createAuthor(
   blogId: string,
-  authorData: CreateAuthorPayload
+  authorData: CreateAuthorPayload,
 ): Promise<Author> {
   const response = await axiosInstance.post(
     `/api/v1/blogs/${blogId}/authors`,
-    authorData
+    authorData,
   );
   return response.data;
 }
@@ -93,28 +96,28 @@ export async function createAuthor(
 export async function updateAuthor(
   blogId: string,
   authorId: string,
-  updates: Partial<CreateAuthorPayload["author"]>
+  updates: Partial<CreateAuthorPayload["author"]>,
 ): Promise<Author> {
   const response = await axiosInstance.patch(
     `/api/v1/blogs/${blogId}/authors/${authorId}`,
-    { author: updates }
+    { author: updates },
   );
   return response.data;
 }
 
 export async function deleteAuthor(
   blogId: string,
-  authorId: string
+  authorId: string,
 ): Promise<void> {
   await axiosInstance.delete(`/api/v1/blogs/${blogId}/authors/${authorId}`);
 }
 
 export async function importAuthors(
   blogId: string,
-  integrationId: string
+  integrationId: string,
 ): Promise<ImportAuthorsResponse> {
   const response = await axiosInstance.post(
-    `/api/v1/blogs/${blogId}/authors/import/${integrationId}`
+    `/api/v1/blogs/${blogId}/authors/import/${integrationId}`,
   );
   return response.data;
 }
