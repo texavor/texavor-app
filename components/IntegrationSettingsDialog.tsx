@@ -496,7 +496,7 @@ export default function IntegrationSettingsDialog({
                       { label: "Personal", value: "null", icon: null }, // distinct null value
                       ...discovered.map((org: any) => ({
                         ...org,
-                        icon: org.profile_image, // Map profile_image to icon
+                        icon: org.profile_image || org.avatar, // Map profile_image or avatar to icon
                       })),
                     ];
                   } else if (
