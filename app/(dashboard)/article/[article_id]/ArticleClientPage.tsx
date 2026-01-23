@@ -16,15 +16,20 @@ import ArticleDetailsSheet from "@/components/ArticleDetailsSheet";
 import { ThumbnailUploadDialog } from "@/components/ThumbnailUploadDialog";
 import { usePermissions } from "@/hooks/usePermissions";
 
+import {
+  EditorSkeleton,
+  InsightsSkeleton,
+} from "./components/ArticlePageSkeletons";
+
 // Dynamic imports with SSR disabled to prevent hydration mismatches
 const Editor = dynamic(() => import("@/components/Editor"), {
   ssr: false,
-  loading: () => <Skeleton className="h-[80vh] w-full rounded-md" />,
+  loading: () => <EditorSkeleton />,
 });
 
 const InsightsPanel = dynamic(() => import("./InsightsPanel"), {
   ssr: false,
-  loading: () => <Skeleton className="h-[80vh] w-full rounded-md" />,
+  loading: () => <InsightsSkeleton />,
 });
 
 export default function ArticleClientPage() {
