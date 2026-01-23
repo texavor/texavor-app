@@ -5,12 +5,12 @@ export const ARTICLE_STATUS_COLORS = {
     label: "Draft",
     chart: "#EAB308", // Yellow-500
   },
-  review: {
-    bg: "#BEE7EF",
-    text: "#0F6C7A",
-    label: "Review",
-    chart: "#3B82F6", // Blue-500
-  },
+  // review: {
+  //   bg: "#BEE7EF",
+  //   text: "#0F6C7A",
+  //   label: "Review",
+  //   chart: "#3B82F6", // Blue-500
+  // },
   scheduled: {
     bg: "#E5D5FF",
     text: "#6A32B9",
