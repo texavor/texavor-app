@@ -23,6 +23,18 @@ export const ARTICLE_STATUS_COLORS = {
     label: "Published",
     chart: "#22C55E", // Green-500
   },
+  partial: {
+    bg: "#FFEDD5",
+    text: "#EA580C",
+    label: "Partial",
+    chart: "#F97316", // Orange-500
+  },
+  failed: {
+    bg: "#FEE2E2",
+    text: "#DC2626",
+    label: "Failed",
+    chart: "#EF4444", // Red-500
+  },
 } as const;
 
 export type ArticleStatus = keyof typeof ARTICLE_STATUS_COLORS;
