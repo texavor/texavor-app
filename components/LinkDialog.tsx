@@ -40,22 +40,25 @@ export const LinkDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
+      <DialogContent className="bg-white p-0 gap-0 sm:max-w-md">
+        <DialogHeader className="p-6 pb-4">
           <DialogTitle>Edit Link</DialogTitle>
         </DialogHeader>
-        <div className="py-4">
-          <Label htmlFor="url">URL</Label>
-          <Input
-            id="url"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://example.com"
-          />
+        <div className="h-[1px] bg-slate-200 w-full" />
+        <div className="p-6">
+          <div className="grid gap-2 mb-4">
+            <Label htmlFor="url">URL</Label>
+            <Input
+              id="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://example.com"
+            />
+          </div>
+          <DialogFooter>
+            <Button onClick={handleSave}>Save</Button>
+          </DialogFooter>
         </div>
-        <DialogFooter>
-          <Button onClick={handleSave}>Save</Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
