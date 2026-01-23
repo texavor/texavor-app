@@ -389,8 +389,8 @@ const Editor = ({
         tightLists: true,
         linkify: true,
         breaks: false,
-        transformPastedText: false,
-        transformCopiedText: false,
+        transformPastedText: true,
+        transformCopiedText: true,
       }),
       Placeholder.configure({
         placeholder: "Write your article here...",
