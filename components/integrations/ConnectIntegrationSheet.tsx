@@ -32,6 +32,7 @@ import { WordpressForm } from "./forms/WordpressForm";
 import { WebflowForm } from "./forms/WebflowForm";
 import { ShopifyForm } from "./forms/ShopifyForm";
 import { CustomWebhookForm } from "./forms/CustomWebhookForm";
+import { SubstackForm } from "./forms/SubstackForm";
 
 import { useAppStore } from "@/store/appStore";
 
@@ -271,6 +272,16 @@ export default function ConnectIntegrationSheet({
             setMappingData(mapping);
           }
           break;
+
+        case "substack":
+          // Mask cookie (sensitive), show subdomain
+          if (platform.settings.subdomain) {
+            newFormData.subdomain = platform.settings.subdomain;
+          } else if (platform.settings.username) {
+            newFormData.subdomain = platform.settings.username;
+          }
+          newFormData.cookie = MASKED_VALUE;
+          break;
       }
 
       // Load primary setting if it exists
@@ -300,6 +311,18 @@ export default function ConnectIntegrationSheet({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!platform) return;
+
+    // Substack Validation
+    if (platform.id === "substack") {
+      if (!formData.subdomain) {
+        toast.error("Please enter your Substack subdomain");
+        return;
+      }
+      if (!formData.cookie) {
+        toast.error("Please enter your Session Cookie");
+        return;
+      }
+    }
 
     // For Shopify blog selection (when editing existing integration with blog selector)
     if (
@@ -505,6 +528,10 @@ export default function ConnectIntegrationSheet({
             }
           }
           break;
+        case "substack":
+          payload.credentials.subdomain = formData.subdomain;
+          payload.credentials.cookie = formData.cookie;
+          break;
         // Add other cases as needed
         default:
           // Fallback: dump everything into credentials for now
@@ -677,6 +704,8 @@ export default function ConnectIntegrationSheet({
             discovered={discoveredData}
           />
         );
+      case "substack":
+        return <SubstackForm formData={formData} handleChange={handleChange} />;
       case "wordpress":
         return (
           <WordpressForm formData={formData} handleChange={handleChange} />

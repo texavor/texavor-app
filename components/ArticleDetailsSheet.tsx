@@ -3,13 +3,12 @@
 import { useIntegrationsApi } from "@/app/(dashboard)/integrations/hooks/useIntegrationsApi";
 import { usePublicationsApi } from "@/app/(dashboard)/article/hooks/usePublicationsApi";
 import { fetchAuthors, Author } from "@/lib/api/authors";
-import { AuthorSelector } from "@/components/integrations/AuthorSelector";
 import { Checkbox } from "./ui/checkbox";
 import { CustomAlertDialog } from "./ui/CustomAlertDialog";
 import { useMutation } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axiosInstace";
 import { toast } from "sonner";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Sheet,
   SheetContent,
@@ -88,6 +87,15 @@ export default function ArticleDetailsSheet({
   } = useArticleSettingsStore();
 
   const [authorDropdownOpen, setAuthorDropdownOpen] = useState(false);
+  const publicationsInitializedRef = useRef(false);
+
+  // Reset init ref when sheet closes or ID changes
+  useEffect(() => {
+    if (!open) {
+      publicationsInitializedRef.current = false;
+    }
+  }, [open, formData?.id]);
+
   const { blogs } = useAppStore();
   const { getIntegrations } = useIntegrationsApi();
   const allIntegrations = getIntegrations.data || [];
@@ -955,7 +963,7 @@ export default function ArticleDetailsSheet({
                         const hasPublication = publications?.some(
                           (pub) => pub.integration_id === integrationId,
                         );
-                        const isChecked = isSelected || hasPublication;
+                        const isChecked = isSelected;
 
                         return (
                           <div
@@ -978,6 +986,7 @@ export default function ArticleDetailsSheet({
                                   {platform.name}
                                 </Label>
                               </div>
+
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -991,29 +1000,7 @@ export default function ArticleDetailsSheet({
                               </Button>
                             </div>
 
-                            {/* Inline Author Selector - Only show if checked and supports authors */}
-                            {isChecked && platform.supports_authors && (
-                              <AuthorSelector
-                                blogId={blogs?.id || ""}
-                                integrationId={integrationId}
-                                selectedAuthorId={
-                                  selectedAuthors[integrationId]
-                                }
-                                onSelect={(authorId) => {
-                                  setSelectedAuthors((prev) => {
-                                    if (!authorId) {
-                                      const next = { ...prev };
-                                      delete next[integrationId];
-                                      return next;
-                                    }
-                                    return {
-                                      ...prev,
-                                      [integrationId]: authorId,
-                                    };
-                                  });
-                                }}
-                              />
-                            )}
+                            {/* Inline Author Selector - Moved up */}
                           </div>
                         );
                       })}
@@ -1066,17 +1053,21 @@ export default function ArticleDetailsSheet({
               </Button>
             </div>
           ) : isScheduled ? (
-            <>
-              <Button variant="outline" onClick={handleCancelSchedule}>
+            <div className="flex flex-row gap-2 w-full">
+              <Button
+                variant="outline"
+                onClick={handleCancelSchedule}
+                className="flex-1"
+              >
                 Cancel Schedule
               </Button>
               <Button
                 onClick={() => handleSave("publish_or_schedule")}
-                className="bg-[#104127] hover:bg-[#0A2918]"
+                className="bg-[#104127] hover:bg-[#0A2918] flex-1"
               >
                 Update Schedule
               </Button>
-            </>
+            </div>
           ) : (
             <div className="flex flex-col sm:flex-row gap-2 w-full">
               <Button

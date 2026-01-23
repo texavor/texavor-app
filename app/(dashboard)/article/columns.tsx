@@ -102,6 +102,11 @@ export const columns: ColumnDef<Article, any>[] = [
       width: "30%",
       truncate: true,
     },
+    cell: ({ row }) => (
+      <div className="truncate max-w-[300px]" title={row.getValue("title")}>
+        {row.getValue("title")}
+      </div>
+    ),
   },
   {
     accessorKey: "categories",
@@ -209,7 +214,7 @@ export const columns: ColumnDef<Article, any>[] = [
       const handleDelete = async () => {
         try {
           await axiosInstance.delete(
-            `/api/v1/blogs/${article.blog_id}/articles/${article.id}`
+            `/api/v1/blogs/${article.blog_id}/articles/${article.id}`,
           );
           toast.success("Article deleted successfully");
           queryClient.invalidateQueries({ queryKey: ["articles"] });

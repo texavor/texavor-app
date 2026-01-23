@@ -22,6 +22,7 @@ export function formatPlatformName(platform: string): string {
     wordpress: "WordPress",
     webflow: "Webflow",
     shopify: "Shopify",
+    substack: "Substack",
   };
 
   const normalized = platform.toLowerCase().replace(/[.\s-]/g, "_");

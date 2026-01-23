@@ -191,6 +191,40 @@ const platformSettings: Record<
       description: "Comma-separated tags",
     },
   ],
+  substack: [
+    {
+      key: "audience",
+      label: "Audience",
+      type: "custom-dropdown",
+      options: [
+        { label: "Everyone (Public)", value: "everyone" },
+        { label: "Paid Subscribers Only", value: "only_paid" },
+        { label: "Free Subscribers Only", value: "only_free" },
+      ],
+      placeholder: "Select Audience",
+      description: "Who can see this post?",
+    },
+    {
+      key: "send_email",
+      label: "Send as Newsletter",
+      type: "radio",
+      options: [
+        { label: "Yes", value: "true" },
+        { label: "No", value: "false" },
+      ],
+      description: "Send via email upon publishing",
+    },
+    {
+      key: "draft",
+      label: "Save as Draft",
+      type: "radio",
+      options: [
+        { label: "Yes", value: "true" },
+        { label: "No", value: "false" },
+      ],
+      description: "Create as draft on Substack",
+    },
+  ],
 };
 
 // Fallback tags for Dev.to when discovery API doesn't return tags
@@ -616,7 +650,7 @@ export default function IntegrationSettingsDialog({
                         }));
                       }}
                       trigger={
-                        <button className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                        <button className="focus-visible:ring-[0px] flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-0 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50">
                           <span className="truncate">
                             {selectedOption
                               ? selectedOption.name
@@ -778,7 +812,7 @@ export default function IntegrationSettingsDialog({
           )}
         </div>
 
-        <DialogFooter className="px-4">
+        <DialogFooter className="p-4 border-t border-[#E5E7EB]">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}

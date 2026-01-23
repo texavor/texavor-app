@@ -45,9 +45,11 @@ const CustomDropdown = ({
 
   return (
     <DropdownMenu open={open} onOpenChange={onOpenChange}>
-      <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+      <DropdownMenuTrigger asChild className="focus-visible:ring-[0px]">
+        {trigger}
+      </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="border-[1px] p-0 py-1 border-[#E4E4E7] min-w-[150px] w-auto z-[1400] max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto"
+        className="border-[1px] p-0 py-1 border-[#E4E4E7] min-w-[200px] z-[1400] max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto"
         onWheel={stopWheelEventPropagation}
         onTouchMove={stopTouchMoveEventPropagation}
       >

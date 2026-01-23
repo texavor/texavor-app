@@ -114,6 +114,7 @@ export default function ArticleClientPage() {
 
       setTitle(fetchedTitle);
       setContent(fetchedContent);
+      setContentHtml(fetchedArticle.content_html || "");
       setThumbnailUrl(fetchedArticle.thumbnail_url || null);
       setArticleId(fetchedArticle);
       setSavedResultId(fetchedArticle.saved_result_id || null);

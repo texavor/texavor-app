@@ -21,12 +21,13 @@ export default function AuthorsSettingsPage() {
   const [editingAuthor, setEditingAuthor] = useState<Author | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [configIntegration, setConfigIntegration] = useState<Platform | null>(
-    null
+    null,
   );
 
   const connectedIntegrations =
     getIntegrations.data?.filter(
-      (p) => p.is_connected && (p.supports_authors || p.id === "custom_webhook")
+      (p) =>
+        p.is_connected && (p.supports_authors || p.id === "custom_webhook"),
     ) || [];
 
   const handleSuccess = () => {
@@ -97,10 +98,12 @@ export default function AuthorsSettingsPage() {
                         src={
                           integration.id === "custom_webhook"
                             ? "/integration/webhook.png"
-                            : integration.logo_url
+                            : integration.id === "substack"
+                              ? "/integration/substack.png"
+                              : integration.logo_url
                         }
                         alt={integration.name}
-                        className="w-5 h-5 object-contain"
+                        className="w-5 h-5 object-contain rounded-md"
                       />
                     </div>
                     <ImportAuthorsButton
@@ -116,24 +119,28 @@ export default function AuthorsSettingsPage() {
                     >
                       {integration.name}
                     </ImportAuthorsButton>
-                    <div className="w-px h-4 bg-gray-100 mx-0.5" />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={`h-7 w-7 rounded-md transition-all ${
-                        !integration.is_ready_for_authors
-                          ? "text-amber-500 hover:text-amber-600 bg-amber-50 animate-pulse"
-                          : "text-gray-400 hover:text-emerald-600 hover:bg-emerald-50/50"
-                      }`}
-                      onClick={() => setConfigIntegration(integration)}
-                      title={
-                        !integration.is_ready_for_authors
-                          ? "Configure authors to enable import"
-                          : "Author configuration"
-                      }
-                    >
-                      <Settings2 className="h-3.5 w-3.5" />
-                    </Button>
+                    {integration.id !== "substack" && (
+                      <>
+                        <div className="w-px h-4 bg-gray-100 mx-0.5" />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={`h-7 w-7 rounded-md transition-all ${
+                            !integration.is_ready_for_authors
+                              ? "text-amber-500 hover:text-amber-600 bg-amber-50 animate-pulse"
+                              : "text-gray-400 hover:text-emerald-600 hover:bg-emerald-50/50"
+                          }`}
+                          onClick={() => setConfigIntegration(integration)}
+                          title={
+                            !integration.is_ready_for_authors
+                              ? "Configure authors to enable import"
+                              : "Author configuration"
+                          }
+                        >
+                          <Settings2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>

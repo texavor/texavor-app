@@ -39,9 +39,13 @@ export function ImportAuthorsButton({
   const [importing, setImporting] = useState(false);
 
   const handleImport = async () => {
-    if (!isReady) {
+    // Substack and Webhook don't technically need "author settings ready" flag from backend if incorrectly set
+    const bypassCheck =
+      platformId === "substack" || platformId === "custom_webhook";
+
+    if (!isReady && !bypassCheck) {
       toast.error(
-        `Please complete ${integrationName} settings to fetch authors.`
+        `Please complete ${integrationName} settings to fetch authors.`,
       );
       return;
     }

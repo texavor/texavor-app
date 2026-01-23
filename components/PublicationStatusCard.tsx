@@ -31,6 +31,7 @@ const PLATFORM_IMAGES: Record<string, string> = {
   webflow: "/integration/webflow.png",
   wordpress: "/integration/wordpress.png",
   custom_webhook: "/integration/webhook.png",
+  substack: "/integration/substack.png",
 };
 
 interface Publication {

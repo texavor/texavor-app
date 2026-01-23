@@ -68,6 +68,7 @@ export const getColumns = (
         if (p.includes("wordpress")) return "/integration/wordpress.png";
         if (p.includes("shopify")) return "/integration/shopify.png";
         if (p.includes("webflow")) return "/integration/webflow.png";
+        if (p.includes("substack")) return "/integration/substack.png";
         if (p.includes("webhook")) return "/integration/webhook.png";
 
         return "/favicon.ico"; // Fallback to app logo
@@ -77,11 +78,11 @@ export const getColumns = (
 
       return (
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center border">
+          <div className="w-8 h-8 rounded-md bg-gray-50 flex items-center justify-center border">
             <img
               src={logo}
               alt={author.external_platform || "Manual"}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain rounded-md"
             />
           </div>
         </div>
@@ -144,6 +145,48 @@ export const getColumns = (
     },
   },
 
+  {
+    accessorKey: "is_default",
+    header: "Default",
+    cell: ({ row }) => {
+      const author = row.original;
+      const isOwner = author.role === "owner";
+      const isDefault = author.is_default;
+
+      if (isDefault) {
+        return (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-yellow-500 hover:text-yellow-600 hover:bg-yellow-50"
+            title="Default Author"
+            disabled
+          >
+            <Star className="h-4 w-4 fill-current" />
+          </Button>
+        );
+      }
+
+      if (author.external_platform && !isOwner) {
+        return (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-gray-300 hover:text-yellow-500 hover:bg-yellow-50"
+            onClick={() => onSetDefault(author)}
+            title="Set as Default"
+          >
+            <Star className="h-4 w-4" />
+          </Button>
+        );
+      }
+
+      return <div className="w-8 h-8" />;
+    },
+    meta: {
+      width: "10%",
+    },
+  },
   {
     id: "actions",
     header: "Action",

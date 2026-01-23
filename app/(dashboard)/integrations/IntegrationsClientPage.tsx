@@ -17,6 +17,7 @@ const PLATFORM_IMAGES: Record<string, string> = {
   webflow: "/integration/webflow.png",
   wordpress: "/integration/wordpress.png",
   custom_webhook: "/integration/webhook.png",
+  substack: "/integration/substack.png",
 };
 
 export default function IntegrationsClientPage() {
@@ -73,15 +74,27 @@ export default function IntegrationsClientPage() {
   // Get all platforms from integrations API
   const rawPlatforms = getIntegrations.data || [];
 
-  const allPlatforms = rawPlatforms.map((p) => {
-    const key = (p.platform || p.id).toLowerCase();
-    const localImage = PLATFORM_IMAGES[key];
+  const allPlatforms = rawPlatforms
+    .map((p) => {
+      const key = (p.platform || p.id).toLowerCase();
+      const localImage = PLATFORM_IMAGES[key];
 
-    if (localImage) {
-      return { ...p, logo_url: localImage };
-    }
-    return p;
-  });
+      if (localImage) {
+        return { ...p, logo_url: localImage };
+      }
+      if (localImage) {
+        return { ...p, logo_url: localImage };
+      }
+      return p;
+    })
+    .reduce((acc: any[], current) => {
+      const x = acc.find((item) => item.id === current.id);
+      if (!x) {
+        return acc.concat([current]);
+      } else {
+        return acc;
+      }
+    }, []);
 
   return (
     <div className="space-y-8 pb-4">

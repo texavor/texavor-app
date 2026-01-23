@@ -32,15 +32,6 @@ export const AuthorSelector: React.FC<AuthorSelectorProps> = ({
 
   const authors = Array.isArray(data) ? data : [];
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center gap-2 text-xs text-gray-400 mt-2 ml-7">
-        <Loader2 className="h-3 w-3 animate-spin" />
-        <span>Loading authors...</span>
-      </div>
-    );
-  }
-
   if (authors.length === 0) {
     return null;
   }
@@ -71,7 +62,17 @@ export const AuthorSelector: React.FC<AuthorSelectorProps> = ({
         placeholder="Select author..."
         disabled={disabled}
         className="h-8 text-xs w-[200px]"
-        triggerClassName="bg-gray-50/50 border-gray-200 hover:bg-white hover:border-gray-300 transition-colors"
+        trigger={
+          <button
+            className={`flex items-center justify-between rounded-md border px-3 py-1.5 text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-gray-50/50 border-gray-200 hover:bg-white hover:border-gray-300 w-[200px] h-8`}
+          >
+            <span className="truncate">
+              {options.find((o) => o.id === selectedAuthorId)?.name ||
+                "Select author..."}
+            </span>
+            <Loader2 className="h-3 w-3 opacity-0" /> {/* Spacer */}
+          </button>
+        }
       />
     </div>
   );

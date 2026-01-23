@@ -20,10 +20,10 @@ export interface DiscoveryResponse {
 
 export async function discoverIntegrationSettings(
   blogId: string,
-  integrationId: string | number
+  integrationId: string | number,
 ): Promise<DiscoveryResponse> {
-  const response = await axiosInstance.post(
-    `/api/v1/blogs/${blogId}/integrations/${integrationId}/discover`
+  const response = await axiosInstance.get(
+    `/api/v1/blogs/${blogId}/integrations/${integrationId}/discover`,
   );
   return response.data;
 }
