@@ -287,19 +287,19 @@ export const columns: ColumnDef<Article, any>[] = [
                 setOpen(false);
               }}
             />
+            <CustomAlertDialog
+              open={deleteDialogOpen}
+              onOpenChange={setDeleteDialogOpen}
+              title="Delete Article"
+              description="Are you sure you want to delete this article? This action cannot be undone."
+              confirmText="Delete"
+              variant="destructive"
+              onConfirm={() => {
+                handleDelete();
+                setDeleteDialogOpen(false);
+              }}
+            />
           </div>
-          <CustomAlertDialog
-            open={deleteDialogOpen}
-            onOpenChange={setDeleteDialogOpen}
-            title="Delete Article"
-            description="Are you sure you want to delete this article? This action cannot be undone."
-            confirmText="Delete"
-            variant="destructive"
-            onConfirm={() => {
-              handleDelete();
-              setDeleteDialogOpen(false);
-            }}
-          />
         </>
       );
     },
