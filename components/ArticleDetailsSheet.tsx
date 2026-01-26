@@ -1096,6 +1096,7 @@ export default function ArticleDetailsSheet({
           integration={selectedIntegration}
           onSave={handleSavePlatformSettings}
           mode="article"
+          articleAuthorId={formData.author_id}
         />
       )}
 

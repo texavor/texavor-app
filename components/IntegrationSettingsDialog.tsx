@@ -37,9 +37,10 @@ interface Integration {
 interface IntegrationSettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  integration: Integration | null;
   onSave?: (settings: Record<string, any>) => void;
   mode?: "global" | "article";
+  articleAuthorId?: string | null;
+  integration: Integration | null;
 }
 
 const platformSettings: Record<
@@ -267,6 +268,7 @@ export default function IntegrationSettingsDialog({
   integration,
   onSave,
   mode = "global",
+  articleAuthorId,
 }: IntegrationSettingsDialogProps) {
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [dropdownsOpen, setDropdownsOpen] = useState<Record<string, boolean>>(
@@ -343,41 +345,75 @@ export default function IntegrationSettingsDialog({
     if (integration && open) {
       const loadedSettings = integration.settings || {};
 
-      // Handle Platform Defaults for Authors if not already set
-      if (
-        !loadedSettings.author_id &&
-        authorsData &&
-        (normalizedPlatform === "webflow" ||
-          normalizedPlatform === "customwebhook")
-      ) {
-        // Find default author for this platform
-        const defaultAuthor = authorsData.find((a: any) => {
-          if (!a.platform_defaults) return false;
-          // Check if platform_defaults contains a match
-          return a.platform_defaults.some((pd: any) => {
-            if (typeof pd === "string") {
-              // Backward compatibility
-              return pd === normalizedPlatform || pd === integration?.platform;
-            }
-            // New Object structure check
-            return (
-              (pd.platform === normalizedPlatform ||
-                pd.platform === integration?.platform) &&
-              (pd.integration_id ? pd.integration_id === integrationId : true)
-            );
-          });
-        });
+      // Handle Platform Defaults or Article Author Prefill
+      // If setting is missing (author_id or organization_id), try to fill it.
+      const targetField =
+        normalizedPlatform === "devto" ? "organization_id" : "author_id";
 
-        if (defaultAuthor) {
-          // Use external_id if available (per user request) or id
-          const val = defaultAuthor.external_id || defaultAuthor.id;
-          loadedSettings.author_id = val;
+      if (!loadedSettings[targetField] && authorsData) {
+        let matchedAuthor = null;
+
+        // 1. Try to match by articleAuthorId if provided
+        if (articleAuthorId) {
+          matchedAuthor = authorsData.find(
+            (a: any) => a.id === articleAuthorId,
+          );
+        }
+
+        // 2. If no match yet, try finding a platform default (fallback)
+        // Only if we shouldn't strictly enforce article author??
+        // Actually, if articleAuthorId is set but doesn't map to this platform, we fall back to global default?
+        // Let's stick to the existing logic for defaults + articleAuthorId priority.
+        if (
+          !matchedAuthor &&
+          (normalizedPlatform === "webflow" ||
+            normalizedPlatform === "customwebhook")
+        ) {
+          matchedAuthor = authorsData.find((a: any) => {
+            if (!a.platform_defaults) return false;
+            return a.platform_defaults.some((pd: any) => {
+              if (typeof pd === "string") {
+                return (
+                  pd === normalizedPlatform || pd === integration?.platform
+                );
+              }
+              return (
+                (pd.platform === normalizedPlatform ||
+                  pd.platform === integration?.platform) &&
+                (pd.integration_id ? pd.integration_id === integrationId : true)
+              );
+            });
+          });
+        }
+
+        // If we found a candidate author, verify it works for this platform/integration
+        if (matchedAuthor) {
+          // Check if author is compatible with this platform/integration
+          const isCompatible =
+            matchedAuthor.external_platform === normalizedPlatform || // Matches platform (e.g. devto)
+            (normalizedPlatform === "customwebhook" &&
+              matchedAuthor.integration_id === integrationId); // Matches integration
+
+          // For Dev.to, if we have an author, we use their external_id as organization_id
+          // But only if they have one.
+          if (matchedAuthor.external_id) {
+            // For Dev.to authors, external_id is usually a number (org id) or "personal" string?
+            // Or sometimes empty if it's just a user.
+            // If we found a match, use it.
+            // Note: For Dev.to, if external_id is null/missing, it might be "Personal" (null).
+            // But we only overwrite if loadedSettings is EMPTY.
+
+            // Additional check: If it's the "Personal" author for Dev.to, external_id might be "personal" or similar.
+            // We need to map it to what the dropdown expects.
+
+            loadedSettings[targetField] = matchedAuthor.external_id;
+          }
         }
       }
 
       setFormData(loadedSettings);
     }
-  }, [integration, open, normalizedPlatform, authorsData]);
+  }, [integration, open, normalizedPlatform, authorsData, articleAuthorId]);
 
   const updateMutation = useMutation({
     mutationFn: async (settings: Record<string, any>) => {
