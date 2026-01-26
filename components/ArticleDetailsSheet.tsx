@@ -3,7 +3,6 @@
 import { useIntegrationsApi } from "@/app/(dashboard)/integrations/hooks/useIntegrationsApi";
 import { usePublicationsApi } from "@/app/(dashboard)/article/hooks/usePublicationsApi";
 import { fetchAuthors, Author } from "@/lib/api/authors";
-import { calculateArticleStats } from "@/lib/textStats";
 import { Checkbox } from "./ui/checkbox";
 import { CustomAlertDialog } from "./ui/CustomAlertDialog";
 import { useMutation } from "@tanstack/react-query";
@@ -86,14 +85,6 @@ export default function ArticleDetailsSheet({
     publishMode,
     setPublishMode,
   } = useArticleSettingsStore();
-
-  const stats = useMemo(() => {
-    return calculateArticleStats(
-      typeof currentContent === "string"
-        ? currentContent
-        : formData.content || "",
-    );
-  }, [currentContent, formData.content]);
 
   const [authorDropdownOpen, setAuthorDropdownOpen] = useState(false);
   const publicationsInitializedRef = useRef(false);
@@ -609,21 +600,6 @@ export default function ArticleDetailsSheet({
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8 no-scrollbar">
-          {/* Quick Stats */}
-          <section className="space-y-4">
-            <h3 className="text-sm font-poppins font-medium text-[#0A2918] uppercase tracking-wider">
-              Quick Stats
-            </h3>
-            <div className="bg-gray-50 p-4 rounded-md space-y-1.5 text-sm text-[#0A2918] font-inter">
-              <div>Word Count: {stats.wordCount}</div>
-              <div>Reading Time: {stats.readingTime} min</div>
-              <div>Headings: {stats.headingCount}</div>
-              <div>Paragraphs: {stats.paragraphCount}</div>
-            </div>
-          </section>
-
-          <Separator />
-
           {/* General Info */}
           <section className="space-y-4">
             <h3 className="text-sm font-poppins font-medium text-[#0A2918] uppercase tracking-wider">

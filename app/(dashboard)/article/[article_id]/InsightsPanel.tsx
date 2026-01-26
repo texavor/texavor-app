@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ScoreMeter, Gauge } from "@/components/ScoreMeter";
+import { calculateArticleStats } from "@/lib/textStats";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Loader2, Book } from "lucide-react";
@@ -27,6 +28,7 @@ interface InsightsPanelProps {
   savedResult?: any;
   articleTitle?: string;
   articleId?: string;
+  articleContent?: string;
 }
 
 const InsightsPanel = ({
@@ -38,6 +40,7 @@ const InsightsPanel = ({
   savedResult,
   articleTitle,
   articleId,
+  articleContent = "",
 }: InsightsPanelProps) => {
   const [outlineTopic, setOutlineTopic] = useState(articleTitle || "");
   const { generateOutline } = useOutlineApi();
@@ -51,6 +54,10 @@ const InsightsPanel = ({
       setOutlineTopic(articleTitle);
     }
   }, [articleTitle]);
+
+  const liveStats = React.useMemo(() => {
+    return calculateArticleStats(articleContent);
+  }, [articleContent]);
 
   if (!showMetrics) {
     return null;
@@ -221,10 +228,10 @@ const InsightsPanel = ({
               </h3>
 
               <div className="space-y-1 bg-gray-100 p-3 rounded-md text-sm font-inter">
-                <p>Word Count: {stats.word_count || 0}</p>
-                <p>Reading Time: {stats.reading_time || 0} min</p>
-                <p>Headings: {stats.headings_count || 0}</p>
-                <p>Paragraphs: {stats.paragraphs_count || 0}</p>
+                <p>Word Count: {liveStats.wordCount}</p>
+                <p>Reading Time: {liveStats.readingTime} min</p>
+                <p>Headings: {liveStats.headingCount}</p>
+                <p>Paragraphs: {liveStats.paragraphCount}</p>
                 <p>Keyword Count: {stats.keyword_count || 0}</p>
                 <p>Difficulty: {stats.difficulty || 0}</p>
               </div>

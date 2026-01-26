@@ -520,6 +520,7 @@ export default function ArticleClientPage() {
               insights={insights}
               savedResult={fetchedSavedResult}
               articleTitle={title}
+              articleContent={content}
               articleId={articleId?.id ? articleId.id : undefined}
             />
           </div>
