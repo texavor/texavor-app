@@ -88,8 +88,12 @@ export default function ArticleDetailsSheet({
   } = useArticleSettingsStore();
 
   const stats = useMemo(() => {
-    return calculateArticleStats(formData.content || "");
-  }, [formData.content]);
+    return calculateArticleStats(
+      typeof currentContent === "string"
+        ? currentContent
+        : formData.content || "",
+    );
+  }, [currentContent, formData.content]);
 
   const [authorDropdownOpen, setAuthorDropdownOpen] = useState(false);
   const publicationsInitializedRef = useRef(false);
