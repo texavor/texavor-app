@@ -585,6 +585,32 @@ export default function IntegrationSettingsDialog({
                         icon: org.profile_image || org.avatar, // Map profile_image or avatar to icon
                       })),
                     ];
+
+                    // MERGE: Backfill from authorsData (e.g. imported authors like Texavor)
+                    // if they are missing from discovery for some reason
+                    if (authorsData) {
+                      const existingValues = new Set(
+                        options.map((o: any) => String(o.value || o.id)),
+                      );
+
+                      authorsData.forEach((author: any) => {
+                        if (
+                          author.external_platform === "devto" &&
+                          author.external_id &&
+                          author.external_id !== "personal" &&
+                          !existingValues.has(String(author.external_id))
+                        ) {
+                          options.push({
+                            label: author.name,
+                            value: author.external_id,
+                            icon: author.avatar,
+                            id: author.external_id,
+                            ...author,
+                          });
+                          existingValues.add(String(author.external_id));
+                        }
+                      });
+                    }
                   } else if (
                     normalizedPlatform === "devto" &&
                     setting.optionsKey === "tags"
