@@ -111,6 +111,7 @@ export default function ArticleDetailsSheet({
     updatePublished,
     isUpdatingPublished,
     publishNow,
+    isPublishing,
   } = usePublicationsApi(blogs?.id || "", formData?.id || "", open);
 
   // Ensure fresh data when sheet opens
@@ -164,6 +165,10 @@ export default function ArticleDetailsSheet({
       setPublishMode("schedule");
     }
   }, [isPublished, isScheduled, setPublishMode]);
+
+  const [savingStatus, setSavingStatus] = useState<
+    "idle" | "saving_draft" | "scheduling" | "publishing"
+  >("idle");
 
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
@@ -335,6 +340,14 @@ export default function ArticleDetailsSheet({
     // formData.scheduled_at is already in UTC ISO format, no conversion needed
 
     try {
+      if (action === "publish_or_schedule") {
+        setSavingStatus(
+          publishMode === "schedule" ? "scheduling" : "publishing",
+        );
+      } else {
+        setSavingStatus("saving_draft");
+      }
+
       // Step 1: Save/Update Article (Action 1)
       // We await this to ensure DB is updated before triggering publish
       await onSave(finalData);
@@ -346,6 +359,15 @@ export default function ArticleDetailsSheet({
     } catch (error) {
       console.error("Failed to save article:", error);
       // Toast handled by parent or mutation?
+    } finally {
+      // If we triggered publishNow, isPublishing will take over UI state if needed,
+      // but strictly speaking we are done with the "save" part.
+      // However, if we set idle immediately, "Publishing..." might flicker to "Publish Now"
+      // before isPublishing becomes true.
+      // But usually react batching or fast updates handle this.
+      // Since publishNow is a mutation call, it should set isPublishing synchronously?
+      // Actually, if we want to keep "Publishing..." until the hook state updates, we rely on isPublishing in the UI.
+      setSavingStatus("idle");
     }
   };
 
@@ -1073,15 +1095,23 @@ export default function ArticleDetailsSheet({
               <Button
                 onClick={() => handleSave("publish_or_schedule")}
                 className="w-full bg-[#104127] hover:bg-[#0A2918] flex-1"
+                disabled={savingStatus !== "idle" || isPublishing}
               >
-                {publishMode === "schedule" ? "Schedule" : "Publish Now"}
+                {publishMode === "schedule"
+                  ? savingStatus === "scheduling"
+                    ? "Scheduling..."
+                    : "Schedule"
+                  : isPublishing || savingStatus === "publishing"
+                    ? "Publishing..."
+                    : "Publish Now"}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => handleSave("save_draft")}
                 className="w-full mt-2 sm:mt-0 sm:w-auto flex-1"
+                disabled={savingStatus !== "idle" || isPublishing}
               >
-                Save Changes
+                {savingStatus === "saving_draft" ? "Saving..." : "Save Changes"}
               </Button>
             </div>
           )}
