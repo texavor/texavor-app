@@ -279,14 +279,6 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
     },
   });
 
-  // Track previous isSaving to detect completion
-  useEffect(() => {
-    if (!isSaving && showSavedMessage) {
-      const timer = setTimeout(() => setShowSavedMessage(false), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [isSaving, showSavedMessage]);
-
   const prevIsSaving = React.useRef(isSaving);
   useEffect(() => {
     if (prevIsSaving.current && !isSaving) {
@@ -316,6 +308,19 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
         section: s,
       })),
   );
+
+  // Reset Saved message on content change
+  useEffect(() => {
+    if (showSavedMessage) {
+      setShowSavedMessage(false);
+    }
+  }, [
+    data.title,
+    data.meta_description,
+    data.introduction,
+    data.conclusion,
+    items,
+  ]);
 
   // Notify parent of changes
   useEffect(() => {
@@ -406,7 +411,7 @@ export const OutlineEditor: React.FC<OutlineEditorProps> = ({
             <Button
               onClick={handleSave}
               disabled={isSaving}
-              className="bg-[#104127] text-white hover:bg-[#0d3320] shadow-none"
+              className="bg-[#104127] text-white hover:bg-[#0d3320] shadow-none min-w-[140px] transition-all"
             >
               {isSaving ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
