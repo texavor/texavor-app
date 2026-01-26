@@ -14,6 +14,7 @@ import {
   Sparkles,
   Brain,
   Star,
+  Info,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -66,7 +67,7 @@ const formatSource = (source: string) => {
 
 // Helper to safely extract keyword string
 const getKeywordTerm = (
-  keyword: string | { term: string } | undefined
+  keyword: string | { term: string } | undefined,
 ): string => {
   if (!keyword) return "";
   if (typeof keyword === "string") return keyword;
@@ -133,28 +134,14 @@ export const AiVisibilityScore = ({ score }: { score?: number }) => {
   }
 
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div
-            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full w-fit ${color}`}
-          >
-            {icon}
-            <span className="text-[10px] font-semibold whitespace-nowrap">
-              {label} <span className="opacity-75">({score}/10)</span>
-            </span>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent className="max-w-xs p-3">
-          <p className="font-semibold mb-1">AI Visibility Score: {score}/10</p>
-          <p className="text-xs text-gray-300">
-            This score measures how likely an LLM (like ChatGPT) is to use your
-            content as a direct answer. High scores mean the topic is specific,
-            question-based, and educational.
-          </p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <div
+      className={`flex items-center gap-2 px-2.5 py-1 rounded-full w-fit ${color}`}
+    >
+      {icon}
+      <span className="text-xs font-semibold whitespace-nowrap">
+        {label} <span className="opacity-75">({score}/10)</span>
+      </span>
+    </div>
   );
 };
 
@@ -288,7 +275,21 @@ export function KeywordDiscoveryTable({
     {
       accessorKey: "ai_visibility_score",
       header: ({ column }) => (
-        <SortableHeader column={column}>AI Visibility</SortableHeader>
+        <div className="flex items-center gap-2">
+          <SortableHeader column={column}>
+            AI Visibility
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info className="h-3 w-3 text-black" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs p-3">
+                  <p>How well this keyword targets AI Search Engines</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </SortableHeader>
+        </div>
       ),
       cell: ({ row }) => {
         const keywordData = row.original;

@@ -108,6 +108,7 @@ export const useOutlineApi = () => {
           target_keywords: outline.target_keywords,
           tone: outline.tone,
           target_audience: outline.target_audience,
+          research_brief: outline.research_brief,
         },
       });
       // Transform back to OutlineData format
@@ -154,6 +155,7 @@ export const useOutlineApi = () => {
               target_keywords: outline.target_keywords,
               tone: outline.tone,
               target_audience: outline.target_audience,
+              research_brief: outline.research_brief,
             },
             search_params: {
               topic: outline.topic,

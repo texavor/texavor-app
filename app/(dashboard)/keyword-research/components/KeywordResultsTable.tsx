@@ -106,28 +106,14 @@ export const AiVisibilityScore = ({ score }: { score?: number }) => {
   }
 
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div
-            className={`flex items-center gap-2 px-2.5 py-1 rounded-full w-fit ${color}`}
-          >
-            {icon}
-            <span className="text-xs font-semibold whitespace-nowrap">
-              {label} <span className="opacity-75">({score}/10)</span>
-            </span>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent className="max-w-xs p-3">
-          <p className="font-semibold mb-1">AI Visibility Score: {score}/10</p>
-          <p className="text-xs text-gray-300">
-            This score measures how likely an LLM (like ChatGPT) is to use your
-            content as a direct answer. High scores mean the topic is specific,
-            question-based, and educational.
-          </p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <div
+      className={`flex items-center gap-2 px-2.5 py-1 rounded-full w-fit ${color}`}
+    >
+      {icon}
+      <span className="text-xs font-semibold whitespace-nowrap">
+        {label} <span className="opacity-75">({score}/10)</span>
+      </span>
+    </div>
   );
 };
 
@@ -264,21 +250,23 @@ export const KeywordResultsTable = ({
     {
       accessorKey: "ai_visibility_score",
       header: ({ column }) => (
-        <SortableHeader column={column}>
-          <div className="flex items-center gap-1">
-            AI Visibility
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Info className="h-3 w-3 text-muted-foreground" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>How well this keyword targets AI Search Engines</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-        </SortableHeader>
+        <div className="flex items-center gap-2">
+          <SortableHeader column={column}>
+            <div className="flex items-center gap-1">
+              AI Visibility
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="h-3 w-3 text-black" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>How well this keyword targets AI Search Engines</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </SortableHeader>
+        </div>
       ),
       cell: ({ row }) => {
         return (
@@ -353,21 +341,23 @@ export const KeywordResultsTable = ({
     {
       accessorKey: "ai_visibility_score",
       header: ({ column }) => (
-        <SortableHeader column={column}>
-          <div className="flex items-center gap-1">
-            AI Visibility
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Info className="h-3 w-3 text-muted-foreground" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>How well this keyword targets AI Search Engines</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-        </SortableHeader>
+        <div className="flex items-center gap-2">
+          <SortableHeader column={column}>
+            <div className="flex items-center gap-1">
+              AI Visibility
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="h-3 w-3 text-black" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>How well this keyword targets AI Search Engines</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </SortableHeader>
+        </div>
       ),
       cell: ({ row }) => {
         return (
@@ -401,21 +391,23 @@ export const KeywordResultsTable = ({
     {
       accessorKey: "ai_visibility_score",
       header: ({ column }) => (
-        <SortableHeader column={column}>
-          <div className="flex items-center gap-1">
-            AI Visibility
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Info className="h-3 w-3 text-muted-foreground" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>How well this keyword targets AI Search Engines</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-        </SortableHeader>
+        <div className="flex items-center gap-2">
+          <SortableHeader column={column}>
+            <div className="flex items-center gap-1">
+              AI Visibility
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="h-3 w-3 text-black" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>How well this keyword targets AI Search Engines</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </SortableHeader>
+        </div>
       ),
       cell: ({ row }) => {
         return (
@@ -432,8 +424,8 @@ export const KeywordResultsTable = ({
         mode === "detailed"
           ? detailedColumns
           : mode === "prompt"
-          ? promptColumns
-          : basicColumns
+            ? promptColumns
+            : basicColumns
       }
       data={data}
       isLoading={isLoading}

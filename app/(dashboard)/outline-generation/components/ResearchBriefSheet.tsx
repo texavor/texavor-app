@@ -121,7 +121,11 @@ export const ResearchBriefSheet: React.FC<ResearchBriefSheetProps> = ({
               </div>
             )}
 
-            <Separator className="bg-gray-100" />
+            {/* Separator only if there is content above AND below */}
+            {(data.market_gaps?.length > 0 ||
+              data.key_statistics?.length > 0 ||
+              data.common_questions?.length > 0) &&
+              data.sources?.length > 0 && <Separator className="bg-gray-100" />}
 
             {/* Sources */}
             {data.sources && data.sources.length > 0 && (
