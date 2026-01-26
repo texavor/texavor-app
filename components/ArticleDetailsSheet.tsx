@@ -1080,14 +1080,18 @@ export default function ArticleDetailsSheet({
                 variant="outline"
                 onClick={handleCancelSchedule}
                 className="flex-1"
+                disabled={savingStatus !== "idle"}
               >
                 Cancel Schedule
               </Button>
               <Button
                 onClick={() => handleSave("publish_or_schedule")}
                 className="bg-[#104127] hover:bg-[#0A2918] flex-1"
+                disabled={savingStatus !== "idle"}
               >
-                Update Schedule
+                {savingStatus === "scheduling"
+                  ? "Scheduling..."
+                  : "Update Schedule"}
               </Button>
             </div>
           ) : (
