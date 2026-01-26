@@ -7,10 +7,11 @@ import Placeholder from "@tiptap/extension-placeholder";
 import React, { useEffect } from "react";
 import "../app/dracula.css";
 import { useAppStore } from "@/store/appStore";
-import Image from "@tiptap/extension-image";
+// import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import { CustomToolbar } from "./CustomToolbar";
 import { CustomHardBreak } from "./editor/extensions/CustomHardBreak";
+import { CustomImage } from "./editor/extensions/CustomImage";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
@@ -378,7 +379,7 @@ const Editor = ({
         hardBreak: false,
       }),
       CustomHardBreak,
-      Image.configure({
+      CustomImage.configure({
         inline: false,
       }),
       Link.configure({
