@@ -364,6 +364,36 @@ export default function ArticleClientPage() {
     setIsAnalyzing(false);
   };
 
+  const handleApplySmartLink = (anchorText: string, url: string) => {
+    setContent((prevContent) => {
+      if (!prevContent) return prevContent;
+
+      // Escape special characters in anchor text for use in regex
+      const escapedAnchor = anchorText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+      // Regex to find anchorText NOT preceded by '[' (Lookbehind) and NOT followed by ']' (Lookahead)
+      // This prevents double-linking: [anchor](url) -> [[anchor](url)](url)
+      // It also skips already linked instances, finding the next unlinked occurrence.
+      const regex = new RegExp(`(?<!\\[)${escapedAnchor}(?!\\])`, "i"); // Case insensitive match
+
+      // If no valid unlinked occurrence found, return previous content
+      if (!regex.test(prevContent)) return prevContent;
+
+      return prevContent.replace(regex, `[${anchorText}](${url})`);
+    });
+    // Note: We don't manually trigger save here, but the debounced effect will pick up the change
+  };
+
+  const handleRemoveSmartLink = (anchorText: string, url: string) => {
+    setContent((prevContent) => {
+      if (!prevContent) return prevContent;
+      // Exact match for the markdown link pattern we created
+      // We escape anchorText just in case, but usually we look for the exact string constructed
+      const linkString = `[${anchorText}](${url})`;
+      return prevContent.replace(linkString, anchorText);
+    });
+  };
+
   const handleManualSave = async () => {
     // Don't save if there's no content
     if (!title?.trim() && !content?.trim()) return;
@@ -522,6 +552,9 @@ export default function ArticleClientPage() {
               articleTitle={title}
               articleContent={content}
               articleId={articleId?.id ? articleId.id : undefined}
+              blogId={blogs?.id}
+              onApplyLink={handleApplySmartLink}
+              onRemoveLink={handleRemoveSmartLink}
             />
           </div>
         )}

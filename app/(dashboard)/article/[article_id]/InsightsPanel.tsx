@@ -18,6 +18,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { SmartLinkingPanel } from "./components/SmartLinkingPanel";
 
 interface InsightsPanelProps {
   showMetrics: boolean;
@@ -29,6 +30,9 @@ interface InsightsPanelProps {
   articleTitle?: string;
   articleId?: string;
   articleContent?: string;
+  blogId?: string;
+  onApplyLink?: (anchorText: string, url: string) => void;
+  onRemoveLink?: (anchorText: string, url: string) => void;
 }
 
 const InsightsPanel = ({
@@ -41,6 +45,9 @@ const InsightsPanel = ({
   articleTitle,
   articleId,
   articleContent = "",
+  blogId,
+  onApplyLink,
+  onRemoveLink,
 }: InsightsPanelProps) => {
   const [outlineTopic, setOutlineTopic] = useState(articleTitle || "");
   const { generateOutline } = useOutlineApi();
@@ -110,6 +117,9 @@ const InsightsPanel = ({
             </TabsTrigger>
             <TabsTrigger value="outline" className="flex-1">
               Outline
+            </TabsTrigger>
+            <TabsTrigger value="smart_links" className="flex-1">
+              Smart Links
             </TabsTrigger>
           </TabsList>
         </div>
@@ -461,6 +471,25 @@ const InsightsPanel = ({
               </div>
             )}
           </div>
+        </TabsContent>
+
+        {/* Smart Links Tab */}
+        <TabsContent
+          value="smart_links"
+          className="flex-1 overflow-y-auto no-scrollbar px-4 pb-4 min-h-[calc(100vh-160px)] max-h-[calc(100vh-160px)]"
+        >
+          {articleId && blogId && onApplyLink && onRemoveLink ? (
+            <SmartLinkingPanel
+              articleId={articleId}
+              blogId={blogId}
+              onApplyLink={onApplyLink}
+              onRemoveLink={onRemoveLink}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+              Please save the article to use Smart Links.
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>
