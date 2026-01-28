@@ -637,6 +637,68 @@ export function CustomWebhookForm(props: CustomWebhookFormProps) {
         </div>
       </div>
 
+      <div className="space-y-3 pt-2">
+        <Label className="text-foreground/80 font-inter">
+          URL Retrieval (Required)
+        </Label>
+        <p className="text-[11px] text-muted-foreground mb-2">
+          Configure how we should find the published URL from the webhook
+          response.
+        </p>
+
+        <div className="grid gap-4 border rounded-lg p-4 bg-gray-50/50">
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="response_url_field"
+              className="text-xs font-medium text-gray-700"
+            >
+              Response URL Field
+            </Label>
+            <Input
+              id="response_url_field"
+              name="response_url_field"
+              value={formData.response_url_field || ""}
+              onChange={handleChange}
+              placeholder="e.g. response.data.post.permalink"
+              className="h-8 text-xs font-inter font-mono bg-white"
+            />
+            <p className="text-[10px] text-gray-500">
+              Dot-notation path (starting with response.) to the URL in the JSON
+              response.
+            </p>
+          </div>
+
+          <div className="relative flex items-center py-1">
+            <div className="flex-grow border-t border-gray-200"></div>
+            <span className="flex-shrink-0 mx-4 text-[10px] text-gray-400 font-medium uppercase tracking-wider">
+              OR
+            </span>
+            <div className="flex-grow border-t border-gray-200"></div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="public_url_pattern"
+              className="text-xs font-medium text-gray-700"
+            >
+              Public URL Pattern
+            </Label>
+            <Input
+              id="public_url_pattern"
+              name="public_url_pattern"
+              value={formData.public_url_pattern || ""}
+              onChange={handleChange}
+              placeholder="e.g. https://mysite.com/blog/{{response.slug}}"
+              className="h-8 text-xs font-inter font-mono bg-white"
+            />
+            <p className="text-[10px] text-gray-500">
+              Construct the URL manually using variables like {"{{slug}}"} or
+              {"{{response.slug}}"}.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <br />
 
       <br />
