@@ -30,6 +30,8 @@ function GoogleCallbackContent() {
     if (token && user) {
       localStorage.setItem("auth_token", token);
       localStorage.setItem("user", decodeURIComponent(user));
+      // Set persistent cookie for middleware
+      document.cookie = `_texavor_session=${token}; path=/; secure; samesite=strict; max-age=2592000`;
       toast.success("Logged in successfully.");
       router.push("/dashboard");
     } else {
