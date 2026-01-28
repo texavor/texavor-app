@@ -16,6 +16,29 @@ import Link from "@tiptap/extension-link";
 import { CustomToolbar } from "./CustomToolbar";
 import { CustomHardBreak } from "./editor/extensions/CustomHardBreak";
 import { CustomImage } from "./editor/extensions/CustomImage";
+import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import { lowlight } from "lowlight/lib/core";
+import css from "highlight.js/lib/languages/css";
+import js from "highlight.js/lib/languages/javascript";
+import ts from "highlight.js/lib/languages/typescript";
+import html from "highlight.js/lib/languages/xml";
+import python from "highlight.js/lib/languages/python";
+import bash from "highlight.js/lib/languages/bash";
+import json from "highlight.js/lib/languages/json";
+import java from "highlight.js/lib/languages/java";
+import cpp from "highlight.js/lib/languages/cpp";
+import c from "highlight.js/lib/languages/c";
+
+lowlight.registerLanguage("html", html);
+lowlight.registerLanguage("css", css);
+lowlight.registerLanguage("js", js);
+lowlight.registerLanguage("ts", ts);
+lowlight.registerLanguage("python", python);
+lowlight.registerLanguage("bash", bash);
+lowlight.registerLanguage("json", json);
+lowlight.registerLanguage("java", java);
+lowlight.registerLanguage("cpp", cpp);
+lowlight.registerLanguage("c", c);
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
@@ -381,6 +404,10 @@ const Editor = ({
           levels: [1, 2, 3],
         },
         hardBreak: false,
+        codeBlock: false,
+      }),
+      CodeBlockLowlight.configure({
+        lowlight,
       }),
       CustomHardBreak,
       Table.configure({

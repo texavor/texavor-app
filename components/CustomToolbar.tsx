@@ -9,7 +9,15 @@ import {
   Code,
   Sparkles,
   Image as ImageIcon,
+  FileCode,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "./ui/button";
 import { useState, useEffect, useRef } from "react";
 import { LinkDialog } from "./LinkDialog";
@@ -174,6 +182,47 @@ export const CustomToolbar = ({ editor, title }: CustomToolbarProps) => {
       icon: <ImageIcon className="w-4 h-4" />,
       tooltip: "Insert Image",
     },
+    {
+      name: "Code Block",
+      command: () => {
+        if (editor.isActive("codeBlock")) {
+          editor.chain().focus().toggleCodeBlock().run();
+        } else {
+          const { from, to } = editor.state.selection;
+          const text = editor.state.doc.textBetween(from, to, "\n", "\n");
+
+          if (text.length > 0) {
+            editor
+              .chain()
+              .focus()
+              .insertContent({
+                type: "codeBlock",
+                content: [{ type: "text", text: text }],
+              })
+              .run();
+          } else {
+            editor.chain().focus().toggleCodeBlock().run();
+          }
+        }
+      },
+      isActive: editor.isActive("codeBlock"),
+      icon: <FileCode className="w-4 h-4" />,
+      tooltip: "Code Block",
+    },
+  ];
+
+  const languages = [
+    { value: "auto", label: "Auto" },
+    { value: "html", label: "HTML" },
+    { value: "css", label: "CSS" },
+    { value: "js", label: "JavaScript" },
+    { value: "ts", label: "TypeScript" },
+    { value: "python", label: "Python" },
+    { value: "bash", label: "Bash" },
+    { value: "json", label: "JSON" },
+    { value: "java", label: "Java" },
+    { value: "cpp", label: "C++" },
+    { value: "c", label: "C" },
   ];
 
   const aiItems = [
@@ -242,6 +291,33 @@ export const CustomToolbar = ({ editor, title }: CustomToolbarProps) => {
               </TooltipContent>
             </Tooltip>
           ))}
+
+          {editor.isActive("codeBlock") && (
+            <>
+              <div className="w-px h-6 bg-gray-300 mx-1" />
+              <Select
+                value={editor.getAttributes("codeBlock").language || "auto"}
+                onValueChange={(value) =>
+                  editor
+                    .chain()
+                    .focus()
+                    .updateAttributes("codeBlock", { language: value })
+                    .run()
+                }
+              >
+                <SelectTrigger className="h-8 w-[100px] text-xs border-none shadow-none focus:ring-0">
+                  <SelectValue placeholder="Language" />
+                </SelectTrigger>
+                <SelectContent>
+                  {languages.map((lang) => (
+                    <SelectItem key={lang.value} value={lang.value}>
+                      {lang.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </>
+          )}
         </TooltipProvider>
       </div>
 
