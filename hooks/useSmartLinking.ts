@@ -58,15 +58,16 @@ export const useSmartLinksQuery = (
   blogId: string,
   articleId: string,
   includeExternal: boolean,
+  forceRefresh: boolean = false,
   enabled: boolean = false,
 ) => {
   return useQuery({
-    queryKey: ["smartLinks", blogId, articleId, includeExternal],
+    queryKey: ["smartLinks", blogId, articleId, includeExternal, forceRefresh],
     queryFn: async () => {
       const response = await axiosInstance.post(
         `/api/v1/blogs/${blogId}/articles/${articleId}/link_suggestions`,
         {
-          force_refresh: false,
+          force_refresh: forceRefresh,
           include_external: includeExternal,
         },
       );

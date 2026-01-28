@@ -39,6 +39,7 @@ export const SmartLinkingPanel = ({
   const [includeExternal, setIncludeExternal] = useState(false);
   const [shouldFetch, setShouldFetch] = useState(false);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [forceRefresh, setForceRefresh] = useState(false);
 
   // Local state for URL edits. Key: "type-index" or just combine suggestions.
   // Since we fetch from query, data is immutable from that source.
@@ -49,16 +50,19 @@ export const SmartLinkingPanel = ({
     blogId,
     articleId,
     includeExternal,
+    forceRefresh,
     shouldFetch,
   );
 
   const updateStatus = useUpdateLinkStatus();
 
   const handleAnalyze = () => {
+    // If we already have data, this is a re-scan, so we force refresh
+    if (data) {
+      setForceRefresh(true);
+    }
     setShouldFetch(true);
-    // Use setTimeout to ensure state update propagates before refetch if needed,
-    // though React query usually handles enabled change well.
-    // Explicit refetch is safer if we want to force it.
+    // Use setTimeout to ensure state update propagates before refetch if needed
     setTimeout(() => refetch(), 0);
   };
 
