@@ -58,16 +58,21 @@ export const useSmartLinksQuery = (
   blogId: string,
   articleId: string,
   includeExternal: boolean,
-  forceRefresh: boolean = false,
+  scanVersion: number,
   enabled: boolean = false,
 ) => {
   return useQuery({
-    queryKey: ["smartLinks", blogId, articleId, includeExternal, forceRefresh],
+    queryKey: ["smartLinks", blogId, articleId, includeExternal, scanVersion],
     queryFn: async () => {
+      // Force refresh only if this is a re-scan (version > 1)
+      // We assume version 1 is the initial "friendly" scan (cached ok)
+      // Version 0 or undefined shouldn't fetch due to enabled flag usually.
+      const shouldForceRefresh = scanVersion > 1;
+
       const response = await axiosInstance.post(
         `/api/v1/blogs/${blogId}/articles/${articleId}/link_suggestions`,
         {
-          force_refresh: forceRefresh,
+          force_refresh: shouldForceRefresh,
           include_external: includeExternal,
         },
       );

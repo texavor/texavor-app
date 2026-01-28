@@ -39,7 +39,7 @@ export const SmartLinkingPanel = ({
   const [includeExternal, setIncludeExternal] = useState(false);
   const [shouldFetch, setShouldFetch] = useState(false);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-  const [forceRefresh, setForceRefresh] = useState(false);
+  const [scanVersion, setScanVersion] = useState(0);
 
   // Local state for URL edits. Key: "type-index" or just combine suggestions.
   // Since we fetch from query, data is immutable from that source.
@@ -50,20 +50,18 @@ export const SmartLinkingPanel = ({
     blogId,
     articleId,
     includeExternal,
-    forceRefresh,
+    scanVersion,
     shouldFetch,
   );
 
   const updateStatus = useUpdateLinkStatus();
 
   const handleAnalyze = () => {
-    // If we already have data, this is a re-scan, so we force refresh
-    if (data) {
-      setForceRefresh(true);
-    }
     setShouldFetch(true);
-    // Use setTimeout to ensure state update propagates before refetch if needed
-    setTimeout(() => refetch(), 0);
+    // Increment version to trigger new query.
+    // Version 1 (0->1) = First fetch (force_refresh=false).
+    // Version >1 = Re-fetch (force_refresh=true).
+    setScanVersion((v) => v + 1);
   };
 
   const getEffectiveUrl = (item: LinkSuggestion) => {
