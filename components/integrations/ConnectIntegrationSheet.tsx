@@ -222,6 +222,14 @@ export default function ConnectIntegrationSheet({
           if (platform.settings.response_id_field) {
             newFormData.response_id_field = platform.settings.response_id_field;
           }
+          if (platform.settings.response_url_field) {
+            newFormData.response_url_field =
+              platform.settings.response_url_field;
+          }
+          if (platform.settings.public_url_pattern) {
+            newFormData.public_url_pattern =
+              platform.settings.public_url_pattern;
+          }
           if (platform.settings.update_url) {
             newFormData.update_url = platform.settings.update_url;
           }
@@ -486,6 +494,12 @@ export default function ConnectIntegrationSheet({
 
           if (formData.response_id_field) {
             payload.settings.response_id_field = formData.response_id_field;
+          }
+          if (formData.response_url_field) {
+            payload.settings.response_url_field = formData.response_url_field;
+          }
+          if (formData.public_url_pattern) {
+            payload.settings.public_url_pattern = formData.public_url_pattern;
           }
           if (formData.update_url) {
             payload.settings.update_url = formData.update_url;
