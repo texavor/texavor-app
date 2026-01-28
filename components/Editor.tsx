@@ -6,6 +6,10 @@ import { Markdown } from "tiptap-markdown";
 import Placeholder from "@tiptap/extension-placeholder";
 import React, { useEffect } from "react";
 import "../app/dracula.css";
+import { Table } from "@tiptap/extension-table";
+import { TableCell } from "@tiptap/extension-table-cell";
+import { TableHeader } from "@tiptap/extension-table-header";
+import { TableRow } from "@tiptap/extension-table-row";
 import { useAppStore } from "@/store/appStore";
 // import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
@@ -379,6 +383,12 @@ const Editor = ({
         hardBreak: false,
       }),
       CustomHardBreak,
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
       CustomImage.configure({
         inline: false,
       }),
