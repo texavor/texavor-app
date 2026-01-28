@@ -88,12 +88,27 @@ export default function IntegrationsClientPage() {
       return p;
     })
     .reduce((acc: any[], current) => {
-      const x = acc.find((item) => item.id === current.id);
-      if (!x) {
-        return acc.concat([current]);
-      } else {
+      // If it has an integration_id, it's a distinct connected instance => unique
+      if (current.integration_id) {
+        // Check if we already have this exact integration instance
+        const exists = acc.find(
+          (item) => item.integration_id === current.integration_id,
+        );
+        if (!exists) {
+          return acc.concat([current]);
+        }
         return acc;
       }
+
+      // If no integration_id, it's a generic "available" platform card.
+      // We only want ONE of these per platform type (id).
+      const exists = acc.find(
+        (item) => !item.integration_id && item.id === current.id,
+      );
+      if (!exists) {
+        return acc.concat([current]);
+      }
+      return acc;
     }, []);
 
   return (
