@@ -12,6 +12,8 @@ import {
   useArticleSettingsStore,
   ArticleDetails,
 } from "@/store/articleSettingsStore";
+import { useSmartLinkStore } from "@/store/smartLinkStore";
+import { useSmartLinksQuery } from "@/hooks/useSmartLinking";
 import ArticleDetailsSheet from "@/components/ArticleDetailsSheet";
 import { ThumbnailUploadDialog } from "@/components/ThumbnailUploadDialog";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -50,6 +52,24 @@ export default function ArticleClientPage() {
   const isViewer = role === "viewer";
 
   const existingId = params?.article_id as string;
+
+  const setSuggestions = useSmartLinkStore((state) => state.setData);
+
+  // Initial fetch of smart links (GET)
+  const { data: initialSmartLinks } = useSmartLinksQuery(
+    blogs?.id || "",
+    existingId,
+    false, // includeExternal default false for initial GET
+    1, // scanVersion 1 = GET request
+    !!existingId && !!blogs?.id && !isViewer, // enabled
+  );
+
+  // Sync smart links to store
+  useEffect(() => {
+    if (initialSmartLinks) {
+      setSuggestions(initialSmartLinks);
+    }
+  }, [initialSmartLinks, setSuggestions]);
 
   // All state hooks MUST be called before any early returns
   const [title, setTitle] = useState("");

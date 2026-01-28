@@ -64,22 +64,29 @@ export const useSmartLinksQuery = (
   return useQuery({
     queryKey: ["smartLinks", blogId, articleId, includeExternal, scanVersion],
     queryFn: async () => {
-      // Force refresh only if this is a re-scan (version > 1)
-      // We assume version 1 is the initial "friendly" scan (cached ok)
-      // Version 0 or undefined shouldn't fetch due to enabled flag usually.
-      const shouldForceRefresh = scanVersion > 1;
+      // Version <= 1: Initial fetch (GET to retrieve stored)
+      // Version > 1: Re-scan (POST to generate new)
+      const isRescan = scanVersion > 1;
 
-      const response = await axiosInstance.post(
-        `/api/v1/blogs/${blogId}/articles/${articleId}/link_suggestions`,
-        {
-          force_refresh: shouldForceRefresh,
-          include_external: includeExternal,
-        },
-      );
-      return response?.data as SmartLinksData;
+      if (isRescan) {
+        const response = await axiosInstance.post(
+          `/api/v1/blogs/${blogId}/articles/${articleId}/link_suggestions`,
+          {
+            force_refresh: true,
+            include_external: includeExternal,
+          },
+        );
+        return response?.data as SmartLinksData;
+      } else {
+        // Initial load - just get what we have
+        const response = await axiosInstance.get(
+          `/api/v1/blogs/${blogId}/articles/${articleId}/link_suggestions`,
+        );
+        return response?.data as SmartLinksData;
+      }
     },
     enabled: enabled,
-    staleTime: Infinity,
+    staleTime: Infinity, // Rely on store/manual refetch
     refetchOnWindowFocus: false,
   });
 };

@@ -20,6 +20,7 @@ import {
   LinkSuggestion,
   ExistingLink,
 } from "@/hooks/useSmartLinking";
+import { useSmartLinkStore } from "@/store/smartLinkStore";
 
 interface SmartLinkingPanelProps {
   articleId: string;
@@ -37,30 +38,45 @@ export const SmartLinkingPanel = ({
   onRemoveLink,
 }: SmartLinkingPanelProps) => {
   const [includeExternal, setIncludeExternal] = useState(false);
-  const [shouldFetch, setShouldFetch] = useState(false);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-  const [scanVersion, setScanVersion] = useState(0);
+  const [scanVersion, setScanVersion] = useState(1); // Start at 1 (idle/viewing)
 
   // Local state for URL edits. Key: "type-index" or just combine suggestions.
   // Since we fetch from query, data is immutable from that source.
   // We need a local override map: key (url+text) -> newUrl
   const [urlOverrides, setUrlOverrides] = useState<Record<string, string>>({});
 
-  const { data, isFetching, refetch } = useSmartLinksQuery(
+  // Use global store for data
+  const { data: storeData, setData: setStoreData } = useSmartLinkStore();
+
+  // Query is used for re-scanning
+  const {
+    data: queryData,
+    isFetching: isQueryFetching,
+    refetch,
+  } = useSmartLinksQuery(
     blogId,
     articleId,
     includeExternal,
     scanVersion,
-    shouldFetch,
+    scanVersion > 1, // Only enable if we are explicitly re-scanning
   );
+
+  // Sync query result to store
+  useEffect(() => {
+    if (queryData) {
+      setStoreData(queryData);
+    }
+  }, [queryData, setStoreData]);
 
   const updateStatus = useUpdateLinkStatus();
 
+  // Prefer store data, fallback to query data if needed (though sync should handle it)
+  const displayData = storeData || queryData;
+  const isFetching = isQueryFetching;
+
   const handleAnalyze = () => {
-    setShouldFetch(true);
-    // Increment version to trigger new query.
-    // Version 1 (0->1) = First fetch (force_refresh=false).
-    // Version >1 = Re-fetch (force_refresh=true).
+    // Increment version to trigger new query (POST if > 1)
     setScanVersion((v) => v + 1);
   };
 
@@ -85,10 +101,10 @@ export const SmartLinkingPanel = ({
   };
 
   const handleApplyAll = () => {
-    if (!data) return;
+    if (!displayData) return;
 
-    const internalSuggestions = data.suggestions?.internal || [];
-    const externalSuggestions = data.suggestions?.external || [];
+    const internalSuggestions = displayData.suggestions?.internal || [];
+    const externalSuggestions = displayData.suggestions?.external || [];
 
     const internalToApply = internalSuggestions.filter(
       (item) => !dismissed.has(item.url + item.anchor_text) && !item.is_applied,
@@ -128,16 +144,16 @@ export const SmartLinkingPanel = ({
   };
 
   const internalSuggestions =
-    data?.suggestions?.internal?.filter(
+    displayData?.suggestions?.internal?.filter(
       (item) => !dismissed.has(item.url + item.anchor_text),
     ) || [];
 
   const externalSuggestions =
-    data?.suggestions?.external?.filter(
+    displayData?.suggestions?.external?.filter(
       (item) => !dismissed.has(item.url + item.anchor_text),
     ) || [];
 
-  const existingLinks = data?.suggestions?.existing || [];
+  const existingLinks = displayData?.suggestions?.existing || [];
 
   return (
     <div className="flex flex-col h-full space-y-4">
@@ -176,7 +192,7 @@ export const SmartLinkingPanel = ({
         </Label>
       </div>
 
-      {!data && !isFetching && (
+      {!displayData && !isFetching && (
         <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-600 text-center">
           <p>
             Scan your article to find internal and external linking
@@ -185,7 +201,7 @@ export const SmartLinkingPanel = ({
         </div>
       )}
 
-      {data && (
+      {displayData && (
         <ScrollArea className="flex-1 pr-4 -mr-4">
           <div className="space-y-6">
             {/* Suggestions Section */}
