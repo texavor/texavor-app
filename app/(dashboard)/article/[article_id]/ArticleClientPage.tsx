@@ -419,12 +419,88 @@ export default function ArticleClientPage() {
     if (!title?.trim() && !content?.trim()) return;
 
     // Use settings from store, but override title/content/content_html with local updated state
-    const { article_publications, ...safeSettings } = settingsFormData;
+    const { article_publications, platform_settings, ...safeSettings } =
+      settingsFormData;
+
+    // Construct article_publications_attributes for autosave
+    // We need to map the selected Integration IDs (article_publications) to attributes
+    // We use fetchedArticle to access original publication IDs for updates
+    const article_publications_attributes = (article_publications || []).map(
+      (intId: string) => {
+        // Find existing publication ID if available in fetched data
+        // We prioritize articleId (local state upgraded by mutations) over fetchedArticle (cached query)
+        // articleId.article_publications should be the list of objects.
+        const sourcePublications =
+          (articleId as any)?.article_publications ||
+          fetchedArticle?.article_publications ||
+          [];
+
+        const existingPub = sourcePublications.find(
+          (p: any) =>
+            (p.integration?.id || p.integration_id) === intId || p.id === intId,
+        );
+
+        const attr: any = {
+          integration_id: intId,
+        };
+
+        if (existingPub && existingPub.id) {
+          attr.id = existingPub.id;
+        }
+
+        // Add settings if available in the store
+        if (platform_settings && platform_settings[intId]) {
+          // We need the platform name to nest settings correctly: { [platformName]: settings }
+          // fetchedArticle might have the integration details.
+          // Or we can try to infer or if we have a way to know.
+          // Store doesn't store platform name easily.
+          // But existingPub might have `integration`.
+          const platformName =
+            existingPub?.integration?.platform ||
+            existingPub?.integration?.id ||
+            "";
+
+          if (platformName) {
+            const normalizedPlatform = platformName
+              .toLowerCase()
+              .replace(/[.\s-_]/g, "");
+
+            attr.publication_settings = {
+              [normalizedPlatform]: platform_settings[intId],
+            };
+          } else {
+            // If we can't find platform name (e.g. new selection not in fetchedArticle yet),
+            // we might miss sending settings in autosave.
+            // But typically autosave is for content. Settings are saved via the sheet.
+            // If user changes settings in sheet -> saves -> it updates DB.
+            // Then autosave continues.
+            // If user changes settings but DOES NOT save, then autosave triggers?
+            // Autosave triggers on Title/Content change.
+            // If user changes settings in sheet, the sheet handles saving immediately or on "Save".
+            // So autosave usually deals with stable settings.
+            // If a new integration was added but not saved via sheet yet (is that possible?),
+            // likely the user has to click Save in sheet.
+          }
+        }
+
+        // Add platform_author_id if available in platform_settings
+        if (
+          platform_settings &&
+          platform_settings[intId] &&
+          platform_settings[intId].platform_author_id
+        ) {
+          attr.platform_author_id = platform_settings[intId].platform_author_id;
+        }
+
+        return attr;
+      },
+    );
 
     // Update existing article
     await updateMutation.mutateAsync({
       article: {
         ...safeSettings,
+        article_publications_attributes, // Send attributes
         title: title || "",
         content: content || "",
         content_html: contentHtml || "",

@@ -307,9 +307,12 @@ export default function ArticleDetailsSheet({
 
     const finalData: any = {
       ...formData,
-      // platform_settings: platformSettings, // Removed per guide, now inside attributes
       article_publications_attributes,
     };
+
+    // Explicitly remove legacy fields
+    delete finalData.article_publications;
+    delete finalData.platform_settings;
 
     if (action === "publish_or_schedule") {
       if (publishMode === "publish") {
@@ -451,9 +454,12 @@ export default function ArticleDetailsSheet({
 
       const finalData: any = {
         ...formData,
-        // platform_settings: newPlatformSettings, // Removed per guide
         article_publications_attributes,
       };
+
+      // Explicitly remove legacy fields
+      delete finalData.article_publications;
+      delete finalData.platform_settings;
 
       // Trigger the patch call (onSave) with keepOpen=true
       onSave(finalData, true);
