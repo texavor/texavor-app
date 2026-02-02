@@ -32,7 +32,7 @@ export function MediumForm({ formData, handleChange }: MediumFormProps) {
           <Label htmlFor="user_id" className="text-foreground/80 font-inter">
             User ID <span className="text-gray-400">(Optional)</span>
           </Label>
-          <button
+          {/* <button
             type="button"
             onClick={() => setShowUserIdHelp(!showUserIdHelp)}
             className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 transition-colors"
@@ -44,7 +44,7 @@ export function MediumForm({ formData, handleChange }: MediumFormProps) {
             ) : (
               <ChevronDown className="w-3.5 h-3.5" />
             )}
-          </button>
+          </button> */}
         </div>
         <Input
           id="user_id"
