@@ -670,11 +670,7 @@ export default function ConnectIntegrationSheet({
         onOpenChange(false);
 
         // Auto-fetch authors for supported platforms
-        if (
-          ["medium", "devto", "hashnode", "custom_webhook"].includes(
-            platform.id,
-          )
-        ) {
+        if (["devto", "hashnode", "custom_webhook"].includes(platform.id)) {
           try {
             const blogId = blogs?.id;
             const integrationId =
