@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { BarChart2, TrendingUp, Calendar, Target, Brain } from "lucide-react";
 import type { AeoVisibilityScore } from "../types/aeo.types";
 
 interface VisibilityTrendChartProps {
@@ -35,42 +36,127 @@ export const VisibilityTrendChart: React.FC<VisibilityTrendChartProps> = ({
     );
   }
 
-  // Reverse if needed, assuming API returns desc or asc. usually charts need asc.
-  // API returns historical_scores list. Check logic. Usually [today, yesterday...] or vice-versa.
-  // If it's desc, we should reverse for chart (left to right = old to new).
-  // Assuming API gives sorted by date descending (newest first). Let's reverse to show timeline left-right.
   const sortedScores = [...historicalScores].sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
   );
 
   const chartData = sortedScores.map((score) => ({
     date: new Date(score.date).toLocaleDateString("en-US", {
-      weekday: "narrow", // S, M, T... like the image
+      day: "numeric",
+      month: "short",
     }),
     fullDate: new Date(score.date).toLocaleDateString("en-US", {
-      month: "short",
+      month: "long",
       day: "numeric",
+      year: "numeric",
     }),
+    metric: score, // Pass full object for tooltip
     score: score.overall_score,
   }));
 
-  // Take last 7 days for the "Project Analytics" view style if data is abundant,
-  // or just show what we have. User liked the specific card look.
-  // displaying 30 days with S/M/T... repeated is confusing.
-  // I'll show the last 7-10 days to match the aesthetic, or keep it manageable.
-  // Let's stick to last 7 days for the cleanest "dashboard" look, as per the image reference.
   const recentData = chartData.slice(-7);
+
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      const metric = data.metric as AeoVisibilityScore;
+
+      // Map API colors to Tailwind classes/hex
+      const getColor = (color: string) => {
+        switch (color) {
+          case "green":
+            return "#104127"; // Primary Green
+          case "blue":
+            return "#2563eb";
+          case "yellow":
+            return "#ca8a04";
+          case "orange":
+            return "#c2410c";
+          case "red":
+            return "#dc2626";
+          default:
+            return "#475569";
+        }
+      };
+
+      const colorHex = getColor(metric.color);
+
+      return (
+        <div className="bg-white dark:bg-zinc-900 p-3 rounded-lg shadow-xl border border-slate-100 dark:border-zinc-800 w-64">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
+              <Calendar className="w-3 h-3" />
+              {data.fullDate}
+            </span>
+            <span
+              className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-white"
+              style={{ backgroundColor: colorHex }}
+            >
+              {metric.interpretation}
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">
+                Visibility Score
+              </span>
+              <span className="text-lg font-bold text-slate-900 dark:text-white">
+                {metric.overall_score.toFixed(1)}
+              </span>
+            </div>
+
+            <div className="h-px bg-slate-100 dark:bg-zinc-800 my-2" />
+
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-slate-400 flex items-center gap-1">
+                  <Target className="w-3 h-3" /> Mentions
+                </span>
+                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                  {metric.total_mentions}{" "}
+                  <span className="text-slate-400 font-normal">
+                    / {metric.total_prompts_tested} prompts
+                  </span>
+                </span>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-slate-400 flex items-center gap-1">
+                  <Brain className="w-3 h-3" /> Platforms
+                </span>
+                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                  {metric.platforms_count} detected
+                </span>
+              </div>
+            </div>
+
+            {metric.trend && (
+              <div className="mt-2 text-xs flex items-center justify-end gap-1">
+                <span className="text-slate-400">Daily Change:</span>
+                <span
+                  className={`${metric.trend.change >= 0 ? "text-green-600" : "text-red-500"} font-bold`}
+                >
+                  {metric.trend.change > 0 ? "+" : ""}
+                  {metric.trend.change.toFixed(1)}%
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <Card className="bg-white dark:bg-zinc-900 border-none shadow-none">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold">
+          <CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+            <TrendingUp className="w-4 h-4" />
             Visibility Trend
           </CardTitle>
-          <span className="text-xs text-slate-500 bg-slate-100 dark:bg-zinc-800 px-2 py-1 rounded-full">
-            Last 7 Days
-          </span>
+          {/* Badge removed as requested */}
         </div>
       </CardHeader>
       <CardContent>
@@ -86,31 +172,15 @@ export const VisibilityTrendChart: React.FC<VisibilityTrendChartProps> = ({
                 dataKey="date"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "#94a3b8", fontSize: 12 }}
+                tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }}
                 dy={10}
+                interval={0}
               />
               <Tooltip
-                cursor={{ fill: "transparent" }}
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
-                    return (
-                      <div className="bg-slate-900 text-white text-xs rounded-lg py-1 px-2 shadow-xl">
-                        <p className="font-semibold mb-0.5">
-                          {payload[0].payload.fullDate}
-                        </p>
-                        <p>Score: {Number(payload[0].value).toFixed(1)}</p>
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
+                cursor={{ fill: "black", opacity: 0.05 }}
+                content={<CustomTooltip />}
               />
-              <Bar
-                dataKey="score"
-                fill="#104127"
-                radius={[20, 20, 20, 20]} // Fully rounded pill shape
-                // background={{ fill: '#f1f5f9', radius: [20, 20, 20, 20] }} // Optional track background
-              />
+              <Bar dataKey="score" fill="#104127" radius={[6, 6, 6, 6]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

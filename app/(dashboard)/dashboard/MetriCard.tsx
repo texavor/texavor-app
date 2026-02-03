@@ -23,6 +23,8 @@ interface MetricCardProps {
     | "No data";
   scoreColor?: "green" | "blue" | "yellow" | "orange" | "red" | "gray";
   customGradient?: string;
+  gaugeValue?: number;
+  action?: React.ReactNode;
 }
 
 const MetricCard = ({
@@ -38,7 +40,8 @@ const MetricCard = ({
   scoreColor,
   customGradient,
   gaugeValue,
-}: MetricCardProps & { gaugeValue?: number }) => {
+  action,
+}: MetricCardProps) => {
   const isPrimary = type === "primary";
 
   // Get interpretation badge colors
@@ -80,7 +83,7 @@ const MetricCard = ({
   return (
     <div
       className={cn(
-        "rounded-2xl p-6 relative overflow-hidden transition-all duration-300",
+        "rounded-2xl p-6 relative overflow-hidden transition-all duration-300 min-h-[12rem]",
         isPrimary
           ? "bg-[#104127] text-white shadow-lg"
           : "bg-white dark:bg-zinc-900 border-none text-foreground shadow-none",
@@ -98,20 +101,20 @@ const MetricCard = ({
         />
       )}
 
-      <div className="relative z-10 flex flex-col h-full justify-between">
-        <div className="flex justify-between items-start mb-2">
-          <div className="flex items-center gap-2">
+      <div className="relative z-10 flex flex-col h-full justify-between gap-4">
+        <div className="flex justify-between items-start gap-4">
+          <div className="flex items-start gap-3 flex-1">
             {icon && (
-              <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shrink-0 mt-0.5">
                 {icon}
               </div>
             )}
             <h3
               className={cn(
-                "text-lg font-medium font-poppins",
+                "text-base font-semibold font-poppins leading-snug break-words",
                 isPrimary
                   ? "text-green-50"
-                  : "text-slate-600 dark:text-slate-400",
+                  : "text-slate-700 dark:text-slate-300",
                 labelClassName,
               )}
             >
@@ -120,13 +123,22 @@ const MetricCard = ({
           </div>
           <div
             className={cn(
-              "w-8 h-8 rounded-full flex items-center justify-center transition-transform hover:-translate-y-1 hover:translate-x-1 shrink-0 ml-2",
+              "rounded-full flex items-center justify-center transition-transform hover:-translate-y-0.5 shrink-0",
               isPrimary
-                ? "bg-white text-[#104127]"
-                : "bg-white border border-border text-slate-800 dark:bg-zinc-800 dark:text-slate-200",
+                ? "text-white/60 hover:text-white"
+                : "text-slate-400 hover:text-slate-600 dark:text-zinc-500 dark:hover:text-zinc-300",
             )}
           >
-            <MoveUpRight className="w-4 h-4" />
+            {action || (
+              <div
+                className={cn(
+                  "w-8 h-8 rounded-full flex items-center justify-center",
+                  isPrimary ? "bg-white/10" : "bg-slate-100 dark:bg-zinc-800",
+                )}
+              >
+                <MoveUpRight className="w-4 h-4" />
+              </div>
+            )}
           </div>
         </div>
 

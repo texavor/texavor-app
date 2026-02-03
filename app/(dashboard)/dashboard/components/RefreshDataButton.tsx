@@ -9,14 +9,14 @@ export const RefreshDataButton: React.FC = () => {
   const { blogs } = useAppStore();
   const queryClient = useQueryClient();
 
-  const handleRefreshComplete = () => {
+  const handleRefreshComplete = React.useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["aeo-metrics", blogs?.id] });
     queryClient.invalidateQueries({ queryKey: ["aeo-prompts", blogs?.id] });
     // Also invalidate trends and other related data
     queryClient.invalidateQueries({
       queryKey: ["aeo-competitive", blogs?.id],
     });
-  };
+  }, [blogs?.id, queryClient]);
 
   const { isPolling, startPolling, progress } = useAeoPolling(
     blogs?.id,
