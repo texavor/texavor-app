@@ -1,45 +1,26 @@
 import React from "react";
 import MetricCard from "../MetriCard";
-import { getScoreGradient } from "../utils/aeoHelpers";
 import type { AeoVisibilityScore } from "../types/aeo.types";
 
 interface VisibilityScoreCardProps {
   score: AeoVisibilityScore | null;
+  className?: string;
 }
 
-export const VisibilityScoreCard: React.FC<VisibilityScoreCardProps> = ({
+export const VisibilityScoreCard = ({
   score,
-}) => {
-  if (!score) {
-    return (
-      <MetricCard
-        type="primary"
-        label="AI Visibility Score"
-        value="--"
-        interpretation="No data"
-        scoreColor="gray"
-        subtext="No AEO data available yet"
-      />
-    );
-  }
-
+  className,
+}: VisibilityScoreCardProps) => {
   return (
     <MetricCard
       type="primary"
       label="AI Visibility Score"
-      value={score.overall_score.toFixed(1)}
-      interpretation={score.interpretation}
-      scoreColor={score.color}
-      customGradient={getScoreGradient(score.color)}
-      trend={score.trend}
-      subtext={
-        <div className="flex flex-col gap-1">
-          <span>Presence Rate: {score.presence_rate.toFixed(1)}%</span>
-          <span>
-            Cross-Model Consistency: {score.cross_model_consistency.toFixed(1)}%
-          </span>
-        </div>
-      }
+      value={score?.overall_score?.toFixed(1) || "0.0"}
+      interpretation={score?.interpretation as any}
+      trend={score?.trend}
+      subtext={null}
+      className={className}
+      gaugeValue={score?.overall_score || 0}
     />
   );
 };

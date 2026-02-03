@@ -129,3 +129,10 @@ export interface UpdatePromptRequest {
     active?: boolean;
   };
 }
+
+export interface AeoJobStatus {
+  status: "processing" | "completed" | "failed";
+  job_id: string;
+  message?: string;
+  progress?: number;
+}

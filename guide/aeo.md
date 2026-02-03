@@ -13,7 +13,7 @@ The AEO API allows you to track and optimize your brand's visibility across AI p
 ## Key Features
 
 - ✅ **Visibility Score Tracking** - Monitor your brand's AI visibility (0-100 scale)
-- ✅ **Multi-Platform Coverage** - Track across 7+ AI platforms
+- ✅ **Multi-Platform Coverage** - Track across the Big 5 AI platforms (ChatGPT, Claude, Gemini, Perplexity, Grok)
 - ✅ **Competitive Analysis** - Compare your brand against competitors
 - ✅ **Prompt Management** - Create and manage custom tracking prompts
 - ✅ **Automated Collection** - Daily background jobs collect fresh data
@@ -42,7 +42,7 @@ Returns comprehensive AEO metrics including current visibility score, historical
     "cross_model_consistency": 85.7,
     "total_mentions": 17,
     "total_prompts_tested": 5,
-    "platforms_count": 6,
+    "platforms_count": 5,
     "trend": {
       "direction": "up",
       "change": 5.2
@@ -97,7 +97,7 @@ Returns comprehensive AEO metrics including current visibility score, historical
   "summary": {
     "total_prompts": 5,
     "total_responses": 25,
-    "platforms_tracked": 7
+    "platforms_tracked": 5
   }
 }
 ```
@@ -599,7 +599,7 @@ function AeoDashboard({ blogId, token }: { blogId: string; token: string }) {
           <span>{current_score.total_mentions}</span>
         </div>
         <div className="metric">
-          <label>Platforms Tracked</label>
+          <label>Platforms</label>
           <span>
             {current_score.platforms_count}/{metrics.summary.platforms_tracked}
           </span>
@@ -714,43 +714,200 @@ function AeoPromptsManager({
 }
 ```
 
-### Refresh Data Button
+### Real-time Data Refresh & Polling
+
+Since AI data collection takes time (10-30 seconds per prompt), the frontend must use **polling** to check for updates after triggering a refresh.
+
+#### Custom Hook: `useAeoPolling`
+
+````typescript
+import { useState, useRef, useCallback } from "react";
+
+### Real-time Data Refresh & Polling
+
+Since AI data collection takes time (10-30 seconds per prompt), the backend provides a dedicated job status tracking system.
+
+**The Flow:**
+1. Call `POST /refresh` -> receive a unique `job_id`.
+2. Poll `GET /jobs/:job_id` every 3 seconds.
+3. When `status === 'completed'`, stop polling and refresh the main data.
+
+#### Custom Hook: `useAeoPolling`
+
+```typescript
+import { useState, useRef, useCallback, useEffect } from 'react';
+
+export function useAeoPolling(blogId: string, token: string, onUpdate: () => void) {
+  const [isPolling, setIsPolling] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const pollTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  const startPolling = useCallback(async () => {
+    setIsPolling(true);
+    setProgress(0);
+
+    try {
+      // 1. Trigger the background job
+      const triggerRes = await fetch(`/api/v1/blogs/${blogId}/aeo/refresh`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!triggerRes.ok) throw new Error('Failed to start refresh');
+
+      const { job_id } = await triggerRes.json();
+
+      // 2. Start polling loop for specific job ID
+      const checkStatus = async () => {
+        try {
+          const statusRes = await fetch(`/api/v1/blogs/${blogId}/aeo/jobs/${job_id}`, {
+             headers: { 'Authorization': `Bearer ${token}` }
+          });
+
+          if (statusRes.ok) {
+            const job = await statusRes.json();
+
+            // Update progress bar from backend
+            setProgress(job.progress || 0);
+
+            if (job.status === 'completed') {
+               // Job done! Refresh main data
+               onUpdate();
+               setIsPolling(false);
+               setProgress(100);
+               return;
+            }
+
+            if (job.status === 'failed') {
+               setIsPolling(false);
+               alert(`Analysis failed: ${job.error}`);
+               return;
+            }
+          }
+        } catch (err) {
+          console.error('Polling error', err);
+        }
+
+        // Poll every 3 seconds
+        pollTimeout.current = setTimeout(checkStatus, 3000);
+      };
+
+      checkStatus();
+
+    } catch (err) {
+      console.error('Failed to trigger refresh:', err);
+      setIsPolling(false);
+      alert('Failed to start data collection');
+    }
+  }, [blogId, token, onUpdate]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (pollTimeout.current) clearTimeout(pollTimeout.current);
+    };
+  }, []);
+
+  return { isPolling, startPolling, progress };
+}
+````
+
+#### Updated Endpoints for Polling
+
+**POST** `/api/v1/blogs/:blog_id/aeo/refresh`
+
+Returns:
+
+```json
+{
+  "message": "Data collection started",
+  "job_id": "uuid-of-new-job",
+  "status": "pending"
+}
+```
+
+**GET** `/api/v1/blogs/:blog_id/aeo/jobs/:id`
+
+Returns:
+
+```json
+{
+  "id": "uuid-of-job",
+  "status": "processing",
+  "progress": 50,
+  "error": null,
+  "completed_at": null
+}
+```
+
+#### Status Values
+
+- `pending`: Job created, waiting for worker.
+- `processing`: Analysis in progress (check `progress` field).
+- `completed`: Analysis finished successfully.
+- `failed`: Analysis failed (check `error` field).
+
+#### Implementation Example: Refresh Button
 
 ```tsx
-function RefreshAeoDataButton({
+function RefreshAeoButton({
   blogId,
   token,
+  onRefreshComplete,
 }: {
   blogId: string;
   token: string;
+  onRefreshComplete: () => void;
 }) {
-  const [refreshing, setRefreshing] = useState(false);
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-
-    try {
-      const result = await refreshAeoData(blogId, token);
-      alert(result.message);
-
-      // Poll for completion or refresh page after delay
-      setTimeout(() => {
-        window.location.reload();
-      }, 120000); // 2 minutes
-    } catch (error) {
-      alert(`Failed to refresh: ${error.message}`);
-    } finally {
-      setRefreshing(false);
-    }
-  };
+  const { isPolling, startPolling, progress } = useAeoPolling(
+    blogId,
+    token,
+    onRefreshComplete,
+  );
 
   return (
-    <button onClick={handleRefresh} disabled={refreshing}>
-      {refreshing ? "Refreshing..." : "🔄 Refresh Data"}
-    </button>
+    <div className="refresh-container">
+      <button
+        onClick={startPolling}
+        disabled={isPolling}
+        className={isPolling ? "btn-loading" : "btn-primary"}
+      >
+        {isPolling ? (
+          <span className="flex items-center gap-2">
+            <Spinner />
+            Analyzing ({progress}%)...
+          </span>
+        ) : (
+          "⚡ Analyze Live Data"
+        )}
+      </button>
+
+      {isPolling && (
+        <p className="text-xs text-muted mt-2">
+          Querying ChatGPT, Claude, Gemini & Perplexity... This usually takes
+          ~30 seconds.
+        </p>
+      )}
+    </div>
   );
 }
 ```
+
+      {isPolling && (
+        <p className="text-xs text-muted mt-2">
+          Querying ChatGPT, Claude, Gemini & Perplexity... This usually takes
+          ~30 seconds.
+        </p>
+      )}
+    </div>
+
+);
+}
+
+````
 
 ### Competitive Rankings Display
 
@@ -807,7 +964,7 @@ function CompetitiveRankings({
     </div>
   );
 }
-```
+````
 
 ---
 

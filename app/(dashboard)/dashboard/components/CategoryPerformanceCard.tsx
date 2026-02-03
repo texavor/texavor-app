@@ -17,7 +17,7 @@ export const CategoryPerformanceCard: React.FC<
 
   if (categoryEntries.length === 0) {
     return (
-      <Card className="bg-primary/5 dark:bg-zinc-900 border-border/50 shadow-none">
+      <Card className="bg-white dark:bg-zinc-900 border-none shadow-none">
         <CardHeader>
           <CardTitle className="text-lg font-semibold">
             Category Performance
@@ -33,7 +33,7 @@ export const CategoryPerformanceCard: React.FC<
   }
 
   return (
-    <Card className="bg-primary/5 dark:bg-zinc-900 border-border/50 shadow-none">
+    <Card className="bg-white dark:bg-zinc-900 border-none shadow-none">
       <CardHeader>
         <CardTitle className="text-lg font-semibold">
           Category Performance

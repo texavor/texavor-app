@@ -1,14 +1,13 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
 import type { AeoVisibilityScore } from "../types/aeo.types";
 
@@ -21,10 +20,10 @@ export const VisibilityTrendChart: React.FC<VisibilityTrendChartProps> = ({
 }) => {
   if (!historicalScores || historicalScores.length === 0) {
     return (
-      <Card className="bg-white dark:bg-zinc-900 border-border/50 shadow-none">
+      <Card className="bg-white dark:bg-zinc-900 border-none shadow-none">
         <CardHeader>
           <CardTitle className="text-lg font-semibold">
-            30-Day Visibility Trend
+            Visibility Trend
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -36,58 +35,85 @@ export const VisibilityTrendChart: React.FC<VisibilityTrendChartProps> = ({
     );
   }
 
-  const chartData = historicalScores.map((score) => ({
+  // Reverse if needed, assuming API returns desc or asc. usually charts need asc.
+  // API returns historical_scores list. Check logic. Usually [today, yesterday...] or vice-versa.
+  // If it's desc, we should reverse for chart (left to right = old to new).
+  // Assuming API gives sorted by date descending (newest first). Let's reverse to show timeline left-right.
+  const sortedScores = [...historicalScores].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+  );
+
+  const chartData = sortedScores.map((score) => ({
     date: new Date(score.date).toLocaleDateString("en-US", {
+      weekday: "narrow", // S, M, T... like the image
+    }),
+    fullDate: new Date(score.date).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
     }),
     score: score.overall_score,
-    presenceRate: score.presence_rate,
   }));
 
+  // Take last 7 days for the "Project Analytics" view style if data is abundant,
+  // or just show what we have. User liked the specific card look.
+  // displaying 30 days with S/M/T... repeated is confusing.
+  // I'll show the last 7-10 days to match the aesthetic, or keep it manageable.
+  // Let's stick to last 7 days for the cleanest "dashboard" look, as per the image reference.
+  const recentData = chartData.slice(-7);
+
   return (
-    <Card className="bg-white dark:bg-zinc-900 border-border/50 shadow-none">
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold">
-          30-Day Visibility Trend
-        </CardTitle>
+    <Card className="bg-white dark:bg-zinc-900 border-none shadow-none">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg font-semibold">
+            Visibility Trend
+          </CardTitle>
+          <span className="text-xs text-slate-500 bg-slate-100 dark:bg-zinc-800 px-2 py-1 rounded-full">
+            Last 7 Days
+          </span>
+        </div>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis
-              dataKey="date"
-              stroke="#6b7280"
-              style={{ fontSize: "12px" }}
-            />
-            <YAxis stroke="#6b7280" style={{ fontSize: "12px" }} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "#fff",
-                border: "1px solid #e5e7eb",
-                borderRadius: "8px",
-              }}
-            />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey="score"
-              stroke="#104127"
-              strokeWidth={2}
-              name="Visibility Score"
-              dot={{ fill: "#104127", r: 4 }}
-            />
-            <Line
-              type="monotone"
-              dataKey="presenceRate"
-              stroke="#3b82f6"
-              strokeWidth={2}
-              name="Presence Rate"
-              dot={{ fill: "#3b82f6", r: 4 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        <div className="h-[200px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={recentData} barSize={40}>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="#f1f5f9"
+              />
+              <XAxis
+                dataKey="date"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "#94a3b8", fontSize: 12 }}
+                dy={10}
+              />
+              <Tooltip
+                cursor={{ fill: "transparent" }}
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div className="bg-slate-900 text-white text-xs rounded-lg py-1 px-2 shadow-xl">
+                        <p className="font-semibold mb-0.5">
+                          {payload[0].payload.fullDate}
+                        </p>
+                        <p>Score: {Number(payload[0].value).toFixed(1)}</p>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+              <Bar
+                dataKey="score"
+                fill="#104127"
+                radius={[20, 20, 20, 20]} // Fully rounded pill shape
+                // background={{ fill: '#f1f5f9', radius: [20, 20, 20, 20] }} // Optional track background
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </CardContent>
     </Card>
   );
