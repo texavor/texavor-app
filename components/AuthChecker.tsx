@@ -33,6 +33,7 @@ const AuthChecker = () => {
     "/email-verified",
     "/google-callback",
     "/accept-invite",
+    "/share",
   ];
 
   const isExcludedPath = excluded.some((p) => pathname.startsWith(p));
