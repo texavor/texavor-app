@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Metadata } from "next";
 import PricingClientPage from "./PricingClientPage";
 
@@ -6,5 +7,9 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <PricingClientPage />;
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#f9f4f0]" />}>
+      <PricingClientPage />
+    </Suspense>
+  );
 }
