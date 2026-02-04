@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { PRICING_TIERS, BillingPeriodType } from "@/lib/pricing";
-import { Check, LogOut } from "lucide-react";
+import { Check, LogOut, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/hooks/useSubscription";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 import { toast } from "sonner";
 
@@ -13,8 +13,10 @@ export default function PricingClientPage() {
   const [billingPeriod, setBillingPeriod] =
     useState<BillingPeriodType>("yearly");
   const [loadingTier, setLoadingTier] = useState<string | null>(null);
-  const { subscribe } = useSubscription();
+  const { subscribe, manageSubscription, loading } = useSubscription();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const reason = searchParams.get("reason");
 
   const handleLogout = async () => {
     try {
@@ -61,6 +63,50 @@ export default function PricingClientPage() {
     <div className="min-h-screen bg-[#f9f4f0] py-20 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Logout Button Moved to Footer */}
+
+        {/* Payment Failure Banner */}
+        {reason === "payment_failed" && (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-8 rounded-r-md shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="h-6 w-6 text-red-500 shrink-0" />
+              <div className="text-left">
+                <h3 className="text-red-800 font-semibold font-poppins text-lg">
+                  Payment Failed
+                </h3>
+                <p className="text-red-700 text-sm font-inter">
+                  Your last subscription payment failed. Please update your
+                  payment method to continue using Texavor without interruption.
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={manageSubscription}
+              disabled={loading}
+              variant="destructive"
+              className="whitespace-nowrap bg-red-600 hover:bg-red-700"
+            >
+              {loading ? "Loading..." : "Update Payment Method"}
+            </Button>
+          </div>
+        )}
+
+        {/* Trial Ended Banner */}
+        {reason === "trial_ended" && (
+          <div className="bg-amber-50 border-l-4 border-amber-500 p-4 mb-8 rounded-r-md shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="h-6 w-6 text-amber-500 shrink-0" />
+              <div className="text-left">
+                <h3 className="text-amber-800 font-semibold font-poppins text-lg">
+                  Trial Ended
+                </h3>
+                <p className="text-amber-800 text-sm font-inter">
+                  Your free trial has ended. Choose a plan below to keep
+                  creating amazing content.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Header */}
         <div className="text-center mb-12">
