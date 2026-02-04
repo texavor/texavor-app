@@ -5,7 +5,7 @@ export const CustomHardBreak = HardBreak.extend({
     return {
       markdown: {
         serialize(state: any, node: any) {
-          state.write("<br>");
+          state.write(" <br> ");
         },
       },
     };
