@@ -14,7 +14,7 @@ export default function DemoStoreInitializer({
   useEffect(() => {
     // Seed the store with demo data
     setUser(DEMO_USER);
-    setBlogs(DEMO_BLOG);
+    setBlogs([DEMO_BLOG]);
     // Important: Set mainLoading to false so the UI renders
     setMainLoading(false);
   }, [setUser, setBlogs, setMainLoading]);
