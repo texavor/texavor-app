@@ -83,6 +83,8 @@ export default function ArticleClientPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [insights, setInsights] = useState(null);
   const [isDetailsSheetOpen, setIsDetailsSheetOpen] = useState(false);
+  // State for text highlighting
+  const [highlightedText, setHighlightedText] = useState<string>("");
 
   // Refs must also be called before early returns
   const isInitialLoadDone = useRef(false);
@@ -632,6 +634,7 @@ export default function ArticleClientPage() {
             onToggleMetrics={toggleMetricsVisibility}
             isLoading={isLoading}
             readOnly={isViewer}
+            highlightText={highlightedText}
           />
         </div>
 
@@ -651,6 +654,7 @@ export default function ArticleClientPage() {
               blogId={blogs?.id}
               onApplyLink={handleApplySmartLink}
               onRemoveLink={handleRemoveSmartLink}
+              onHighlightText={setHighlightedText}
             />
           </div>
         )}

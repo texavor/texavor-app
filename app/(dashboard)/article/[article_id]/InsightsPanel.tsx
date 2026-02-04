@@ -33,7 +33,29 @@ interface InsightsPanelProps {
   blogId?: string;
   onApplyLink?: (anchorText: string, url: string) => void;
   onRemoveLink?: (anchorText: string, url: string) => void;
+  onHighlightText?: (text: string) => void;
 }
+
+// Helper to strip markdown
+const cleanText = (text: string) => {
+  if (!text) return "";
+  return (
+    text
+      // Remove bold/italic markers (* or _)
+      .replace(/[*_]/g, "")
+      // Remove code ticks (`)
+      .replace(/`/g, "")
+      // Remove heading hashes (#)
+      .replace(/#/g, "")
+      // Remove link brackets but keep text: [text](url) -> text
+      // This simple regex handles standard markdown links.
+      // For nested or complex links, it might be partial, but sufficient for readability snippets.
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+      // Remove stand-alone brackets if any remain
+      .replace(/[\[\]]/g, "")
+      .trim()
+  );
+};
 
 const InsightsPanel = ({
   showMetrics,
@@ -48,6 +70,7 @@ const InsightsPanel = ({
   blogId,
   onApplyLink,
   onRemoveLink,
+  onHighlightText,
 }: InsightsPanelProps) => {
   const [outlineTopic, setOutlineTopic] = useState(articleTitle || "");
   const { generateOutline } = useOutlineApi();
@@ -108,7 +131,7 @@ const InsightsPanel = ({
   };
 
   return (
-    <div className="bg-white max-h-[calc(100vh-100px)] rounded-xl flex flex-col">
+    <div className="bg-white h-[calc(100vh-100px)] rounded-xl flex flex-col">
       <Tabs defaultValue="insights" className="w-full flex flex-col h-full">
         <div className="sticky top-0 bg-white z-10 p-4 pb-2 rounded-t-xl">
           <TabsList className="w-full">
@@ -127,124 +150,398 @@ const InsightsPanel = ({
         {/* Content Insights Tab */}
         <TabsContent
           value="insights"
-          className="flex-1 overflow-y-auto max-h-[calc(100vh-160px)] no-scrollbar px-4 pb-4"
+          className="flex-1 overflow-y-auto h-[calc(100vh-160px)] no-scrollbar px-4 pb-4"
         >
           <div className="space-y-6">
-            <div className="space-y-6">
-              {/* Top Section — Content Insights */}
+            <div className="space-y-4">
+              {/* Top Section — Header & Action */}
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-bold text-black font-poppins">
-                  Content Insights
+                  Content Analysis
                 </h3>
                 <Button
                   onClick={onAnalyzeClick}
                   disabled={isAnalyzing}
-                  className="text-sm"
+                  className="text-xs h-8"
                 >
-                  {isAnalyzing ? "Analyzing..." : "Analyze Article"}
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    "Analyze"
+                  )}
                 </Button>
               </div>
 
-              {/* Readability Score */}
-              <div className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <p className="text-sm font-semibold text-black font-poppins">
-                    Readability Score
+              {/* Quick Stats Grid */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-[#104127] p-2 rounded-lg text-center">
+                  <p className="text-xs text-gray-200 uppercase tracking-wide">
+                    Words
                   </p>
-                  <p className="text-sm font-inter">{readability}/100</p>
+                  <p className="font-bold text-white">{liveStats.wordCount}</p>
                 </div>
-                <ScoreMeter value={readability / 100} />
-              </div>
-
-              {/* SEO Details */}
-              <div>
-                <p className="text-sm font-semibold text-black font-poppins mb-2">
-                  SEO Details
-                </p>
-                <div className="bg-gray-100 p-2 rounded-md space-y-1 text-sm font-inter">
-                  <p>Title Keyword: {seo_details?.title_keyword ? "✔" : "✖"}</p>
-                  <p>
-                    Header Variants: {seo_details?.header_variants ? "✔" : "✖"}
+                <div className="bg-[#104127] p-2 rounded-lg text-center">
+                  <p className="text-xs text-gray-200 uppercase tracking-wide">
+                    Reading Time
                   </p>
-                  <p>
-                    Semantic Matches:{" "}
-                    {seo_details?.semantic_matches ? "✔" : "✖"}
+                  <p className="font-bold text-white">
+                    {liveStats.readingTime}m
                   </p>
-                  <p>Coverage: {seo_details?.coverage ? "✔" : "✖"}</p>
+                </div>
+                <div className="bg-[#104127] p-2 rounded-lg text-center">
+                  <p className="text-xs text-gray-200 uppercase tracking-wide">
+                    Headings
+                  </p>
+                  <p className="font-bold text-white">
+                    {liveStats.headingCount}
+                  </p>
+                </div>
+                <div className="bg-[#104127] p-2 rounded-lg text-center">
+                  <p className="text-xs text-gray-200 uppercase tracking-wide">
+                    Paragraphs
+                  </p>
+                  <p className="font-bold text-white">
+                    {liveStats.paragraphCount}
+                  </p>
                 </div>
               </div>
 
-              {/* SEO Score */}
-              <div>
-                <Gauge label="SEO Score" value={seo_score} max={100} />
-              </div>
+              {insights?.insight_data ? (
+                // NEW STRUCTURE
+                <div className="space-y-4">
+                  {/* AEO Section */}
+                  <div className="bg-primary/5 rounded-xl p-4 space-y-3">
+                    <div className="flex justify-between items-baseline border-b border-gray-200 pb-2">
+                      <h4 className="font-bold text-gray-900 font-poppins text-base">
+                        AEO Analysis
+                      </h4>
+                      <span
+                        className={`text-2xl font-poppins font-bold ${
+                          (insights.insight_data.aeo?.score || 0) >= 80
+                            ? "text-green-600"
+                            : (insights.insight_data.aeo?.score || 0) >= 50
+                              ? "text-yellow-600"
+                              : "text-red-600"
+                        }`}
+                      >
+                        {insights.insight_data.aeo?.score || 0}
+                      </span>
+                    </div>
+                    <div className="space-y-3">
+                      {insights.insight_data.aeo?.issues?.length > 0 ? (
+                        insights.insight_data.aeo.issues.map(
+                          (issue: any, i: number) => (
+                            <div key={i} className="flex gap-3 items-start">
+                              <div className="mt-1.5 min-w-[6px] h-[6px] rounded-full bg-red-500 shrink-0" />
+                              <p className="text-sm text-gray-600 leading-relaxed font-inter">
+                                {issue.message}
+                              </p>
+                            </div>
+                          ),
+                        )
+                      ) : (
+                        <div className="flex items-center gap-2 text-gray-500 text-sm italic">
+                          <span>No critical AEO issues found.</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
-              {/* Authority Score */}
-              <div className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <p className="text-sm font-semibold text-black font-poppins">
-                    Authority Score
-                  </p>
-                  <p className="text-sm font-inter">{authority}/100</p>
+                  {/* SEO Section */}
+                  <div className="bg-primary/5 rounded-xl p-4 space-y-3">
+                    <div className="flex justify-between items-baseline border-b border-gray-200 pb-2">
+                      <h4 className="font-bold text-gray-900 font-poppins text-base">
+                        SEO Analysis
+                      </h4>
+                      <span
+                        className={`text-2xl font-poppins font-bold ${
+                          (insights.insight_data.seo?.score || 0) >= 80
+                            ? "text-green-600"
+                            : (insights.insight_data.seo?.score || 0) >= 50
+                              ? "text-yellow-600"
+                              : "text-red-600"
+                        }`}
+                      >
+                        {insights.insight_data.seo?.score || 0}
+                      </span>
+                    </div>
+                    <div className="space-y-3">
+                      {insights.insight_data.seo?.issues?.length > 0 ? (
+                        insights.insight_data.seo.issues.map(
+                          (issue: any, i: number) => (
+                            <div key={i} className="flex gap-3 items-start">
+                              <div className="mt-1.5 min-w-[6px] h-[6px] rounded-full bg-red-500 shrink-0" />
+                              <p className="text-sm text-gray-600 leading-relaxed font-inter">
+                                {issue.message}
+                              </p>
+                            </div>
+                          ),
+                        )
+                      ) : (
+                        <div className="flex items-center gap-2 text-gray-500 text-sm italic">
+                          <span>No critical SEO issues found.</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Readability Section */}
+                  <div className="bg-primary/5 rounded-xl p-4 space-y-3">
+                    <div className="flex justify-between items-baseline border-b border-gray-200 pb-2">
+                      <h4 className="font-bold text-gray-900 font-poppins text-base">
+                        Readability
+                      </h4>
+                      <span
+                        className={`text-2xl font-poppins font-bold ${
+                          (insights.insight_data.readability?.score || 0) >= 80
+                            ? "text-green-600"
+                            : (insights.insight_data.readability?.score || 0) >=
+                                50
+                              ? "text-yellow-600"
+                              : "text-red-600"
+                        }`}
+                      >
+                        {insights.insight_data.readability?.score || 0}
+                      </span>
+                    </div>
+                    <div className="space-y-3">
+                      {insights.insight_data.readability?.issues?.length > 0 ? (
+                        insights.insight_data.readability.issues.map(
+                          (issue: any, i: number) => (
+                            <div
+                              key={i}
+                              className="bg-white rounded-lg p-3 space-y-2"
+                            >
+                              <div className="flex flex-col gap-1.5">
+                                <div className="flex items-center gap-2">
+                                  <div
+                                    className={`w-1.5 h-1.5 rounded-full mt-0.5 shrink-0 ${
+                                      (insights.insight_data.readability
+                                        ?.score || 0) >= 80
+                                        ? "bg-green-500"
+                                        : "bg-red-500"
+                                    }`}
+                                  />
+                                  <h5 className="text-sm font-semibold text-gray-900 font-poppins">
+                                    {issue.type
+                                      ? issue.type
+                                          .replace(/_/g, " ")
+                                          .replace(/\b\w/g, (l: string) =>
+                                            l.toUpperCase(),
+                                          )
+                                      : "Improvement"}
+                                  </h5>
+                                </div>
+
+                                <p className="text-sm text-gray-700 leading-relaxed font-inter">
+                                  {issue.message}
+                                </p>
+
+                                {issue.examples &&
+                                  issue.examples.length > 0 && (
+                                    <div className="bg-gray-50 border border-gray-100 rounded-md p-2 mt-1">
+                                      <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1.5">
+                                        Examples found:
+                                      </p>
+                                      <ul className="space-y-1">
+                                        {issue.examples.map(
+                                          (ex: string, j: number) => {
+                                            const cleanExample = cleanText(ex);
+                                            return (
+                                              <li
+                                                key={j}
+                                                className="flex items-start gap-2 group cursor-pointer hover:bg-white rounded p-1 -ml-1 transition-all"
+                                                onClick={() =>
+                                                  onHighlightText?.(
+                                                    cleanExample,
+                                                  )
+                                                }
+                                                title="Click to highlight in editor"
+                                              >
+                                                <span className="text-xs text-gray-600 italic group-hover:text-primary transition-colors">
+                                                  "{cleanExample}"
+                                                </span>
+                                              </li>
+                                            );
+                                          },
+                                        )}
+                                      </ul>
+                                    </div>
+                                  )}
+                              </div>
+                            </div>
+                          ),
+                        )
+                      ) : (
+                        <div className="flex items-center gap-2 text-gray-500 text-sm italic">
+                          <span>Text is easy to read.</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Grammar Section */}
+                  <div className="bg-primary/5 rounded-xl p-4 space-y-3">
+                    <div className="flex justify-between items-baseline border-b border-gray-200 pb-2">
+                      <h4 className="font-bold text-gray-900 font-poppins text-base">
+                        Grammar
+                      </h4>
+                      <span
+                        className={`text-2xl font-poppins font-bold ${
+                          (insights.grammar?.score ?? 100) >= 90
+                            ? "text-green-600"
+                            : (insights.grammar?.score ?? 100) >= 50
+                              ? "text-yellow-600"
+                              : "text-red-600"
+                        }`}
+                      >
+                        {insights.grammar?.score || 100}
+                      </span>
+                    </div>
+                    <div>
+                      {insights.grammar?.issues?.length > 0 ? (
+                        <div className="space-y-3">
+                          {insights.grammar.issues.map(
+                            (issue: any, i: number) => {
+                              // Backward compatibility
+                              if (typeof issue === "string") {
+                                return (
+                                  <div
+                                    key={i}
+                                    className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm flex gap-3 items-start"
+                                  >
+                                    <div className="mt-1.5 min-w-[6px] h-[6px] rounded-full bg-red-500 shrink-0" />
+                                    <span className="flex-1 text-sm text-gray-600 font-inter leading-relaxed">
+                                      {issue}
+                                    </span>
+                                  </div>
+                                );
+                              }
+
+                              const severityColor =
+                                issue.severity === "error"
+                                  ? "text-red-700 bg-red-50 border-red-200"
+                                  : issue.severity === "warning"
+                                    ? "text-amber-700 bg-amber-50 border-amber-200"
+                                    : "text-blue-700 bg-blue-50 border-blue-200";
+
+                              return (
+                                <div
+                                  key={i}
+                                  className="bg-white rounded-lg p-3 space-y-3"
+                                >
+                                  {/* Header */}
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <span
+                                        className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${severityColor}`}
+                                      >
+                                        {issue.severity || "Info"}
+                                      </span>
+                                      <span className="text-xs font-semibold text-gray-900 capitalize font-inter">
+                                        {issue.type?.replace(/_/g, " ") ||
+                                          "Issue"}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {/* Content */}
+                                  <div className="space-y-2">
+                                    <p className="text-sm text-gray-800 font-medium font-inter">
+                                      {issue.message}
+                                    </p>
+
+                                    {/* Context with Highlight Action */}
+                                    {issue.context && (
+                                      <div className="group relative">
+                                        <div className="bg-gray-50 border border-gray-200 rounded p-2.5 text-xs font-mono text-gray-600 flex justify-between items-center transition-colors group-hover:border-primary/30 group-hover:bg-primary/5">
+                                          <span className="truncate pr-8">
+                                            "{issue.context}"
+                                          </span>
+                                          <button
+                                            onClick={() =>
+                                              onHighlightText?.(
+                                                cleanText(issue.context),
+                                              )
+                                            }
+                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-primary opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white rounded-md shadow-sm"
+                                            title="Highlight in editor"
+                                          >
+                                            <svg
+                                              xmlns="http://www.w3.org/2000/svg"
+                                              width="14"
+                                              height="14"
+                                              viewBox="0 0 24 24"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              strokeWidth="2"
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                            >
+                                              <circle cx="11" cy="11" r="8" />
+                                              <path d="m21 21-4.3-4.3" />
+                                            </svg>
+                                          </button>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Suggestion */}
+                                    {issue.suggestion && (
+                                      <div className="flex gap-2 items-start bg-green-50 p-2.5 rounded-md border border-green-100">
+                                        <div className="mt-0.5 text-green-600 shrink-0">
+                                          <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="14"
+                                            height="14"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                          >
+                                            <path d="M20 6 9 17l-5-5" />
+                                          </svg>
+                                        </div>
+                                        <div className="text-xs">
+                                          <span className="font-bold text-green-700 mr-1">
+                                            Suggestion:
+                                          </span>
+                                          <span className="text-green-800 italic">
+                                            {issue.suggestion}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            },
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-gray-500 text-sm italic">
+                          <span>No grammar issues found.</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <ScoreMeter value={authority / 100} />
-              </div>
-
-              {/* Plagiarism Score */}
-              <div className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <p className="text-sm font-semibold text-black font-poppins">
-                    Plagiarism Score
-                  </p>
-                  <p className="text-sm font-inter">{plagiarism}/100</p>
-                </div>
-                <ScoreMeter value={plagiarism / 100} />
-              </div>
-
-              {/* Sentiment Score */}
-              <div className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <p className="text-sm font-semibold text-black font-poppins">
-                    Sentiment Score
-                  </p>
-                  <p className="text-sm font-inter">{sentiment}/1000</p>
-                </div>
-                <ScoreMeter value={sentiment / 1000} />
-              </div>
-            </div>
-
-            {/* Grammar Suggestions */}
-            <div className="space-y-3">
-              <h3 className="text-lg font-bold text-black capitalize font-poppins">
-                Grammar Suggestions
-              </h3>
-              {suggestions.length === 0 ? (
-                <p className="text-sm italic text-gray-500">
-                  No suggestions detected.
-                </p>
               ) : (
-                <ul className="list-disc list-inside bg-gray-100 p-3 rounded-md text-sm font-inter space-y-1">
-                  {suggestions.map((suggestion: any, idx: number) => (
-                    <li key={idx}>{suggestion}</li>
-                  ))}
-                </ul>
+                // FALLBACK / EMPTY STATE (Before first analysis)
+                <div className="text-center py-12 text-gray-500">
+                  <Book className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                  <p className="text-sm font-medium">No insights yet</p>
+                  <p className="text-xs max-w-[200px] mx-auto mt-1 text-gray-400">
+                    Click "Analyze" to generate AEO, SEO, and Readability
+                    scores.
+                  </p>
+                </div>
               )}
-            </div>
-
-            {/* Quick Stats */}
-            <div>
-              <h3 className="text-lg font-bold text-black capitalize font-poppins mb-2">
-                Quick Stats
-              </h3>
-
-              <div className="space-y-1 bg-gray-100 p-3 rounded-md text-sm font-inter">
-                <p>Word Count: {liveStats.wordCount}</p>
-                <p>Reading Time: {liveStats.readingTime} min</p>
-                <p>Headings: {liveStats.headingCount}</p>
-                <p>Paragraphs: {liveStats.paragraphCount}</p>
-                <p>Keyword Count: {stats.keyword_count || 0}</p>
-                <p>Difficulty: {stats.difficulty || 0}</p>
-              </div>
             </div>
           </div>
         </TabsContent>
@@ -252,7 +549,7 @@ const InsightsPanel = ({
         {/* Outline Tab */}
         <TabsContent
           value="outline"
-          className="flex-1 overflow-y-auto no-scrollbar px-4 pb-4 min-h-[calc(100vh-160px)] max-h-[calc(100vh-160px)]"
+          className="flex-1 overflow-y-auto h-[calc(100vh-160px)] no-scrollbar px-4 pb-4"
         >
           <div className="space-y-4">
             {!outlineData ? (
@@ -292,7 +589,7 @@ const InsightsPanel = ({
                   </Button>
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-600">
+                <div className="bg-primary/5 p-4 rounded-lg text-sm text-gray-600">
                   <p className="font-medium mb-2">No outline available</p>
                   <p>
                     {savedResult
@@ -325,7 +622,7 @@ const InsightsPanel = ({
                 </div>
 
                 {/* Compact Metrics */}
-                <div className="bg-gray-50 p-3 rounded-lg space-y-2">
+                <div className="bg-primary/5 p-3 rounded-lg space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-gray-500 font-medium uppercase tracking-wider">
                       Est. Words
@@ -343,7 +640,7 @@ const InsightsPanel = ({
                           (keyword: string, idx: number) => (
                             <span
                               key={idx}
-                              className="bg-green-50 text-green-700 px-2 py-0.5 rounded text-xs font-medium border border-green-100"
+                              className="bg-[#104127] rounded-sm text-white px-2 py-0.5 rounded text-xs font-medium border border-green-100"
                             >
                               {keyword}
                             </span>
@@ -362,7 +659,7 @@ const InsightsPanel = ({
                   <div className="space-y-2">
                     {/* Introduction */}
                     {outlineData.introduction && (
-                      <div className="bg-gray-50 p-3 rounded-lg">
+                      <div className="bg-primary/5 p-3 rounded-lg">
                         <div className="flex items-center gap-2 mb-2">
                           <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                           <span className="text-sm font-semibold text-gray-900">
@@ -377,7 +674,7 @@ const InsightsPanel = ({
 
                     {/* Sections */}
                     {outlineData.sections?.map((section: any, idx: number) => (
-                      <div key={idx} className="bg-gray-50 p-3 rounded-lg">
+                      <div key={idx} className="bg-primary/5 p-3 rounded-lg">
                         <div className="flex items-start gap-2 mb-2">
                           <span className="text-gray-400 text-xs mt-0.5">
                             {idx + 1}.
@@ -454,7 +751,7 @@ const InsightsPanel = ({
 
                     {/* Conclusion */}
                     {outlineData.conclusion && (
-                      <div className="bg-gray-50 p-3 rounded-lg">
+                      <div className="bg-primary/5 p-3 rounded-lg">
                         <div className="flex items-center gap-2 mb-2">
                           <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
                           <span className="text-sm font-semibold text-gray-900">
@@ -476,7 +773,7 @@ const InsightsPanel = ({
         {/* Smart Links Tab */}
         <TabsContent
           value="smart_links"
-          className="flex-1 overflow-y-auto no-scrollbar px-4 pb-4 min-h-[calc(100vh-160px)] max-h-[calc(100vh-160px)]"
+          className="flex-1 overflow-y-auto h-[calc(100vh-160px)] no-scrollbar px-4 pb-4"
         >
           {articleId && blogId && onApplyLink && onRemoveLink ? (
             <SmartLinkingPanel

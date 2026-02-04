@@ -16,6 +16,7 @@ import Link from "@tiptap/extension-link";
 import { CustomToolbar } from "./CustomToolbar";
 import { CustomHardBreak } from "./editor/extensions/CustomHardBreak";
 import { CustomImage } from "./editor/extensions/CustomImage";
+import { SearchHighlight } from "./editor/extensions/SearchHighlight";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { lowlight } from "lowlight/lib/core";
 import css from "highlight.js/lib/languages/css";
@@ -78,6 +79,7 @@ type EditorProps = {
   onToggleMetrics?: () => void;
   isLoading?: boolean;
   readOnly?: boolean;
+  highlightText?: string;
 };
 
 const Editor = ({
@@ -95,6 +97,7 @@ const Editor = ({
   onToggleMetrics,
   isLoading,
   readOnly = false,
+  highlightText,
 }: EditorProps) => {
   const { zenMode, toggleZenMode } = useAppStore();
   const [isExportOpen, setIsExportOpen] = React.useState(false);
@@ -421,7 +424,11 @@ const Editor = ({
       }),
       Link.configure({
         openOnClick: false,
+        HTMLAttributes: {
+          class: "text-blue-500 hover:underline cursor-pointer",
+        },
       }),
+      SearchHighlight, // Add browser-like highlighting
       Markdown.configure({
         html: false,
         tightLists: true,
@@ -481,6 +488,110 @@ const Editor = ({
       onChange(md, html);
     },
   });
+
+  // Handle Text Highlighting from Insights
+  useEffect(() => {
+    if (!editor) return;
+
+    if (!highlightText) {
+      // Clear highlights if no text
+      const tr = editor.state.tr.setMeta("searchHighlight", { clear: true });
+      editor.view.dispatch(tr);
+      return;
+    }
+
+    // Sanitize the search text
+    const searchText = highlightText.trim();
+    if (!searchText) return;
+
+    try {
+      const doc = editor.state.doc;
+      let fullText = "";
+      // Map char index in fullText to { pos, nodeOffset }
+      const textNodes: { pos: number; text: string; length: number }[] = [];
+
+      doc.descendants((node, pos) => {
+        if (node.isText && node.text) {
+          textNodes.push({
+            pos,
+            text: node.text,
+            length: node.text.length,
+          });
+          fullText += node.text;
+        } else if (node.isBlock) {
+          // Block separation could be handled here if needed
+        }
+      });
+
+      // Find FIRST occurrence
+      // Note: We could map ALL occurrences if desired, but let's stick to first for now.
+      const searchIndex = fullText.indexOf(searchText);
+
+      if (searchIndex !== -1) {
+        // Find start pos
+        let currentLen = 0;
+        let startPos = -1;
+        let endPos = -1;
+
+        let foundStart = false;
+
+        for (const node of textNodes) {
+          const nextLen = currentLen + node.length;
+
+          // Check for start
+          if (
+            !foundStart &&
+            searchIndex >= currentLen &&
+            searchIndex < nextLen
+          ) {
+            const offset = searchIndex - currentLen;
+            startPos = node.pos + offset;
+            foundStart = true;
+          }
+
+          // Check for end (searchIndex + length)
+          const endIndex = searchIndex + searchText.length;
+          if (foundStart && endIndex > currentLen && endIndex <= nextLen) {
+            const offset = endIndex - currentLen;
+            endPos = node.pos + offset;
+            break; // Found both
+          }
+
+          currentLen = nextLen;
+        }
+
+        if (startPos !== -1 && endPos !== -1) {
+          // Dispatch decoration metadata
+          const tr = editor.state.tr.setMeta("searchHighlight", {
+            from: startPos,
+            to: endPos,
+          });
+          editor.view.dispatch(tr);
+
+          // Scroll to view
+          // We scroll to the NODE containing the start position
+          const dom = editor.view.domAtPos(startPos);
+          if (dom.node instanceof HTMLElement) {
+            dom.node.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            });
+          } else if (dom.node.parentElement) {
+            dom.node.parentElement.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            });
+          }
+        }
+      } else {
+        // If not found, clear
+        const tr = editor.state.tr.setMeta("searchHighlight", { clear: true });
+        editor.view.dispatch(tr);
+      }
+    } catch (err) {
+      console.error("Error highlighting text:", err);
+    }
+  }, [highlightText, editor]);
 
   // Sync readOnly state → editor
   useEffect(() => {
