@@ -163,7 +163,17 @@ const AuthChecker = () => {
             (subscriptionStatus !== "active" &&
               subscriptionStatus !== "on_trial"))
         ) {
-          router.push("/pricing");
+          let reason = "";
+          if (
+            subscriptionStatus === "past_due" ||
+            subscriptionStatus === "unpaid"
+          ) {
+            reason = "?reason=payment_failed";
+          } else if (subscriptionTier === "trial") {
+            reason = "?reason=trial_ended";
+          }
+
+          router.push(`/pricing${reason}`);
         }
       }
     }
