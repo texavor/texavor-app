@@ -40,8 +40,10 @@ const OpportunityMeter = ({ value }: { value: number }) => {
       {segments.map((isFilled, index) => {
         let color = "bg-gray-200";
         if (isFilled) {
-          if (value <= 3) color = "bg-red-500"; // Low
-          else if (value <= 7) color = "bg-yellow-500"; // Medium
+          if (value <= 3)
+            color = "bg-red-500"; // Low
+          else if (value <= 7)
+            color = "bg-yellow-500"; // Medium
           else color = "bg-green-500"; // High
         }
         return <div key={index} className={`h-2 w-full rounded-sm ${color}`} />;
@@ -76,7 +78,7 @@ const TopicGenerationClient = () => {
           toast.success("Topic saved successfully!");
         },
         onError: () => toast.error("Failed to save topic."),
-      }
+      },
     );
   };
 
@@ -286,8 +288,8 @@ const TopicGenerationClient = () => {
                                           candidate.difficulty <= 3
                                             ? "text-green-600"
                                             : candidate.difficulty <= 7
-                                            ? "text-yellow-600"
-                                            : "text-red-600"
+                                              ? "text-yellow-600"
+                                              : "text-red-600"
                                         }`}
                                       >
                                         {candidate.difficulty}
@@ -304,8 +306,8 @@ const TopicGenerationClient = () => {
                                       {candidate.difficulty <= 3
                                         ? "Easy to rank"
                                         : candidate.difficulty <= 6
-                                        ? "Moderate effort"
-                                        : "Challenging topic"}
+                                          ? "Moderate effort"
+                                          : "Challenging topic"}
                                     </p>
                                   </div>
 
@@ -329,8 +331,8 @@ const TopicGenerationClient = () => {
                                       {candidate.opportunity >= 8
                                         ? "High traffic potential"
                                         : candidate.opportunity >= 5
-                                        ? "Good potential"
-                                        : "Limited potential"}
+                                          ? "Good potential"
+                                          : "Limited potential"}
                                     </p>
                                   </div>
                                 </div>
@@ -385,7 +387,7 @@ const TopicGenerationClient = () => {
                             </AccordionContent>
                           </AccordionItem>
                         </Accordion>
-                      )
+                      ),
                     )}
                   </div>
                 </div>
@@ -398,7 +400,7 @@ const TopicGenerationClient = () => {
                     <h3 className="text-lg font-bold text-black capitalize font-poppins mb-2">
                       Keyword Analysis
                     </h3>
-                    <p className="text-sm font-inter text-gray-700 bg-gray-100 p-2 rounded-md">
+                    <p className="bg-primary/5 text-sm font-inter text-gray-700 p-2 rounded-md">
                       {topics?.[0]?.keyword}
                     </p>
                   </div>
@@ -434,13 +436,18 @@ const TopicGenerationClient = () => {
                     <div className="space-y-1">
                       <div className="flex justify-between items-center">
                         <p className="text-sm font-semibold text-black font-poppins">
-                          GEO Score
+                          AI Visibility
                         </p>
                         <p className="text-sm font-inter">
-                          {topics[0].geo_score}
+                          {topics[0].ai_visibility_score ?? topics[0].geo_score}
                         </p>
                       </div>
-                      <ScoreMeter value={topics[0].geo_score / 10} />
+                      <ScoreMeter
+                        value={
+                          (topics[0].ai_visibility_score ??
+                            topics[0].geo_score) / 10
+                        }
+                      />
                     </div>
                   </div>
                   {uniqueCompetitors.length > 0 && (
@@ -453,7 +460,7 @@ const TopicGenerationClient = () => {
                           <li key={index} className="text-sm text-gray-600">
                             <a
                               href={`https://www.google.com/search?q=${encodeURIComponent(
-                                competitor
+                                competitor,
                               )}`}
                               target="_blank"
                               rel="noopener noreferrer"

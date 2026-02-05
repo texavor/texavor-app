@@ -18,6 +18,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  ResponsiveContainer,
+  PolarRadiusAxis,
+} from "recharts";
 import { SmartLinkingPanel } from "./components/SmartLinkingPanel";
 
 interface InsightsPanelProps {
@@ -51,9 +59,78 @@ const cleanText = (text: string) => {
       // This simple regex handles standard markdown links.
       // For nested or complex links, it might be partial, but sufficient for readability snippets.
       .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-      // Remove stand-alone brackets if any remain
-      .replace(/[\[\]]/g, "")
-      .trim()
+    // Remove stand-alone brackets if any remain
+  );
+};
+
+const CustomTick = ({ payload, x, y, cx, cy, ...rest }: any) => {
+  const images: Record<string, string> = {
+    Gemini: "/ai/gemini.jpg",
+    Perplexity: "/ai/perplexity.png",
+    ChatGPT: "/ai/chatgpt.png",
+  };
+
+  const href = images[payload.value];
+
+  if (!href) return null;
+
+  return (
+    <foreignObject x={x - 10} y={y - 10} width={20} height={20}>
+      <img
+        src={href}
+        alt={payload.value}
+        className="w-full h-full rounded-md object-cover m-1"
+      />
+    </foreignObject>
+  );
+};
+
+const PlatformRadarChart = ({ platformScores }: { platformScores: any }) => {
+  if (!platformScores) return null;
+
+  const data = [
+    {
+      subject: "Gemini",
+      A: platformScores.gemini || 0,
+      fullMark: 100,
+    },
+    {
+      subject: "Perplexity",
+      A: platformScores.perplexity || 0,
+      fullMark: 100,
+    },
+    {
+      subject: "ChatGPT",
+      A: platformScores.chatgpt || 0,
+      fullMark: 100,
+    },
+  ];
+
+  return (
+    <div className="h-[200px] w-full -ml-6">
+      <ResponsiveContainer width="100%" height="100%">
+        <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
+          <PolarGrid stroke="#9ca3af" />
+          <PolarAngleAxis
+            dataKey="subject"
+            tick={(props) => <CustomTick {...props} />}
+          />
+          <PolarRadiusAxis
+            angle={30}
+            domain={[0, 100]}
+            tick={false}
+            axisLine={false}
+          />
+          <Radar
+            name="Score"
+            dataKey="A"
+            stroke="#104127"
+            fill="#104127"
+            fillOpacity={0.3}
+          />
+        </RadarChart>
+      </ResponsiveContainer>
+    </div>
   );
 };
 
@@ -230,6 +307,13 @@ const InsightsPanel = ({
                         {insights.insight_data.aeo?.score || 0}
                       </span>
                     </div>
+                    {insights.insight_data.aeo?.platform_scores && (
+                      <PlatformRadarChart
+                        platformScores={
+                          insights.insight_data.aeo.platform_scores
+                        }
+                      />
+                    )}
                     <div className="space-y-3">
                       {insights.insight_data.aeo?.issues?.length > 0 ? (
                         insights.insight_data.aeo.issues.map(

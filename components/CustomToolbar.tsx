@@ -42,6 +42,7 @@ export const CustomToolbar = ({ editor, title }: CustomToolbarProps) => {
   const [initialPrompt, setInitialPrompt] = useState("");
   const [initialStyle, setInitialStyle] = useState("natural");
   const [isVisible, setIsVisible] = useState(false);
+  const [wordCount, setWordCount] = useState(0);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const toolbarRef = useRef<HTMLDivElement>(null);
 
@@ -61,6 +62,11 @@ export const CustomToolbar = ({ editor, title }: CustomToolbarProps) => {
       const { view } = editor;
       const start = view.coordsAtPos(from);
       const end = view.coordsAtPos(to);
+
+      // Calculate word count
+      const text = editor.state.doc.textBetween(from, to, " ");
+      const count = text.trim().split(/\s+/).filter(Boolean).length;
+      setWordCount(count);
 
       // Calculate toolbar position (centered above selection)
       const centerX = (start.left + end.right) / 2;
@@ -254,6 +260,14 @@ export const CustomToolbar = ({ editor, title }: CustomToolbarProps) => {
         }}
       >
         <TooltipProvider>
+          {wordCount > 0 && (
+            <>
+              <div className="flex items-center px-2 text-xs font-medium text-gray-500 border-r border-gray-200 mr-1 select-none">
+                {wordCount} {wordCount === 1 ? "word" : "words"}
+              </div>
+            </>
+          )}
+
           {items.map((item) => (
             <Tooltip key={item.name}>
               <TooltipTrigger asChild>
