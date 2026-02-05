@@ -74,12 +74,26 @@ const CustomTick = ({ payload, x, y, cx, cy, ...rest }: any) => {
 
   if (!href) return null;
 
+  // Calculate direction vector from center
+  const dx = x - cx;
+  const dy = y - cy;
+  // Calculate offset position (push out by 15px)
+  // We don't need full vector math because x,y are already on the circle.
+  // Just adding a bit of margin based on the angle would be safer but complex.
+  // Simple approximation: add constant offset in the direction of the tick
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  const offset = 15; // 15px gap
+  const scale = (dist + offset) / dist;
+
+  const finalX = cx + dx * scale;
+  const finalY = cy + dy * scale;
+
   return (
-    <foreignObject x={x - 10} y={y - 10} width={20} height={20}>
+    <foreignObject x={finalX - 12} y={finalY - 12} width={24} height={24}>
       <img
         src={href}
         alt={payload.value}
-        className="w-full h-full rounded-md object-cover m-1"
+        className="w-full h-full rounded-md object-cover shadow-sm bg-white"
       />
     </foreignObject>
   );
@@ -107,9 +121,9 @@ const PlatformRadarChart = ({ platformScores }: { platformScores: any }) => {
   ];
 
   return (
-    <div className="h-[200px] w-full -ml-6">
+    <div className="h-[220px] w-full -ml-4 flex items-center justify-center">
       <ResponsiveContainer width="100%" height="100%">
-        <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
+        <RadarChart cx="50%" cy="50%" outerRadius="65%" data={data}>
           <PolarGrid stroke="#9ca3af" />
           <PolarAngleAxis
             dataKey="subject"
