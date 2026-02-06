@@ -5,6 +5,7 @@ import AppSidebar from "./Sidebar";
 import AuthChecker from "@/components/AuthChecker";
 import Topbar from "./Topbar";
 import { useAppStore } from "@/store/appStore";
+import CrispChat from "@/components/CrispChat";
 
 export default function DashboardLayout({
   children,
@@ -16,6 +17,7 @@ export default function DashboardLayout({
   return (
     <SidebarProvider>
       <AuthChecker />
+      <CrispChat />
       <div className={`flex h-screen w-full ${zenMode ? "p-4" : "pr-4"}`}>
         {!zenMode && <AppSidebar />}
         <div className="w-full flex flex-col h-full overflow-hidden ">

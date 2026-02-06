@@ -108,11 +108,6 @@ const SideBarOptionSettings = [
 
 const SideBarOptionExternal = [
   {
-    icon: <MessageCircleQuestion className="h-4 w-4" />,
-    title: "Support",
-    href: "/support",
-  },
-  {
     icon: <Newspaper className="h-4 w-4" />,
     title: "Blogs",
     href: "http://texavor.com/blog",
@@ -239,7 +234,7 @@ const AppSidebar = () => {
         {},
         {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
-        }
+        },
       );
       toast.success("Logout Successfull!");
       router.push("/login");

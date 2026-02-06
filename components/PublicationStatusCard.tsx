@@ -250,16 +250,14 @@ export default function PublicationStatusCard({
 
         {/* Raise Query Button (Prod only, exhausted retries) */}
         {showRaiseQuery && (
-          <a href="/support" target="_blank" rel="noopener noreferrer">
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-2 h-7 text-xs text-red-600 border-red-200 hover:bg-red-50"
-            >
-              <HelpCircle className="h-3 w-3 mr-1" />
-              Raise Query
-            </Button>
-          </a>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-2 h-7 text-xs text-red-600 border-red-200 hover:bg-red-50"
+          >
+            <HelpCircle className="h-3 w-3 mr-1" />
+            Raise Query through Support.
+          </Button>
         )}
       </div>
     </div>
