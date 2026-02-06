@@ -122,9 +122,9 @@ const PlatformRadarChart = ({ platformScores }: { platformScores: any }) => {
   ];
 
   return (
-    <div className="h-[220px] w-full -ml-4 flex items-center justify-center">
+    <div className="h-[200px] w-full flex items-center justify-center">
       <ResponsiveContainer width="100%" height="100%">
-        <RadarChart cx="50%" cy="50%" outerRadius="65%" data={data}>
+        <RadarChart cx="50%" cy="50%" outerRadius="60%" data={data}>
           <PolarGrid stroke="#9ca3af" />
           <PolarAngleAxis
             dataKey="subject"
@@ -145,6 +145,147 @@ const PlatformRadarChart = ({ platformScores }: { platformScores: any }) => {
           />
         </RadarChart>
       </ResponsiveContainer>
+    </div>
+  );
+};
+
+const SimulationCard = ({ simulation }: { simulation: any }) => {
+  if (!simulation?.snippet) return null;
+
+  return (
+    <div className="bg-white border-2 border-[#104127]/10 rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-[#104127]/5 px-4 py-2 border-b border-[#104127]/10 flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-[#104127] animate-pulse" />
+          <span className="text-[10px] font-bold text-[#104127] uppercase tracking-wider">
+            AI Search Simulation
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex flex-col items-end">
+            <span className="text-[8px] text-gray-400 leading-none">Style</span>
+            <span className="text-[10px] font-bold text-[#104127]">
+              {simulation.style || "AI"}
+            </span>
+          </div>
+          <div className="flex flex-col items-end">
+            <span className="text-[8px] text-gray-400 leading-none">
+              Readiness
+            </span>
+            <span className="text-[10px] font-bold text-green-600">
+              {simulation.aeo_readiness}%
+            </span>
+          </div>
+        </div>
+      </div>
+      <div className="p-4">
+        <div className="bg-gray-50 rounded-lg p-3 relative">
+          <div className="absolute top-2 right-2 flex gap-1">
+            <div className="w-1 h-1 rounded-full bg-blue-400" />
+            <div className="w-1 h-1 rounded-full bg-red-400" />
+            <div className="w-1 h-1 rounded-full bg-yellow-400" />
+            <div className="w-1 h-1 rounded-full bg-green-400" />
+          </div>
+          <p className="text-sm text-gray-700 leading-relaxed font-inter italic">
+            "{simulation.snippet}"
+          </p>
+        </div>
+        <p className="text-[10px] text-gray-400 mt-3 text-center italic">
+          Disclaimer: This is a generated preview of how AI search engines might
+          summarize this article.
+        </p>
+      </div>
+    </div>
+  );
+};
+
+const EntityGapAnalysis = ({ entityGaps }: { entityGaps: any }) => {
+  if (!entityGaps?.missing || entityGaps.missing.length === 0) return null;
+
+  return (
+    <div className="bg-primary/5 rounded-xl p-4 space-y-3">
+      <div className="flex justify-between items-baseline border-b border-gray-200 pb-2">
+        <h4 className="font-bold text-gray-900 font-poppins text-base">
+          Topic Overlap Gaps
+        </h4>
+        <div className="flex flex-col items-end">
+          <span className="text-[10px] font-bold text-[#104127] leading-none uppercase">
+            Overlap Score
+          </span>
+          <span className="text-xl font-poppins font-bold text-yellow-600">
+            {entityGaps.score}%
+          </span>
+        </div>
+      </div>
+      <p className="text-xs text-gray-500 font-inter leading-relaxed">
+        {entityGaps.message ||
+          "These entities are frequently mentioned by top-ranking competitors but missing in your content."}
+      </p>
+      <div className="flex flex-wrap gap-2 pt-1">
+        {entityGaps.missing.map((entity: string, i: number) => (
+          <div
+            key={i}
+            className="px-2.5 py-1 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-700 shadow-sm hover:border-[#104127]/30 transition-colors"
+          >
+            + {entity}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const LiveBenchmarkList = ({ benchmarks }: { benchmarks: any[] }) => {
+  if (!benchmarks || benchmarks.length === 0) return null;
+
+  return (
+    <div className="bg-primary/5 rounded-xl p-4 space-y-3">
+      <div className="flex justify-between items-baseline border-b border-gray-200 pb-2">
+        <h4 className="font-bold text-gray-900 font-poppins text-base">
+          Competitor Benchmark
+        </h4>
+      </div>
+      <div className="space-y-2">
+        {benchmarks.map((comp: any, i: number) => (
+          <div
+            key={i}
+            className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm flex flex-col gap-1.5 hover:border-[#104127]/20 transition-all group"
+          >
+            <div className="flex justify-between items-start gap-2">
+              <a
+                href={comp.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-bold text-[#104127] hover:underline flex-1 line-clamp-2"
+              >
+                {comp.title || "Competitor Article"}
+              </a>
+              <span className="px-1.5 py-0.5 bg-gray-100 rounded text-[9px] font-bold text-gray-500 uppercase">
+                {comp.type || "Page"}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
+              <div className="w-3 h-3 text-gray-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                </svg>
+              </div>
+              <p className="text-[10px] text-gray-400 truncate flex-1">
+                {comp.url}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
@@ -186,17 +327,16 @@ const InsightsPanel = ({
   }
 
   const {
-    readability = 0,
-    seo_details = {},
+    aeo = {},
     seo_score = 0,
-    authority = 0,
-    grammar = {},
+    simulation = {},
+    entity_gaps = {},
+    live_benchmark = [],
+    readability = {},
     stats = {},
-    plagiarism = 0,
-    sentiment = 0,
   } = insights || {};
 
-  const { suggestions = [] } = grammar;
+  const { suggestions = [] } = (insights as any)?.grammar || {};
 
   // Determine which outline to display
   const outlineData =
@@ -273,358 +413,193 @@ const InsightsPanel = ({
                   <p className="text-xs text-gray-200 uppercase tracking-wide">
                     Words
                   </p>
-                  <p className="font-bold text-white">{liveStats.wordCount}</p>
+                  <p className="font-bold text-white">
+                    {stats.word_count || liveStats.wordCount}
+                  </p>
                 </div>
                 <div className="bg-[#104127] p-2 rounded-lg text-center">
                   <p className="text-xs text-gray-200 uppercase tracking-wide">
                     Reading Time
                   </p>
                   <p className="font-bold text-white">
-                    {liveStats.readingTime}m
+                    {stats.reading_time || liveStats.readingTime}m
                   </p>
                 </div>
                 <div className="bg-[#104127] p-2 rounded-lg text-center">
                   <p className="text-xs text-gray-200 uppercase tracking-wide">
-                    Headings
+                    Keywords
                   </p>
                   <p className="font-bold text-white">
-                    {liveStats.headingCount}
+                    {stats.keyword_count || 0}
                   </p>
                 </div>
                 <div className="bg-[#104127] p-2 rounded-lg text-center">
                   <p className="text-xs text-gray-200 uppercase tracking-wide">
-                    Paragraphs
+                    Difficulty
                   </p>
                   <p className="font-bold text-white">
-                    {liveStats.paragraphCount}
+                    {stats.difficulty || 1}
                   </p>
                 </div>
               </div>
 
-              {insights?.insight_data ? (
+              {insights ? (
                 // NEW STRUCTURE
                 <div className="space-y-4">
-                  {/* AEO Section */}
-                  <div className="bg-primary/5 rounded-xl p-4 space-y-3">
-                    <div className="flex justify-between items-baseline border-b border-gray-200 pb-2">
-                      <h4 className="font-bold text-gray-900 font-poppins text-base">
-                        AEO Analysis
-                      </h4>
+                  {/* AI Simulation Preview - Primary Insight */}
+                  <SimulationCard simulation={simulation} />
+
+                  {/* Top Scores */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-primary/5 rounded-xl p-3 text-center border border-[#104127]/5">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter mb-1">
+                        SEO Score
+                      </p>
                       <span
                         className={`text-2xl font-poppins font-bold ${
-                          (insights.insight_data.aeo?.score || 0) >= 80
+                          (seo_score || 0) >= 80
                             ? "text-green-600"
-                            : (insights.insight_data.aeo?.score || 0) >= 50
+                            : (seo_score || 0) >= 50
                               ? "text-yellow-600"
                               : "text-red-600"
                         }`}
                       >
-                        {insights.insight_data.aeo?.score || 0}
+                        {seo_score || 0}
                       </span>
                     </div>
-                    {insights.insight_data.aeo?.platform_scores && (
+                    <div className="bg-primary/5 rounded-xl p-3 text-center border border-[#104127]/5">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter mb-1">
+                        AEO Readiness
+                      </p>
+                      <span
+                        className={`text-2xl font-poppins font-bold ${
+                          (aeo.score || 0) >= 80
+                            ? "text-green-600"
+                            : (aeo.score || 0) >= 50
+                              ? "text-yellow-600"
+                              : "text-red-600"
+                        }`}
+                      >
+                        {aeo.score || 0}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* AEO Radar & Issues */}
+                  <div className="bg-primary/5 rounded-xl p-4 space-y-3">
+                    <div className="flex justify-between items-baseline border-b border-gray-200 pb-2">
+                      <h4 className="font-bold text-gray-900 font-poppins text-base">
+                        AEO Breakdown
+                      </h4>
+                    </div>
+                    {aeo.platform_scores && (
                       <PlatformRadarChart
-                        platformScores={
-                          insights.insight_data.aeo.platform_scores
-                        }
+                        platformScores={aeo.platform_scores}
                       />
                     )}
                     <div className="space-y-3">
-                      {insights.insight_data.aeo?.issues?.length > 0 ? (
-                        insights.insight_data.aeo.issues.map(
-                          (issue: any, i: number) => (
-                            <div key={i} className="flex gap-3 items-start">
-                              <div className="mt-1.5 min-w-[6px] h-[6px] rounded-full bg-red-500 shrink-0" />
-                              <p className="text-sm text-gray-600 leading-relaxed font-inter">
-                                {issue.message}
-                              </p>
-                            </div>
-                          ),
-                        )
+                      {aeo.issues?.length > 0 ? (
+                        aeo.issues.map((issue: any, i: number) => (
+                          <div key={i} className="flex gap-3 items-start">
+                            <div className="mt-1.5 min-w-[6px] h-[6px] rounded-full bg-red-500 shrink-0" />
+                            <p className="text-sm text-gray-600 leading-relaxed font-inter">
+                              {issue.message}
+                            </p>
+                          </div>
+                        ))
                       ) : (
                         <div className="flex items-center gap-2 text-gray-500 text-sm italic">
-                          <span>No critical AEO issues found.</span>
+                          <span>No critical AEO structural issues.</span>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* SEO Section */}
+                  {/* Entity Gaps */}
+                  <EntityGapAnalysis entityGaps={entity_gaps} />
+
+                  {/* Competitors */}
+                  <LiveBenchmarkList benchmarks={live_benchmark} />
+
+                  {/* Readability Section (Keep but at bottom) */}
                   <div className="bg-primary/5 rounded-xl p-4 space-y-3">
                     <div className="flex justify-between items-baseline border-b border-gray-200 pb-2">
-                      <h4 className="font-bold text-gray-900 font-poppins text-base">
-                        SEO Analysis
+                      <h4 className="font-bold text-gray-900 font-poppins text-base text-sm opacity-70">
+                        Content Readability
                       </h4>
                       <span
-                        className={`text-2xl font-poppins font-bold ${
-                          (insights.insight_data.seo?.score || 0) >= 80
+                        className={`text-lg font-poppins font-bold ${
+                          (readability.score || 0) >= 80
                             ? "text-green-600"
-                            : (insights.insight_data.seo?.score || 0) >= 50
+                            : (readability.score || 0) >= 50
                               ? "text-yellow-600"
                               : "text-red-600"
                         }`}
                       >
-                        {insights.insight_data.seo?.score || 0}
+                        {readability.score || 0}
                       </span>
                     </div>
                     <div className="space-y-3">
-                      {insights.insight_data.seo?.issues?.length > 0 ? (
-                        insights.insight_data.seo.issues.map(
-                          (issue: any, i: number) => (
-                            <div key={i} className="flex gap-3 items-start">
-                              <div className="mt-1.5 min-w-[6px] h-[6px] rounded-full bg-red-500 shrink-0" />
-                              <p className="text-sm text-gray-600 leading-relaxed font-inter">
-                                {issue.message}
-                              </p>
-                            </div>
-                          ),
-                        )
-                      ) : (
-                        <div className="flex items-center gap-2 text-gray-500 text-sm italic">
-                          <span>No critical SEO issues found.</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Readability Section */}
-                  <div className="bg-primary/5 rounded-xl p-4 space-y-3">
-                    <div className="flex justify-between items-baseline border-b border-gray-200 pb-2">
-                      <h4 className="font-bold text-gray-900 font-poppins text-base">
-                        Readability
-                      </h4>
-                      <span
-                        className={`text-2xl font-poppins font-bold ${
-                          (insights.insight_data.readability?.score || 0) >= 80
-                            ? "text-green-600"
-                            : (insights.insight_data.readability?.score || 0) >=
-                                50
-                              ? "text-yellow-600"
-                              : "text-red-600"
-                        }`}
-                      >
-                        {insights.insight_data.readability?.score || 0}
-                      </span>
-                    </div>
-                    <div className="space-y-3">
-                      {insights.insight_data.readability?.issues?.length > 0 ? (
-                        insights.insight_data.readability.issues.map(
-                          (issue: any, i: number) => (
-                            <div
-                              key={i}
-                              className="bg-white rounded-lg p-3 space-y-2"
-                            >
-                              <div className="flex flex-col gap-1.5">
-                                <div className="flex items-center gap-2">
-                                  <div
-                                    className={`w-1.5 h-1.5 rounded-full mt-0.5 shrink-0 ${
-                                      (insights.insight_data.readability
-                                        ?.score || 0) >= 80
-                                        ? "bg-green-500"
-                                        : "bg-red-500"
-                                    }`}
-                                  />
-                                  <h5 className="text-sm font-semibold text-gray-900 font-poppins">
-                                    {issue.type
-                                      ? issue.type
-                                          .replace(/_/g, " ")
-                                          .replace(/\b\w/g, (l: string) =>
-                                            l.toUpperCase(),
-                                          )
-                                      : "Improvement"}
-                                  </h5>
-                                </div>
-
-                                <p className="text-sm text-gray-700 leading-relaxed font-inter">
-                                  {issue.message}
-                                </p>
-
-                                {issue.examples &&
-                                  issue.examples.length > 0 && (
-                                    <div className="bg-gray-50 border border-gray-100 rounded-md p-2 mt-1">
-                                      <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1.5">
-                                        Examples found:
-                                      </p>
-                                      <ul className="space-y-1">
-                                        {issue.examples.map(
-                                          (ex: string, j: number) => {
-                                            const cleanExample = cleanText(ex);
-                                            return (
-                                              <li
-                                                key={j}
-                                                className="flex items-start gap-2 group cursor-pointer hover:bg-white rounded p-1 -ml-1 transition-all"
-                                                onClick={() =>
-                                                  onHighlightText?.(
-                                                    cleanExample,
-                                                  )
-                                                }
-                                                title="Click to highlight in editor"
-                                              >
-                                                <span className="text-xs text-gray-600 italic group-hover:text-primary transition-colors">
-                                                  "{cleanExample}"
-                                                </span>
-                                              </li>
-                                            );
-                                          },
-                                        )}
-                                      </ul>
-                                    </div>
-                                  )}
+                      {readability.issues?.length > 0 ? (
+                        readability.issues.map((issue: any, i: number) => (
+                          <div
+                            key={i}
+                            className="bg-white rounded-lg p-3 space-y-2"
+                          >
+                            <div className="flex flex-col gap-1.5">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className={`w-1.5 h-1.5 rounded-full mt-0.5 shrink-0 bg-red-500`}
+                                />
+                                <h5 className="text-sm font-semibold text-gray-900 font-poppins">
+                                  {issue.type
+                                    ? issue.type
+                                        .replace(/_/g, " ")
+                                        .replace(/\b\w/g, (l: string) =>
+                                          l.toUpperCase(),
+                                        )
+                                    : "Improvement"}
+                                </h5>
                               </div>
+
+                              <p className="text-sm text-gray-700 leading-relaxed font-inter">
+                                {issue.message}
+                              </p>
+
+                              {issue.examples && issue.examples.length > 0 && (
+                                <div className="bg-gray-50 border border-gray-100 rounded-md p-2 mt-1">
+                                  <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1.5">
+                                    Examples found:
+                                  </p>
+                                  <ul className="space-y-1">
+                                    {issue.examples.map(
+                                      (ex: string, j: number) => {
+                                        const cleanExample = cleanText(ex);
+                                        return (
+                                          <li
+                                            key={j}
+                                            className="flex items-start gap-2 group cursor-pointer hover:bg-white rounded p-1 -ml-1 transition-all"
+                                            onClick={() =>
+                                              onHighlightText?.(cleanExample)
+                                            }
+                                            title="Click to highlight in editor"
+                                          >
+                                            <span className="text-xs text-gray-600 italic group-hover:text-primary transition-colors">
+                                              "{cleanExample}"
+                                            </span>
+                                          </li>
+                                        );
+                                      },
+                                    )}
+                                  </ul>
+                                </div>
+                              )}
                             </div>
-                          ),
-                        )
+                          </div>
+                        ))
                       ) : (
                         <div className="flex items-center gap-2 text-gray-500 text-sm italic">
                           <span>Text is easy to read.</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Grammar Section */}
-                  <div className="bg-primary/5 rounded-xl p-4 space-y-3">
-                    <div className="flex justify-between items-baseline border-b border-gray-200 pb-2">
-                      <h4 className="font-bold text-gray-900 font-poppins text-base">
-                        Grammar
-                      </h4>
-                      <span
-                        className={`text-2xl font-poppins font-bold ${
-                          (insights.grammar?.score ?? 100) >= 90
-                            ? "text-green-600"
-                            : (insights.grammar?.score ?? 100) >= 50
-                              ? "text-yellow-600"
-                              : "text-red-600"
-                        }`}
-                      >
-                        {insights.grammar?.score || 100}
-                      </span>
-                    </div>
-                    <div>
-                      {insights.grammar?.issues?.length > 0 ? (
-                        <div className="space-y-3">
-                          {insights.grammar.issues.map(
-                            (issue: any, i: number) => {
-                              // Backward compatibility
-                              if (typeof issue === "string") {
-                                return (
-                                  <div
-                                    key={i}
-                                    className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm flex gap-3 items-start"
-                                  >
-                                    <div className="mt-1.5 min-w-[6px] h-[6px] rounded-full bg-red-500 shrink-0" />
-                                    <span className="flex-1 text-sm text-gray-600 font-inter leading-relaxed">
-                                      {issue}
-                                    </span>
-                                  </div>
-                                );
-                              }
-
-                              const severityColor =
-                                issue.severity === "error"
-                                  ? "text-red-700 bg-red-50 border-red-200"
-                                  : issue.severity === "warning"
-                                    ? "text-amber-700 bg-amber-50 border-amber-200"
-                                    : "text-blue-700 bg-blue-50 border-blue-200";
-
-                              return (
-                                <div
-                                  key={i}
-                                  className="bg-white rounded-lg p-3 space-y-3"
-                                >
-                                  {/* Header */}
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                      <span
-                                        className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${severityColor}`}
-                                      >
-                                        {issue.severity || "Info"}
-                                      </span>
-                                      <span className="text-xs font-semibold text-gray-900 capitalize font-inter">
-                                        {issue.type?.replace(/_/g, " ") ||
-                                          "Issue"}
-                                      </span>
-                                    </div>
-                                  </div>
-
-                                  {/* Content */}
-                                  <div className="space-y-2">
-                                    <p className="text-sm text-gray-800 font-medium font-inter">
-                                      {issue.message}
-                                    </p>
-
-                                    {/* Context with Highlight Action */}
-                                    {issue.context && (
-                                      <div className="group relative">
-                                        <div className="bg-gray-50 border border-gray-200 rounded p-2.5 text-xs font-mono text-gray-600 flex justify-between items-center transition-colors group-hover:border-primary/30 group-hover:bg-primary/5">
-                                          <span className="truncate pr-8">
-                                            "{issue.context}"
-                                          </span>
-                                          <button
-                                            onClick={() =>
-                                              onHighlightText?.(
-                                                cleanText(issue.context),
-                                              )
-                                            }
-                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-primary opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white rounded-md shadow-sm"
-                                            title="Highlight in editor"
-                                          >
-                                            <svg
-                                              xmlns="http://www.w3.org/2000/svg"
-                                              width="14"
-                                              height="14"
-                                              viewBox="0 0 24 24"
-                                              fill="none"
-                                              stroke="currentColor"
-                                              strokeWidth="2"
-                                              strokeLinecap="round"
-                                              strokeLinejoin="round"
-                                            >
-                                              <circle cx="11" cy="11" r="8" />
-                                              <path d="m21 21-4.3-4.3" />
-                                            </svg>
-                                          </button>
-                                        </div>
-                                      </div>
-                                    )}
-
-                                    {/* Suggestion */}
-                                    {issue.suggestion && (
-                                      <div className="flex gap-2 items-start bg-green-50 p-2.5 rounded-md border border-green-100">
-                                        <div className="mt-0.5 text-green-600 shrink-0">
-                                          <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="14"
-                                            height="14"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                          >
-                                            <path d="M20 6 9 17l-5-5" />
-                                          </svg>
-                                        </div>
-                                        <div className="text-xs">
-                                          <span className="font-bold text-green-700 mr-1">
-                                            Suggestion:
-                                          </span>
-                                          <span className="text-green-800 italic">
-                                            {issue.suggestion}
-                                          </span>
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              );
-                            },
-                          )}
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 text-gray-500 text-sm italic">
-                          <span>No grammar issues found.</span>
                         </div>
                       )}
                     </div>
@@ -636,8 +611,8 @@ const InsightsPanel = ({
                   <Book className="w-12 h-12 mx-auto text-gray-300 mb-3" />
                   <p className="text-sm font-medium">No insights yet</p>
                   <p className="text-xs max-w-[200px] mx-auto mt-1 text-gray-400">
-                    Click "Analyze" to generate AEO, SEO, and Readability
-                    scores.
+                    Click "Analyze" to trigger live AEO, entity gap, and
+                    competitor benchmarking.
                   </p>
                 </div>
               )}
