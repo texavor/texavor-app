@@ -112,6 +112,8 @@ export default function ArticleDetailsSheet({
     isUpdatingPublished,
     publishNow,
     isPublishing,
+    deletePublication,
+    isDeleting,
   } = usePublicationsApi(blogs?.id || "", formData?.id || "", open);
 
   // Ensure fresh data when sheet opens
@@ -151,11 +153,19 @@ export default function ArticleDetailsSheet({
   });
 
   // Derived state
-  const isPublished = publications?.some((p) => p.status === "success");
+  const isActuallyPublishing = useMemo(
+    () =>
+      publications?.some((p) => ["publishing", "pending"].includes(p.status)),
+    [publications],
+  );
+
+  const isPublished = useMemo(
+    () => publications?.some((p) => p.status === "success"),
+    [publications],
+  );
+
   const isScheduled =
-    !isPublished &&
-    formData.scheduled_at &&
-    new Date(formData.scheduled_at) > new Date();
+    !!formData.scheduled_at && new Date(formData.scheduled_at) > new Date();
 
   // set publishMode based on state when sheet opens or state changes
   useEffect(() => {
@@ -260,6 +270,11 @@ export default function ArticleDetailsSheet({
     // We iterate over ALL selected integrations (both existing and new)
     const selectedIntegrationIds = formData.article_publications || [];
 
+    // Find records to delete (previously selected but now unchecked)
+    const publicationsToDelete = (publications || []).filter(
+      (p) => !selectedIntegrationIds.includes(p.integration_id),
+    );
+
     const article_publications_attributes = selectedIntegrationIds.map(
       (intId: string) => {
         // Find existing publication if any
@@ -355,9 +370,14 @@ export default function ArticleDetailsSheet({
       // We await this to ensure DB is updated before triggering publish
       await onSave(finalData);
 
+      // Physically remove unselected publications from database
+      for (const pub of publicationsToDelete) {
+        await deletePublication(pub.id);
+      }
+
       // Step 2: Trigger Publication (Action 2) - Only for "Publish Now"
       if (action === "publish_or_schedule" && publishMode === "publish") {
-        publishNow(); // Fire and forget or handle error? Hook manages toasts.
+        publishNow(selectedIntegrationIds); // Pass selected integration IDs specifically
       }
     } catch (error) {
       console.error("Failed to save article:", error);
@@ -1080,7 +1100,7 @@ export default function ArticleDetailsSheet({
                 {isUpdatingPublished ? "Updating..." : "Update Published"}
               </Button>
             </div>
-          ) : isScheduled ? (
+          ) : publishMode === "schedule" ? (
             <div className="flex flex-row gap-2 w-full">
               <Button
                 variant="outline"
@@ -1088,7 +1108,7 @@ export default function ArticleDetailsSheet({
                 className="flex-1"
                 disabled={savingStatus !== "idle"}
               >
-                Cancel Schedule
+                {isScheduled ? "Cancel Schedule" : "Discard"}
               </Button>
               <Button
                 onClick={() => handleSave("publish_or_schedule")}
@@ -1097,31 +1117,29 @@ export default function ArticleDetailsSheet({
               >
                 {savingStatus === "scheduling"
                   ? "Scheduling..."
-                  : "Update Schedule"}
+                  : isScheduled
+                    ? "Update Schedule"
+                    : "Schedule"}
               </Button>
             </div>
           ) : (
             <div className="flex flex-col sm:flex-row gap-2 w-full">
               <Button
+                variant="outline"
+                onClick={() => handleSave("save_draft")}
+                className="w-full sm:w-auto flex-1 mt-0"
+                disabled={savingStatus !== "idle"}
+              >
+                {savingStatus === "saving_draft" ? "Saving..." : "Save Changes"}
+              </Button>
+              <Button
                 onClick={() => handleSave("publish_or_schedule")}
                 className="w-full bg-[#104127] hover:bg-[#0A2918] flex-1"
                 disabled={savingStatus !== "idle" || isPublishing}
               >
-                {publishMode === "schedule"
-                  ? savingStatus === "scheduling"
-                    ? "Scheduling..."
-                    : "Schedule"
-                  : isPublishing || savingStatus === "publishing"
-                    ? "Publishing..."
-                    : "Publish Now"}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleSave("save_draft")}
-                className="w-full mt-2 sm:mt-0 sm:w-auto flex-1"
-                disabled={savingStatus !== "idle" || isPublishing}
-              >
-                {savingStatus === "saving_draft" ? "Saving..." : "Save Changes"}
+                {isPublishing || savingStatus === "publishing"
+                  ? "Publishing..."
+                  : "Publish Now"}
               </Button>
             </div>
           )}

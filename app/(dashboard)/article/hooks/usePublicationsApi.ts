@@ -30,7 +30,7 @@ interface PublicationsResponse {
 export const usePublicationsApi = (
   blogId: string,
   articleId: string,
-  isEnabled: boolean = true
+  isEnabled: boolean = true,
 ) => {
   const queryClient = useQueryClient();
 
@@ -39,7 +39,7 @@ export const usePublicationsApi = (
     queryKey: ["publications", blogId, articleId],
     queryFn: async () => {
       const res = await axiosInstance.get<PublicationsResponse>(
-        `/api/v1/blogs/${blogId}/articles/${articleId}/publications`
+        `/api/v1/blogs/${blogId}/articles/${articleId}/publications`,
       );
       return res.data.publications || [];
     },
@@ -83,7 +83,7 @@ export const usePublicationsApi = (
   const retryMutation = useMutation({
     mutationFn: async (publicationId: string) => {
       const res = await axiosInstance.post(
-        `/api/v1/blogs/${blogId}/articles/${articleId}/publications/${publicationId}/retry`
+        `/api/v1/blogs/${blogId}/articles/${articleId}/publications/${publicationId}/retry`,
       );
       return res.data;
     },
@@ -103,9 +103,10 @@ export const usePublicationsApi = (
 
   // Publish article now to all selected integrations
   const publishNowMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (integrationIds?: string[]) => {
       const res = await axiosInstance.post(
-        `/api/v1/blogs/${blogId}/articles/${articleId}/publish`
+        `/api/v1/blogs/${blogId}/articles/${articleId}/publish`,
+        integrationIds ? { integration_ids: integrationIds } : {},
       );
       return res.data;
     },
@@ -133,7 +134,7 @@ export const usePublicationsApi = (
     }) => {
       const res = await axiosInstance.post(
         `/api/v1/blogs/${blogId}/articles/${articleId}/unpublish`,
-        data || { all: true }
+        data || { all: true },
       );
       return res.data;
     },
@@ -157,7 +158,7 @@ export const usePublicationsApi = (
   const updatePublishedMutation = useMutation({
     mutationFn: async () => {
       const res = await axiosInstance.post(
-        `/api/v1/blogs/${blogId}/articles/${articleId}/update_published`
+        `/api/v1/blogs/${blogId}/articles/${articleId}/update_published`,
       );
       return res.data;
     },
@@ -177,6 +178,25 @@ export const usePublicationsApi = (
     },
   });
 
+  // Delete publication record
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await axiosInstance.delete(
+        `/api/v1/blogs/${blogId}/articles/${articleId}/publications/${id}`,
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["publications", blogId, articleId],
+      });
+    },
+    onError: (error: any) => {
+      const message =
+        error?.response?.data?.error || "Failed to remove publication";
+      toast.error(message);
+    },
+  });
+
   return {
     publications: getPublications.data || [],
     isLoading: getPublications.isLoading,
@@ -191,5 +211,7 @@ export const usePublicationsApi = (
     isUnpublishing: unpublishMutation.isPending,
     updatePublished: updatePublishedMutation.mutate,
     isUpdatingPublished: updatePublishedMutation.isPending,
+    deletePublication: deleteMutation.mutateAsync, // Use mutateAsync for sequential cleanup
+    isDeleting: deleteMutation.isPending,
   };
 };
