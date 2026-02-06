@@ -13,7 +13,7 @@ import {
   ArticleDetails,
 } from "@/store/articleSettingsStore";
 import { useSmartLinkStore } from "@/store/smartLinkStore";
-import { useSmartLinksQuery } from "@/hooks/useSmartLinking";
+import { useSmartLinksQuery, LinkSuggestion } from "@/hooks/useSmartLinking";
 import ArticleDetailsSheet from "@/components/ArticleDetailsSheet";
 import { ThumbnailUploadDialog } from "@/components/ThumbnailUploadDialog";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -386,22 +386,56 @@ export default function ArticleClientPage() {
     setIsAnalyzing(false);
   };
 
-  const handleApplySmartLink = (anchorText: string, url: string) => {
+  const handleApplySmartLink = (suggestion: LinkSuggestion) => {
     setContent((prevContent) => {
       if (!prevContent) return prevContent;
 
-      // Escape special characters in anchor text for use in regex
-      const escapedAnchor = anchorText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const { anchor_text, url, position, exact_match } = suggestion;
 
-      // Regex to find anchorText NOT preceded by '[' (Lookbehind) and NOT followed by ']' (Lookahead)
-      // This prevents double-linking: [anchor](url) -> [[anchor](url)](url)
-      // It also skips already linked instances, finding the next unlinked occurrence.
-      const regex = new RegExp(`(?<!\\[)${escapedAnchor}(?!\\])`, "i"); // Case insensitive match
+      // Use exact_match (actual text in article) instead of anchor_text
+      const textToReplace = exact_match || anchor_text;
 
-      // If no valid unlinked occurrence found, return previous content
-      if (!regex.test(prevContent)) return prevContent;
+      // Verify the text at the position matches
+      const actualText = prevContent.substring(
+        position,
+        position + textToReplace.length,
+      );
 
-      return prevContent.replace(regex, `[${anchorText}](${url})`);
+      if (actualText !== textToReplace) {
+        console.error("Link application failed - text mismatch:", {
+          expected: textToReplace,
+          found: actualText,
+          position,
+          suggestion,
+        });
+        return prevContent;
+      }
+
+      // Check if already linked
+      const beforeText = prevContent.substring(
+        Math.max(0, position - 1),
+        position,
+      );
+      const afterText = prevContent.substring(
+        position + textToReplace.length,
+        position + textToReplace.length + 2,
+      );
+
+      if (beforeText === "[" || afterText.startsWith("](")) {
+        console.warn("This text is already part of a link");
+        return prevContent;
+      }
+
+      // Create markdown link
+      const markdownLink = `[${textToReplace}](${url})`;
+
+      // Replace text at the exact position
+      const newContent =
+        prevContent.substring(0, position) +
+        markdownLink +
+        prevContent.substring(position + textToReplace.length);
+
+      return newContent;
     });
     // Note: We don't manually trigger save here, but the debounced effect will pick up the change
   };

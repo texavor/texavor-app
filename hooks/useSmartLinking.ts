@@ -7,6 +7,9 @@ export interface LinkSuggestion {
   url: string;
   reason?: string;
   is_applied: boolean; // Added backend status
+  position: number; // Character position in article where anchor text starts
+  exact_match: string; // The actual text found in article (may differ in case from anchor_text)
+  match_type: "exact" | "case_insensitive"; // Type of match
 }
 
 export interface ExistingLink {
@@ -58,36 +61,63 @@ export const useSmartLinksQuery = (
   blogId: string,
   articleId: string,
   includeExternal: boolean,
-  scanVersion: number,
-  enabled: boolean = false,
+  enabled: boolean = true,
 ) => {
   return useQuery({
-    queryKey: ["smartLinks", blogId, articleId, includeExternal, scanVersion],
+    queryKey: ["smartLinks", blogId, articleId, includeExternal],
     queryFn: async () => {
-      // Version <= 1: Initial fetch (GET to retrieve stored)
-      // Version > 1: Re-scan (POST to generate new)
-      const isRescan = scanVersion > 1;
-
-      if (isRescan) {
-        const response = await axiosInstance.post(
-          `/api/v1/blogs/${blogId}/articles/${articleId}/link_suggestions`,
-          {
-            force_refresh: true,
-            include_external: includeExternal,
-          },
-        );
-        return response?.data as SmartLinksData;
-      } else {
-        // Initial load - just get what we have
-        const response = await axiosInstance.get(
-          `/api/v1/blogs/${blogId}/articles/${articleId}/link_suggestions`,
-        );
-        return response?.data as SmartLinksData;
-      }
+      const response = await axiosInstance.get(
+        `/api/v1/blogs/${blogId}/articles/${articleId}/link_suggestions`,
+        {
+          params: { include_external: includeExternal },
+        },
+      );
+      return response?.data as SmartLinksData;
     },
-    enabled: enabled,
-    staleTime: Infinity, // Rely on store/manual refetch
+    enabled: enabled && !!blogId && !!articleId,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
     refetchOnWindowFocus: false,
+  });
+};
+
+export const useRegenerateSmartLinks = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      blogId,
+      articleId,
+      includeExternal = false,
+    }: {
+      blogId: string;
+      articleId: string;
+      includeExternal?: boolean;
+    }) => {
+      const response = await axiosInstance.post(
+        `/api/v1/blogs/${blogId}/articles/${articleId}/link_suggestions`,
+        {
+          force_refresh: true,
+          include_external: includeExternal,
+        },
+      );
+      return response?.data as SmartLinksData;
+    },
+    onSuccess: (data, variables) => {
+      // Update the query cache with the newly generated suggestions
+      queryClient.setQueryData(
+        [
+          "smartLinks",
+          variables.blogId,
+          variables.articleId,
+          variables.includeExternal,
+        ],
+        data,
+      );
+      // Also invalidate to be safe
+      queryClient.invalidateQueries({
+        queryKey: ["smartLinks", variables.blogId, variables.articleId],
+      });
+    },
   });
 };
 
@@ -128,17 +158,18 @@ export const useUpdateLinkStatus = () => {
       return response?.data;
     },
     onMutate: async (newLinkStatus) => {
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
       await queryClient.cancelQueries({
         queryKey: ["smartLinks", newLinkStatus.blogId, newLinkStatus.articleId],
       });
 
-      const previousData = queryClient.getQueryData([
-        "smartLinks",
-        newLinkStatus.blogId,
-        newLinkStatus.articleId,
-      ]);
+      // Snapshot the previous values for all matching queries
+      const queriesData = queryClient.getQueriesData<SmartLinksData>({
+        queryKey: ["smartLinks", newLinkStatus.blogId, newLinkStatus.articleId],
+      });
 
-      queryClient.setQueriesData(
+      // Optimistically update all matching queries
+      queryClient.setQueriesData<SmartLinksData>(
         {
           queryKey: [
             "smartLinks",
@@ -146,12 +177,11 @@ export const useUpdateLinkStatus = () => {
             newLinkStatus.articleId,
           ],
         },
-        (old: SmartLinksData | undefined) => {
+        (old) => {
           if (!old || !old.suggestions) return old;
 
-          // Ensure arrays exist before mapping
-          let newInternal = old.suggestions.internal || [];
-          let newExternal = old.suggestions.external || [];
+          let newInternal = [...(old.suggestions.internal || [])];
+          let newExternal = [...(old.suggestions.external || [])];
 
           if (newLinkStatus.applyAll) {
             newInternal = newInternal.map((link) => ({
@@ -186,13 +216,30 @@ export const useUpdateLinkStatus = () => {
         },
       );
 
-      return { previousData };
+      return { queriesData };
     },
-    // onError: Removed to avoid double invalidation. onSettled handles it.
+    onSuccess: (data, variables) => {
+      // If the backend returns updated suggestions, sync them
+      if (data?.suggestions) {
+        queryClient.setQueriesData<SmartLinksData>(
+          {
+            queryKey: ["smartLinks", variables.blogId, variables.articleId],
+          },
+          (old) => {
+            if (!old) return old;
+            return {
+              ...old,
+              suggestions: data.suggestions,
+            };
+          },
+        );
+      }
+    },
     onSettled: (data, error, variables) => {
       if (error) {
         console.error("Mutation failed:", error);
       }
+      // Re-invalidate to ensure we are eventually consistent
       queryClient.invalidateQueries({
         queryKey: ["smartLinks", variables.blogId, variables.articleId],
       });

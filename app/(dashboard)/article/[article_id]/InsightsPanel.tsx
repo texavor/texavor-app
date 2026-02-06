@@ -27,6 +27,7 @@ import {
   PolarRadiusAxis,
 } from "recharts";
 import { SmartLinkingPanel } from "./components/SmartLinkingPanel";
+import { LinkSuggestion } from "@/hooks/useSmartLinking";
 
 interface InsightsPanelProps {
   showMetrics: boolean;
@@ -39,7 +40,7 @@ interface InsightsPanelProps {
   articleId?: string;
   articleContent?: string;
   blogId?: string;
-  onApplyLink?: (anchorText: string, url: string) => void;
+  onApplyLink?: (suggestion: LinkSuggestion) => void;
   onRemoveLink?: (anchorText: string, url: string) => void;
   onHighlightText?: (text: string) => void;
 }
@@ -738,7 +739,7 @@ const InsightsPanel = ({
                           (keyword: string, idx: number) => (
                             <span
                               key={idx}
-                              className="bg-[#104127] rounded-sm text-white px-2 py-0.5 rounded text-xs font-medium border border-green-100"
+                              className="bg-primary/5 rounded-sm text-primary px-2 py-0.5 rounded text-xs font-medium border border-green-100"
                             >
                               {keyword}
                             </span>
@@ -879,6 +880,7 @@ const InsightsPanel = ({
               blogId={blogId}
               onApplyLink={onApplyLink}
               onRemoveLink={onRemoveLink}
+              onHighlightText={onHighlightText}
             />
           ) : (
             <div className="flex items-center justify-center h-full text-gray-500 text-sm">

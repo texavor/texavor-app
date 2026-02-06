@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import {
   useSmartLinksQuery,
+  useRegenerateSmartLinks,
   useUpdateLinkStatus,
   LinkSuggestion,
   ExistingLink,
@@ -26,8 +27,9 @@ interface SmartLinkingPanelProps {
   articleId: string;
   blogId: string;
   articleContent?: string;
-  onApplyLink: (anchorText: string, url: string) => void;
+  onApplyLink: (suggestion: LinkSuggestion) => void;
   onRemoveLink: (anchorText: string, url: string) => void;
+  onHighlightText?: (text: string) => void;
 }
 
 export const SmartLinkingPanel = ({
@@ -36,31 +38,27 @@ export const SmartLinkingPanel = ({
   articleContent = "",
   onApplyLink,
   onRemoveLink,
+  onHighlightText,
 }: SmartLinkingPanelProps) => {
   const [includeExternal, setIncludeExternal] = useState(false);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-  const [scanVersion, setScanVersion] = useState(1); // Start at 1 (idle/viewing)
 
-  // Local state for URL edits. Key: "type-index" or just combine suggestions.
-  // Since we fetch from query, data is immutable from that source.
-  // We need a local override map: key (url+text) -> newUrl
+  // Local state for URL edits
   const [urlOverrides, setUrlOverrides] = useState<Record<string, string>>({});
 
   // Use global store for data
   const { data: storeData, setData: setStoreData } = useSmartLinkStore();
 
-  // Query is used for re-scanning
-  const {
-    data: queryData,
-    isFetching: isQueryFetching,
-    refetch,
-  } = useSmartLinksQuery(
+  // Query is used for fetching stored suggestions
+  const { data: queryData, isFetching: isQueryFetching } = useSmartLinksQuery(
     blogId,
     articleId,
     includeExternal,
-    scanVersion,
-    scanVersion > 1, // Only enable if we are explicitly re-scanning
+    true, // enabled
   );
+
+  // Mutation for regenerating suggestions
+  const regenerateLinks = useRegenerateSmartLinks();
 
   // Sync query result to store
   useEffect(() => {
@@ -71,13 +69,16 @@ export const SmartLinkingPanel = ({
 
   const updateStatus = useUpdateLinkStatus();
 
-  // Prefer store data, fallback to query data if needed (though sync should handle it)
+  // Prefer store data, fallback to query data if needed
   const displayData = storeData || queryData;
-  const isFetching = isQueryFetching;
+  const isFetching = isQueryFetching || regenerateLinks.isPending;
 
   const handleAnalyze = () => {
-    // Increment version to trigger new query (POST if > 1)
-    setScanVersion((v) => v + 1);
+    regenerateLinks.mutate({
+      blogId,
+      articleId,
+      includeExternal,
+    });
   };
 
   const getEffectiveUrl = (item: LinkSuggestion) => {
@@ -89,7 +90,12 @@ export const SmartLinkingPanel = ({
 
   const handleApply = (item: LinkSuggestion) => {
     const effectiveUrl = getEffectiveUrl(item);
-    onApplyLink(item.anchor_text, effectiveUrl);
+
+    // Pass the full suggestion object with the effective URL
+    onApplyLink({
+      ...item,
+      url: effectiveUrl,
+    });
 
     // Update backend status
     updateStatus.mutate({
@@ -117,7 +123,10 @@ export const SmartLinkingPanel = ({
 
     allToApply.forEach((item) => {
       const effectiveUrl = getEffectiveUrl(item);
-      onApplyLink(item.anchor_text, effectiveUrl);
+      onApplyLink({
+        ...item,
+        url: effectiveUrl,
+      });
     });
 
     // Single bulk update to backend
@@ -165,11 +174,11 @@ export const SmartLinkingPanel = ({
           onClick={handleAnalyze}
           disabled={isFetching}
           size="sm"
-          className="bg-[#104127] text-white hover:bg-[#0d3320] shadow-none border-none"
+          className="bg-[#104127] text-white hover:bg-[#0d3320] shadow-none border-none text-xs h-8"
         >
-          {isFetching ? (
+          {regenerateLinks.isPending ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-2 h-3 w-3 animate-spin" />
               Scanning...
             </>
           ) : (
@@ -178,7 +187,7 @@ export const SmartLinkingPanel = ({
         </Button>
       </div>
 
-      <div className="flex items-center space-x-2 my-2 bg-gray-50 p-2 rounded-md">
+      <div className="flex items-center space-x-2 bg-primary/5 p-3 rounded-lg">
         <Switch
           id="include-external"
           checked={includeExternal}
@@ -186,14 +195,14 @@ export const SmartLinkingPanel = ({
         />
         <Label
           htmlFor="include-external"
-          className="text-xs font-medium cursor-pointer"
+          className="text-sm font-medium cursor-pointer font-inter"
         >
           Include External Links
         </Label>
       </div>
 
       {!displayData && !isFetching && (
-        <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-600 text-center">
+        <div className="bg-primary/5 p-4 rounded-lg text-sm text-gray-600 text-center font-inter">
           <p>
             Scan your article to find internal and external linking
             opportunities.
@@ -203,85 +212,74 @@ export const SmartLinkingPanel = ({
 
       {displayData && (
         <ScrollArea className="flex-1 pr-4 -mr-4">
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Suggestions Section */}
             {(internalSuggestions.length > 0 ||
               externalSuggestions.length > 0) && (
-              <div className="space-y-3">
-                <div className="flex justify-between items-center border-b pb-1">
-                  <h4 className="font-poppins text-sm font-semibold text-gray-900">
+              <div className="space-y-3 mb-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-bold text-gray-900 font-poppins text-base">
                     Suggestions
                   </h4>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleApplyAll}
-                    className="h-6 text-xs text-[#104127] hover:text-[#0d3320] hover:bg-green-50 px-2"
+                    className="h-7 text-xs text-[#104127] hover:text-[#0d3320] hover:bg-green-50 px-2"
                   >
                     <CheckCheck size={14} className="mr-1" />
                     Apply All
                   </Button>
                 </div>
 
-                {internalSuggestions.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold text-gray-500 uppercase">
-                      Internal ({internalSuggestions.length})
-                    </p>
-                    {internalSuggestions.map((item, idx) => (
-                      <SuggestionItem
-                        key={idx}
-                        item={item}
-                        type="internal"
-                        applied={item.is_applied}
-                        currentUrl={getEffectiveUrl(item)}
-                        onApply={() => handleApply(item)}
-                        onDismiss={() => handleDismiss(item)}
-                        onUrlChange={(val) => handleUrlUpdate(item, val)}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {externalSuggestions.length > 0 && (
-                  <div className="space-y-2 mt-4">
-                    <p className="text-xs font-semibold text-gray-500 uppercase">
-                      External ({externalSuggestions.length})
-                    </p>
-                    {externalSuggestions.map((item, idx) => (
-                      <SuggestionItem
-                        key={idx}
-                        item={item}
-                        type="external"
-                        applied={item.is_applied}
-                        currentUrl={getEffectiveUrl(item)}
-                        onApply={() => handleApply(item)}
-                        onDismiss={() => handleDismiss(item)}
-                        onUrlChange={(val) => handleUrlUpdate(item, val)}
-                      />
-                    ))}
-                  </div>
-                )}
+                <div className="space-y-2">
+                  {internalSuggestions.map((item, idx) => (
+                    <SuggestionItem
+                      key={`internal-${idx}`}
+                      item={item}
+                      type="internal"
+                      applied={item.is_applied}
+                      currentUrl={getEffectiveUrl(item)}
+                      onApply={() => handleApply(item)}
+                      onDismiss={() => handleDismiss(item)}
+                      onUrlChange={(val) => handleUrlUpdate(item, val)}
+                      onHighlightText={onHighlightText}
+                    />
+                  ))}
+                  {externalSuggestions.map((item, idx) => (
+                    <SuggestionItem
+                      key={`external-${idx}`}
+                      item={item}
+                      type="external"
+                      applied={item.is_applied}
+                      currentUrl={getEffectiveUrl(item)}
+                      onApply={() => handleApply(item)}
+                      onDismiss={() => handleDismiss(item)}
+                      onUrlChange={(val) => handleUrlUpdate(item, val)}
+                      onHighlightText={onHighlightText}
+                    />
+                  ))}
+                </div>
               </div>
             )}
 
             {internalSuggestions.length === 0 &&
               externalSuggestions.length === 0 && (
-                <div className="text-sm text-gray-500 italic">
+                <div className="text-sm text-gray-500 italic text-center py-4">
                   No new suggestions found.
                 </div>
               )}
 
             {/* Existing Links Section */}
-            <div className="space-y-3">
-              <h4 className="font-poppins text-sm font-semibold text-gray-900 border-b pb-1">
+            {/* <div className="bg-primary/5 rounded-xl p-4 space-y-3">
+              <h4 className="font-bold text-gray-900 font-poppins text-base border-b border-gray-200 pb-2">
                 Link Inventory
               </h4>
-              <p className="text-xs text-gray-500 mb-2">
+              <p className="text-xs text-gray-500 font-inter">
                 Links already found in the original scan.
               </p>
               {existingLinks.length === 0 ? (
-                <p className="text-sm text-gray-500 italic">
+                <p className="text-sm text-gray-500 italic text-center py-2">
                   No links found in this article.
                 </p>
               ) : (
@@ -295,7 +293,7 @@ export const SmartLinkingPanel = ({
                   ))}
                 </div>
               )}
-            </div>
+            </div> */}
           </div>
         </ScrollArea>
       )}
@@ -311,6 +309,7 @@ const SuggestionItem = ({
   onApply,
   onDismiss,
   onUrlChange,
+  onHighlightText,
 }: {
   item: LinkSuggestion;
   type: "internal" | "external";
@@ -319,85 +318,121 @@ const SuggestionItem = ({
   onApply: () => void;
   onDismiss: () => void;
   onUrlChange: (val: string) => void;
+  onHighlightText?: (text: string) => void;
 }) => (
-  <div
-    className={`bg-white border ${applied ? "border-green-200 bg-green-50/50" : "border-gray-100"} rounded-lg p-3 shadow-sm hover:shadow-md transition-all group`}
-  >
+  <div className="bg-primary/5 rounded-lg p-3 border border-transparent hover:border-gray-200 transition-all">
     <div className="flex justify-between items-start mb-2">
       <Badge
         variant="outline"
-        className={`text-[10px] px-1.5 py-0 ${
+        className={`text-[10px] px-1.5 py-0 font-medium ${
           type === "internal"
-            ? "bg-blue-50 text-blue-700 border-blue-100"
-            : "bg-purple-50 text-purple-700 border-purple-100"
+            ? "bg-blue-50 text-blue-700 border-blue-200"
+            : "bg-purple-50 text-purple-700 border-purple-200"
         }`}
       >
         {type === "internal" ? "Internal" : "External"}
       </Badge>
-      <div className="flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+      {!applied && (
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6 text-gray-400 hover:text-red-500"
+          className="h-6 w-6 text-gray-400 hover:text-red-500 hover:bg-red-50"
           onClick={onDismiss}
           title="Dismiss"
         >
-          <X size={14} />
+          <X size={12} />
         </Button>
+      )}
+    </div>
+
+    <div className="space-y-3">
+      <div>
+        <p className="text-[10px] text-gray-500 mb-1 uppercase tracking-wide font-semibold">
+          Anchor Text
+        </p>
+        <div className="group relative">
+          <div
+            onClick={() => onHighlightText?.(item.anchor_text)}
+            className="text-sm font-mono text-gray-900 transition-colors hover:text-primary cursor-pointer break-words pr-8 leading-relaxed"
+          >
+            "{item.anchor_text}"
+            <button
+              className="absolute right-0 top-0 text-primary opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white rounded-md shadow-sm"
+              title="Highlight in editor"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="m9 11-6 6v3h3l6-6" />
+                <path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" />
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <div className="mb-2">
-      <p className="text-xs text-gray-500 mb-0.5">Anchor Text:</p>
-      <p className="font-medium text-sm text-gray-900 bg-gray-50 inline-block px-1 rounded">
-        {item.anchor_text}
-      </p>
-    </div>
-
-    <div className="mb-3">
-      <p className="text-xs text-gray-500 mb-0.5">Target URL:</p>
-      <div className="flex items-center gap-1.5">
-        <Input
-          value={currentUrl}
-          onChange={(e) => onUrlChange(e.target.value)}
-          className="h-7 text-xs flex-1"
-          disabled={applied}
-        />
-        <a
-          href={currentUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="text-xs text-blue-600 hover:text-blue-800 p-1 hover:bg-blue-50 rounded"
-          title="Open Link"
-        >
-          {type === "internal" ? (
-            <Link2 size={14} />
+      <div>
+        <p className="text-[10px] text-gray-500 mb-1 uppercase tracking-wide font-semibold">
+          Target URL
+        </p>
+        <div className="flex items-start gap-1.5">
+          {applied ? (
+            <p className="text-xs text-blue-600/70 font-inter break-all flex-1 py-1 italic">
+              {currentUrl}
+            </p>
           ) : (
-            <ExternalLink size={14} />
+            <Input
+              value={currentUrl}
+              onChange={(e) => onUrlChange(e.target.value)}
+              className="h-7 text-xs flex-1 font-inter"
+            />
           )}
-        </a>
+          <a
+            href={currentUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs text-blue-600 hover:text-blue-800 p-1.5 hover:bg-blue-50 rounded transition-colors shrink-0"
+            title="Open Link"
+          >
+            {type === "internal" ? (
+              <Link2 size={12} />
+            ) : (
+              <ExternalLink size={12} />
+            )}
+          </a>
+        </div>
       </div>
-    </div>
 
-    {item.reason && (
-      <p className="text-xs text-gray-600 italic mb-3">"{item.reason}"</p>
-    )}
+      {item.reason && (
+        <p className="text-xs text-gray-600 italic font-inter leading-relaxed break-words">
+          "{item.reason}"
+        </p>
+      )}
+    </div>
 
     {applied ? (
       <Button
         size="sm"
         disabled
-        className="w-full h-8 text-xs bg-green-100 text-green-700 border border-green-200 shadow-none opacity-100"
+        className="w-full h-7 text-xs bg-gray-100 text-gray-600 border border-gray-200 shadow-none opacity-100 mt-3 font-medium"
       >
-        <Check size={14} className="mr-1.5" /> Applied
+        <Check size={12} className="mr-1.5" /> Applied
       </Button>
     ) : (
       <Button
         size="sm"
         onClick={onApply}
-        className="w-full h-8 text-xs bg-[#104127] text-white hover:bg-[#0d3320] shadow-none border-none"
+        className="w-full h-7 text-xs bg-[#104127] text-white hover:bg-[#0d3320] shadow-none border-none mt-3 font-medium"
       >
-        <Check size={14} className="mr-1.5" /> Apply Link
+        <Check size={12} className="mr-1.5" /> Apply Link
       </Button>
     )}
   </div>
@@ -410,15 +445,15 @@ const InventoryItem = ({
   item: ExistingLink;
   onRemove: () => void;
 }) => (
-  <div className="bg-gray-50 border border-transparent hover:border-gray-200 rounded-lg p-2.5 transition-colors flex justify-between items-center group">
-    <div className="overflow-hidden">
+  <div className="bg-primary/5 border border-transparent hover:border-gray-200 rounded-lg p-2.5 transition-all flex justify-between items-center group">
+    <div className="overflow-hidden flex-1 min-w-0">
       <div className="flex items-center gap-2 mb-1">
         <span
-          className={`w-1.5 h-1.5 rounded-full ${
+          className={`w-1.5 h-1.5 rounded-full shrink-0 ${
             item.type === "internal" ? "bg-blue-500" : "bg-purple-500"
           }`}
         />
-        <span className="font-medium text-sm text-gray-900 truncate">
+        <span className="font-medium text-sm text-gray-900 truncate font-inter">
           {item.anchor_text}
         </span>
       </div>
@@ -426,7 +461,7 @@ const InventoryItem = ({
         href={item.url}
         target="_blank"
         rel="noreferrer"
-        className="text-xs text-gray-500 hover:text-blue-600 hover:underline truncate block max-w-[220px]"
+        className="text-xs text-gray-500 hover:text-blue-600 hover:underline truncate block font-inter"
       >
         {item.url}
       </a>
@@ -434,11 +469,11 @@ const InventoryItem = ({
     <Button
       variant="ghost"
       size="icon"
-      className="h-7 w-7 text-gray-400 hover:text-red-600 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity"
+      className="h-7 w-7 text-gray-400 hover:text-red-600 hover:bg-red-50 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2"
       onClick={onRemove}
       title="Remove Link"
     >
-      <Unlink size={14} />
+      <Unlink size={12} />
     </Button>
   </div>
 );
