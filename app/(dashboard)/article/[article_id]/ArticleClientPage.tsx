@@ -60,7 +60,6 @@ export default function ArticleClientPage() {
     blogs?.id || "",
     existingId,
     false, // includeExternal default false for initial GET
-    1, // scanVersion 1 = GET request
     !!existingId && !!blogs?.id && !isViewer, // enabled
   );
 
