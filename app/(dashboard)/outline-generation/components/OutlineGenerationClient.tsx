@@ -27,7 +27,7 @@ function OutlineGenerationLoading() {
 function OutlineGenerationContent() {
   const [view, setView] = useState<ViewMode>("generate");
   const [currentOutline, setCurrentOutline] = useState<OutlineData | null>(
-    null
+    null,
   );
   const [editorKey, setEditorKey] = useState(0);
   const [prefilledTopic, setPrefilledTopic] = useState("");
@@ -66,7 +66,7 @@ function OutlineGenerationContent() {
           setEditorKey((prev) => prev + 1);
           setView("editor");
         },
-      }
+      },
     );
   };
 
@@ -78,7 +78,7 @@ function OutlineGenerationContent() {
           onSuccess: (updated) => {
             setCurrentOutline(updated);
           },
-        }
+        },
       );
     } else {
       saveOutline.mutate(data, {
@@ -113,7 +113,7 @@ function OutlineGenerationContent() {
           <RecentSearches
             type="outline_generation"
             onSelect={(topic) =>
-              handleGenerate({ topic, aeo_optimization: false })
+              handleGenerate({ topic, aeo_optimization: true })
             }
           />
         </div>
@@ -175,7 +175,7 @@ function OutlineGenerationContent() {
                               >
                                 {keyword}
                               </span>
-                            )
+                            ),
                           )}
                         </div>
                       </div>
