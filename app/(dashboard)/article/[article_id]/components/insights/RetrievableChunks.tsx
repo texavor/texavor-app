@@ -16,27 +16,33 @@ export const RetrievableChunks = ({ chunks }: RetrievableChunksProps) => {
 
   return (
     <div className="bg-primary/5 rounded-xl overflow-hidden">
-      <div
-        className="p-4 flex justify-between items-center cursor-pointer hover:bg-black/5 transition-colors"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <div className="flex items-center gap-2">
-          <Layers className="w-4 h-4 text-[#104127]" />
-          <h4 className="font-bold text-gray-900 text-sm">
-            Retrievable Chunks
-          </h4>
-          <span className="bg-primary/10 text-gray-600 px-1.5 py-0.5 rounded-full text-[10px] font-bold">
-            {chunks.length}
-          </span>
-        </div>
-        {isExpanded ? (
-          <ChevronUp className="w-4 h-4 text-gray-500" />
-        ) : (
-          <ChevronDown className="w-4 h-4 text-gray-500" />
-        )}
+      <div className="bg-[#104127]/10 px-4 py-2 flex items-center gap-2">
+        <Layers className="w-4 h-4 text-[#104127]" />
+        <h4 className="font-bold text-[#104127] text-sm">Retrievable Chunks</h4>
       </div>
 
-      <div className="p-4 space-y-3">
+      <div className="p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-gray-500 font-medium">
+            {chunks?.length || 0} chunks detected
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="h-6 text-xs text-[#104127] hover:text-[#104127]/80 hover:bg-[#104127]/10 p-0"
+          >
+            {isExpanded ? (
+              <>
+                Hide <ChevronUp className="w-3 h-3 ml-1" />
+              </>
+            ) : (
+              <>
+                View All <ChevronDown className="w-3 h-3 ml-1" />
+              </>
+            )}
+          </Button>
+        </div>
         {displayChunks.map((chunk, idx) => (
           <div key={idx} className="bg-white/40 rounded-lg p-3">
             <div className="flex justify-between items-start mb-2">

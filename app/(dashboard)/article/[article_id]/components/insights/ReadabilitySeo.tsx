@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ReadabilityData, SeoData, StatsData } from "./types";
-import { ChevronDown, ChevronUp, Sliders } from "lucide-react";
+import { ChevronDown, ChevronUp, Sliders, FileText, Gauge } from "lucide-react";
 
 interface ReadabilitySeoProps {
   readability: ReadabilityData;
@@ -88,11 +88,16 @@ export const ReadabilitySeo = ({
       {isOpen && (
         <div className="space-y-6 animate-in slide-in-from-top-2 duration-300">
           {/* Readability Section */}
-          <div className="bg-primary/5 rounded-xl p-4 space-y-3">
-            <div className="flex justify-between items-center">
-              <h5 className="text-sm font-bold text-gray-900">Readability</h5>
+          <div className="bg-primary/5 rounded-xl overflow-hidden">
+            <div className="bg-[#104127]/10 px-4 py-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-[#104127]" />
+                <h5 className="text-sm font-bold text-[#104127]">
+                  Readability
+                </h5>
+              </div>
               <span
-                className={`text-lg font-bold ${
+                className={`text-sm font-bold ${
                   (readability?.score || 0) >= 80
                     ? "text-green-600"
                     : (readability?.score || 0) >= 40
@@ -104,29 +109,33 @@ export const ReadabilitySeo = ({
               </span>
             </div>
 
-            {readability?.issues?.length > 0 ? (
-              <div className="space-y-2">
-                {readability.issues.map((issue, idx) => (
-                  <ReadabilityIssue
-                    key={idx}
-                    issue={issue}
-                    onHighlightText={onHighlightText}
-                  />
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-gray-500 italic">
-                No readability issues detected.
-              </p>
-            )}
+            <div className="p-4 space-y-3">
+              {readability?.issues?.length > 0 ? (
+                <div className="space-y-2">
+                  {readability.issues.map((issue, idx) => (
+                    <ReadabilityIssue
+                      key={idx}
+                      issue={issue}
+                      onHighlightText={onHighlightText}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-gray-500 italic">
+                  No readability issues detected.
+                </p>
+              )}
+            </div>
           </div>
 
-          {/* SEO Section */}
-          <div className="bg-primary/5 rounded-xl p-4 space-y-3">
-            <div className="flex justify-between items-center">
-              <h5 className="text-sm font-bold text-gray-900">SEO Score</h5>
+          <div className="bg-primary/5 rounded-xl overflow-hidden">
+            <div className="bg-[#104127]/10 px-4 py-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Gauge className="w-4 h-4 text-[#104127]" />
+                <h5 className="text-sm font-bold text-[#104127]">SEO Score</h5>
+              </div>
               <span
-                className={`text-lg font-bold ${
+                className={`text-sm font-bold ${
                   (seo?.score || 0) >= 80
                     ? "text-green-600"
                     : (seo?.score || 0) >= 40
@@ -137,21 +146,26 @@ export const ReadabilitySeo = ({
                 {seo?.score || 0}
               </span>
             </div>
-            {seo?.issues?.length > 0 ? (
-              <ul className="space-y-1">
-                {seo.issues.map((issue, idx) => (
-                  <li
-                    key={idx}
-                    className="text-xs text-gray-600 flex items-start gap-2"
-                  >
-                    <span className="text-red-500 mt-0.5">•</span>
-                    {issue.message}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-xs text-gray-500 italic">SEO checks passed.</p>
-            )}
+
+            <div className="p-4 space-y-3">
+              {seo?.issues?.length > 0 ? (
+                <ul className="space-y-1">
+                  {seo.issues.map((issue, idx) => (
+                    <li
+                      key={idx}
+                      className="text-xs text-gray-600 flex items-start gap-2"
+                    >
+                      <span className="text-red-500 mt-0.5">•</span>
+                      {issue.message}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs text-gray-500 italic">
+                  SEO checks passed.
+                </p>
+              )}
+            </div>
           </div>
         </div>
       )}
