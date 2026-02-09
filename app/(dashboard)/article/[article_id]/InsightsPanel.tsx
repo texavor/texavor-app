@@ -28,6 +28,13 @@ import {
 } from "recharts";
 import { SmartLinkingPanel } from "./components/SmartLinkingPanel";
 import { LinkSuggestion } from "@/hooks/useSmartLinking";
+import { AeoHeroSection } from "./components/insights/AeoHeroSection";
+import { PlatformBlockers } from "./components/insights/PlatformBlockers";
+import { AnswerabilityBreakdown } from "./components/insights/AnswerabilityBreakdown";
+import { RetrievableChunks } from "./components/insights/RetrievableChunks";
+import { CitationPotential } from "./components/insights/CitationPotential";
+import { AuthoritySignals } from "./components/insights/AuthoritySignals";
+import { ReadabilitySeo } from "./components/insights/ReadabilitySeo";
 
 interface InsightsPanelProps {
   showMetrics: boolean;
@@ -44,251 +51,6 @@ interface InsightsPanelProps {
   onRemoveLink?: (anchorText: string, url: string) => void;
   onHighlightText?: (text: string) => void;
 }
-
-// Helper to strip markdown
-const cleanText = (text: string) => {
-  if (!text) return "";
-  return (
-    text
-      // Remove bold/italic markers (* or _)
-      .replace(/[*_]/g, "")
-      // Remove code ticks (`)
-      .replace(/`/g, "")
-      // Remove heading hashes (#)
-      .replace(/#/g, "")
-      // Remove link brackets but keep text: [text](url) -> text
-      // This simple regex handles standard markdown links.
-      // For nested or complex links, it might be partial, but sufficient for readability snippets.
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-    // Remove stand-alone brackets if any remain
-  );
-};
-
-const CustomTick = ({ payload, x, y, cx, cy, ...rest }: any) => {
-  const images: Record<string, string> = {
-    Gemini: "/ai/gemini.jpg",
-    Perplexity: "/ai/perplexity.png",
-    ChatGPT: "/ai/chatgpt.png",
-  };
-
-  const href = images[payload.value];
-
-  if (!href) return null;
-
-  // Calculate direction vector from center
-  const dx = x - cx;
-  const dy = y - cy;
-  // Calculate offset position (push out by 15px)
-  // We don't need full vector math because x,y are already on the circle.
-  // Just adding a bit of margin based on the angle would be safer but complex.
-  // Simple approximation: add constant offset in the direction of the tick
-  const dist = Math.sqrt(dx * dx + dy * dy);
-  const offset = 15; // 15px gap
-  const scale = (dist + offset) / dist;
-
-  const finalX = cx + dx * scale;
-  const finalY = cy + dy * scale;
-
-  return (
-    <foreignObject x={finalX - 12} y={finalY - 12} width={24} height={24}>
-      <img
-        src={href}
-        alt={payload.value}
-        className="w-full h-full rounded-md object-cover shadow-sm bg-white"
-      />
-    </foreignObject>
-  );
-};
-
-const PlatformRadarChart = ({ platformScores }: { platformScores: any }) => {
-  if (!platformScores) return null;
-
-  const data = [
-    {
-      subject: "Gemini",
-      A: platformScores.gemini || 0,
-      fullMark: 100,
-    },
-    {
-      subject: "Perplexity",
-      A: platformScores.perplexity || 0,
-      fullMark: 100,
-    },
-    {
-      subject: "ChatGPT",
-      A: platformScores.chatgpt || 0,
-      fullMark: 100,
-    },
-  ];
-
-  return (
-    <div className="h-[200px] w-full flex items-center justify-center">
-      <ResponsiveContainer width="100%" height="100%">
-        <RadarChart cx="50%" cy="50%" outerRadius="60%" data={data}>
-          <PolarGrid stroke="#9ca3af" />
-          <PolarAngleAxis
-            dataKey="subject"
-            tick={(props) => <CustomTick {...props} />}
-          />
-          <PolarRadiusAxis
-            angle={30}
-            domain={[0, 100]}
-            tick={false}
-            axisLine={false}
-          />
-          <Radar
-            name="Score"
-            dataKey="A"
-            stroke="#104127"
-            fill="#104127"
-            fillOpacity={0.3}
-          />
-        </RadarChart>
-      </ResponsiveContainer>
-    </div>
-  );
-};
-
-const SimulationCard = ({ simulation }: { simulation: any }) => {
-  if (!simulation?.snippet) return null;
-
-  return (
-    <div className="bg-white border-2 border-[#104127]/10 rounded-xl overflow-hidden shadow-sm">
-      <div className="bg-[#104127]/5 px-4 py-2 border-b border-[#104127]/10 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-[#104127] animate-pulse" />
-          <span className="text-[10px] font-bold text-[#104127] uppercase tracking-wider">
-            AI Search Simulation
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex flex-col items-end">
-            <span className="text-[8px] text-gray-400 leading-none">Style</span>
-            <span className="text-[10px] font-bold text-[#104127]">
-              {simulation.style || "AI"}
-            </span>
-          </div>
-          <div className="flex flex-col items-end">
-            <span className="text-[8px] text-gray-400 leading-none">
-              Readiness
-            </span>
-            <span className="text-[10px] font-bold text-green-600">
-              {simulation.aeo_readiness}%
-            </span>
-          </div>
-        </div>
-      </div>
-      <div className="p-4">
-        <div className="bg-gray-50 rounded-lg p-3 relative">
-          <div className="absolute top-2 right-2 flex gap-1">
-            <div className="w-1 h-1 rounded-full bg-blue-400" />
-            <div className="w-1 h-1 rounded-full bg-red-400" />
-            <div className="w-1 h-1 rounded-full bg-yellow-400" />
-            <div className="w-1 h-1 rounded-full bg-green-400" />
-          </div>
-          <p className="text-sm text-gray-700 leading-relaxed font-inter italic">
-            "{simulation.snippet}"
-          </p>
-        </div>
-        <p className="text-[10px] text-gray-400 mt-3 text-center italic">
-          Disclaimer: This is a generated preview of how AI search engines might
-          summarize this article.
-        </p>
-      </div>
-    </div>
-  );
-};
-
-const EntityGapAnalysis = ({ entityGaps }: { entityGaps: any }) => {
-  if (!entityGaps?.missing || entityGaps.missing.length === 0) return null;
-
-  return (
-    <div className="bg-primary/5 rounded-xl p-4 space-y-3">
-      <div className="flex justify-between items-baseline border-b border-gray-200 pb-2">
-        <h4 className="font-bold text-gray-900 font-poppins text-base">
-          Topic Overlap Gaps
-        </h4>
-        <div className="flex flex-col items-end">
-          <span className="text-[10px] font-bold text-[#104127] leading-none uppercase">
-            Overlap Score
-          </span>
-          <span className="text-xl font-poppins font-bold text-yellow-600">
-            {entityGaps.score}%
-          </span>
-        </div>
-      </div>
-      <p className="text-xs text-gray-500 font-inter leading-relaxed">
-        {entityGaps.message ||
-          "These entities are frequently mentioned by top-ranking competitors but missing in your content."}
-      </p>
-      <div className="flex flex-wrap gap-2 pt-1">
-        {entityGaps.missing.map((entity: string, i: number) => (
-          <div
-            key={i}
-            className="px-2.5 py-1 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-700 shadow-sm hover:border-[#104127]/30 transition-colors"
-          >
-            + {entity}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const LiveBenchmarkList = ({ benchmarks }: { benchmarks: any[] }) => {
-  if (!benchmarks || benchmarks.length === 0) return null;
-
-  return (
-    <div className="bg-primary/5 rounded-xl p-4 space-y-3">
-      <div className="flex justify-between items-baseline border-b border-gray-200 pb-2">
-        <h4 className="font-bold text-gray-900 font-poppins text-base">
-          Competitor Benchmark
-        </h4>
-      </div>
-      <div className="space-y-2">
-        {benchmarks.map((comp: any, i: number) => (
-          <div
-            key={i}
-            className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm flex flex-col gap-1.5 hover:border-[#104127]/20 transition-all group"
-          >
-            <div className="flex justify-between items-start gap-2">
-              <a
-                href={comp.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs font-bold text-[#104127] hover:underline flex-1 line-clamp-2"
-              >
-                {comp.title || "Competitor Article"}
-              </a>
-              <span className="px-1.5 py-0.5 bg-gray-100 rounded text-[9px] font-bold text-gray-500 uppercase">
-                {comp.type || "Page"}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
-              <div className="w-3 h-3 text-gray-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                </svg>
-              </div>
-              <p className="text-[10px] text-gray-400 truncate flex-1">
-                {comp.url}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 const InsightsPanel = ({
   showMetrics,
@@ -329,6 +91,7 @@ const InsightsPanel = ({
   const {
     aeo = {},
     seo_score = 0,
+    seo = {}, // Ensure seo object is available
     simulation = {},
     entity_gaps = {},
     live_benchmark = [],
@@ -446,164 +209,38 @@ const InsightsPanel = ({
               {insights ? (
                 // NEW STRUCTURE
                 <div className="space-y-4">
-                  {/* AI Simulation Preview - Primary Insight */}
-                  <SimulationCard simulation={simulation} />
+                  {/* 1. AEO Readiness (Hero) */}
+                  <AeoHeroSection
+                    aeoScore={aeo.score || 0}
+                    answerabilityScore={aeo.answerability?.score || 0}
+                    platformScores={aeo.platform_scores}
+                  />
 
-                  {/* Top Scores */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-primary/5 rounded-xl p-3 text-center border border-[#104127]/5">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter mb-1">
-                        SEO Score
-                      </p>
-                      <span
-                        className={`text-2xl font-poppins font-bold ${
-                          (seo_score || 0) >= 80
-                            ? "text-green-600"
-                            : (seo_score || 0) >= 50
-                              ? "text-yellow-600"
-                              : "text-red-600"
-                        }`}
-                      >
-                        {seo_score || 0}
-                      </span>
-                    </div>
-                    <div className="bg-primary/5 rounded-xl p-3 text-center border border-[#104127]/5">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter mb-1">
-                        AEO Readiness
-                      </p>
-                      <span
-                        className={`text-2xl font-poppins font-bold ${
-                          (aeo.score || 0) >= 80
-                            ? "text-green-600"
-                            : (aeo.score || 0) >= 50
-                              ? "text-yellow-600"
-                              : "text-red-600"
-                        }`}
-                      >
-                        {aeo.score || 0}
-                      </span>
-                    </div>
-                  </div>
+                  {/* 2. Platform Blockers (Most Important) */}
+                  <PlatformBlockers
+                    blockers={aeo.platform_blockers}
+                    recommendations={aeo.platform_recommendations}
+                  />
 
-                  {/* AEO Radar & Issues */}
-                  <div className="bg-primary/5 rounded-xl p-4 space-y-3">
-                    <div className="flex justify-between items-baseline border-b border-gray-200 pb-2">
-                      <h4 className="font-bold text-gray-900 font-poppins text-base">
-                        AEO Breakdown
-                      </h4>
-                    </div>
-                    {aeo.platform_scores && (
-                      <PlatformRadarChart
-                        platformScores={aeo.platform_scores}
-                      />
-                    )}
-                    <div className="space-y-3">
-                      {aeo.issues?.length > 0 ? (
-                        aeo.issues.map((issue: any, i: number) => (
-                          <div key={i} className="flex gap-3 items-start">
-                            <div className="mt-1.5 min-w-[6px] h-[6px] rounded-full bg-red-500 shrink-0" />
-                            <p className="text-sm text-gray-600 leading-relaxed font-inter">
-                              {issue.message}
-                            </p>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="flex items-center gap-2 text-gray-500 text-sm italic">
-                          <span>No critical AEO structural issues.</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  {/* 3. Answerability Breakdown */}
+                  <AnswerabilityBreakdown data={aeo.answerability} />
 
-                  {/* Entity Gaps */}
-                  <EntityGapAnalysis entityGaps={entity_gaps} />
+                  {/* 4. Retrievable Chunks (Expandable) */}
+                  <RetrievableChunks chunks={aeo.retrievable_chunks} />
 
-                  {/* Competitors */}
-                  <LiveBenchmarkList benchmarks={live_benchmark} />
+                  {/* 5. Citation Potential */}
+                  <CitationPotential data={insights.citation_potential} />
 
-                  {/* Readability Section (Keep but at bottom) */}
-                  <div className="bg-primary/5 rounded-xl p-4 space-y-3">
-                    <div className="flex justify-between items-baseline border-b border-gray-200 pb-2">
-                      <h4 className="font-bold text-gray-900 font-poppins text-base text-sm opacity-70">
-                        Content Readability
-                      </h4>
-                      <span
-                        className={`text-lg font-poppins font-bold ${
-                          (readability.score || 0) >= 80
-                            ? "text-green-600"
-                            : (readability.score || 0) >= 50
-                              ? "text-yellow-600"
-                              : "text-red-600"
-                        }`}
-                      >
-                        {readability.score || 0}
-                      </span>
-                    </div>
-                    <div className="space-y-3">
-                      {readability.issues?.length > 0 ? (
-                        readability.issues.map((issue: any, i: number) => (
-                          <div
-                            key={i}
-                            className="bg-white rounded-lg p-3 space-y-2"
-                          >
-                            <div className="flex flex-col gap-1.5">
-                              <div className="flex items-center gap-2">
-                                <div
-                                  className={`w-1.5 h-1.5 rounded-full mt-0.5 shrink-0 bg-red-500`}
-                                />
-                                <h5 className="text-sm font-semibold text-gray-900 font-poppins">
-                                  {issue.type
-                                    ? issue.type
-                                        .replace(/_/g, " ")
-                                        .replace(/\b\w/g, (l: string) =>
-                                          l.toUpperCase(),
-                                        )
-                                    : "Improvement"}
-                                </h5>
-                              </div>
+                  {/* 6. Authority Signals */}
+                  <AuthoritySignals score={insights.authority} />
 
-                              <p className="text-sm text-gray-700 leading-relaxed font-inter">
-                                {issue.message}
-                              </p>
-
-                              {issue.examples && issue.examples.length > 0 && (
-                                <div className="bg-gray-50 border border-gray-100 rounded-md p-2 mt-1">
-                                  <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1.5">
-                                    Examples found:
-                                  </p>
-                                  <ul className="space-y-1">
-                                    {issue.examples.map(
-                                      (ex: string, j: number) => {
-                                        const cleanExample = cleanText(ex);
-                                        return (
-                                          <li
-                                            key={j}
-                                            className="flex items-start gap-2 group cursor-pointer hover:bg-white rounded p-1 -ml-1 transition-all"
-                                            onClick={() =>
-                                              onHighlightText?.(cleanExample)
-                                            }
-                                            title="Click to highlight in editor"
-                                          >
-                                            <span className="text-xs text-gray-600 italic group-hover:text-primary transition-colors">
-                                              "{cleanExample}"
-                                            </span>
-                                          </li>
-                                        );
-                                      },
-                                    )}
-                                  </ul>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="flex items-center gap-2 text-gray-500 text-sm italic">
-                          <span>Text is easy to read.</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  {/* 7. Readability & SEO (Lowest Priority) */}
+                  <ReadabilitySeo
+                    readability={readability}
+                    seo={seo}
+                    stats={stats}
+                    onHighlightText={onHighlightText}
+                  />
                 </div>
               ) : (
                 // FALLBACK / EMPTY STATE (Before first analysis)
