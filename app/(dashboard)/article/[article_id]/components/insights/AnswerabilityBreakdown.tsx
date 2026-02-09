@@ -24,15 +24,15 @@ export const AnswerabilityBreakdown = ({
   const quoteColor = getScoreColor(data.breakdown.quotes, 30);
 
   return (
-    <div className="bg-primary/5 rounded-xl p-4 space-y-4">
-      <h4 className="font-bold text-gray-900 text-sm flex items-center gap-2">
-        <span className="bg-blue-100 text-blue-600 p-1 rounded-md">
-          <Info className="w-3 h-3" />
-        </span>
-        Answerability Breakdown
-      </h4>
+    <div className="bg-primary/5 rounded-xl overflow-hidden">
+      <div className="bg-[#104127]/10 px-4 py-2 flex items-center gap-2">
+        <Info className="w-4 h-4 text-[#104127]" />
+        <h4 className="font-bold text-[#104127] text-sm">
+          Answerability Breakdown
+        </h4>
+      </div>
 
-      <div className="space-y-4">
+      <div className="p-4 space-y-4">
         {/* Definitions */}
         <div className="space-y-1">
           <div className="flex justify-between text-xs">
