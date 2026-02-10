@@ -59,27 +59,51 @@ export interface NewApiKey extends ApiKey {
 export interface Usage {
   current_month: {
     articles_created: number;
-    articles_limit: number;
     outlines_created: number;
-    outlines_limit: number;
     topics_generated: number;
-    topics_limit: number;
     keyword_queries: number;
-    keyword_limit: number;
     integrations_used: number;
-    integrations_limit: number;
     image_generations: number;
-    image_generations_limit: number;
   };
   all_time: {
     total_articles: number;
     total_words: number;
     total_outlines: number;
   };
-  subscription: {
-    tier: "trial" | "starter" | "professional" | "business";
-    status: "active" | "inactive" | "trial";
+  subscription: Subscription;
+  credits: {
+    balance: number;
+    usage_forecast: {
+      articles: number;
+      detailed_research: number;
+      deep_research: number;
+      competitor_analysis: number;
+      image_generations: number;
+      keyword_discoveries: number;
+    };
+    forecast_message: string;
   };
+}
+
+export interface CreditTransaction {
+  id: number;
+  amount: number;
+  balance_after: number;
+  feature_name: string;
+  metadata: {
+    topic?: string;
+    deep_research?: boolean;
+    usage?: Record<string, any>;
+    competitor_name?: string;
+    keyword?: string;
+    trigger_type?: string;
+  };
+  created_at: string;
+}
+
+export interface Wallet {
+  balance: number;
+  predicted_usage: string;
 }
 
 export interface SubscriptionDetails {
@@ -98,6 +122,9 @@ export interface SubscriptionLimits {
   integrations: number;
   authors: number;
   competitors: number;
+  team_members: number;
+  image_generations: number;
+  keyword_discoveries: number;
 }
 
 export interface SubscriptionUsageData {
@@ -121,7 +148,7 @@ export interface SubscriptionUsagePercentages {
 }
 
 export interface Subscription {
-  tier: "trial" | "starter" | "professional" | "business";
+  tier: "trial" | "starter" | "professional" | "business" | "free";
   status:
     | "active"
     | "inactive"
@@ -129,12 +156,14 @@ export interface Subscription {
     | "canceled"
     | "on_trial"
     | "past_due"
-    | "unpaid";
+    | "unpaid"
+    | "free";
   subscription_details: SubscriptionDetails | null;
   limits: SubscriptionLimits;
   usage: SubscriptionUsageData;
   usage_percentages: SubscriptionUsagePercentages;
   suggested_upgrade_tier?: string;
+  suggest_upgrade?: boolean;
 }
 
 export interface UpgradePromptData {

@@ -21,32 +21,29 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTeamRoles } from "./hooks/useTeamRoles";
 
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import { LimitIndicator } from "@/components/LimitIndicator";
+
 export default function TeamSettingsClientPage() {
   const { user, currentTeam, setCurrentTeam, teams, setTeams, blogs } =
     useAppStore();
   const [inviteOpen, setInviteOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { hasReachedLimit, isLocked, getLimit, usage, tier } =
+    useFeatureAccess();
 
   // Fetch Teams
   const { data: teamsData, isLoading: teamsLoading } = useQuery({
     queryKey: ["teams", blogs?.id],
     queryFn: async () => {
+      // ... same ...
       if (!blogs?.id) return [];
       const response = await axiosInstance.get(
-        `/api/v1/blogs/${blogs.id}/teams`
+        `/api/v1/blogs/${blogs.id}/teams`,
       );
       return response.data;
     },
     enabled: !!blogs?.id,
-  });
-
-  // Fetch Usage
-  const { data: usage, isLoading: usageLoading } = useQuery({
-    queryKey: ["subscription-usage"],
-    queryFn: async () => {
-      const response = await axiosInstance.get("/api/v1/subscription");
-      return response.data;
-    },
   });
 
   // Get permissions
@@ -54,9 +51,9 @@ export default function TeamSettingsClientPage() {
 
   // Sync teams to store and set default
   useEffect(() => {
+    // ... same ...
     if (teamsData) {
       setTeams(teamsData);
-      // If no current team is selected, or the selected team is not in the list (e.g. deleted), select the first one
       if (
         !currentTeam ||
         !teamsData.find((t: any) => t.id === currentTeam.id)
@@ -69,6 +66,9 @@ export default function TeamSettingsClientPage() {
   }, [teamsData, currentTeam, setTeams, setCurrentTeam]);
 
   const isLoading = teamsLoading || !currentTeam;
+  const currentUsageCount = usage?.subscription?.usage?.team_members || 0;
+  const isLimitReached = hasReachedLimit("team_members", currentUsageCount);
+  const limit = getLimit("team_members");
 
   return (
     <div className="space-y-6">
@@ -93,20 +93,15 @@ export default function TeamSettingsClientPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          {usageLoading || isLoading ? (
+          {!usage ? (
             <Skeleton className="h-9 w-32 rounded-lg" />
           ) : (
-            usage && (
-              <div className="flex flex-col items-end mr-2 px-3 py-1.5 bg-white rounded-lg">
-                <p className="text-sm font-medium font-poppins">
-                  {usage.usage.team_members} /{" "}
-                  {usage.limits.team_members === -1
-                    ? "Unlimited"
-                    : usage.limits.team_members}{" "}
-                  Team Members
-                </p>
-              </div>
-            )
+            <LimitIndicator
+              feature="team_members"
+              label="Team Members"
+              currentUsage={currentUsageCount}
+              className="w-40"
+            />
           )}
 
           {isLoading ? (
@@ -119,9 +114,18 @@ export default function TeamSettingsClientPage() {
                     toast.error("Please select a team first");
                     return;
                   }
+                  if (isLimitReached) {
+                    import("sonner").then((mod) =>
+                      mod.toast.error(
+                        `Team member limit reached for ${tier} tier. Please upgrade.`,
+                      ),
+                    );
+                    return;
+                  }
                   setInviteOpen(true);
                 }}
-                className="bg-[#0A2918] hover:bg-[#0A2918]/90 text-white"
+                disabled={isLimitReached}
+                className={`bg-[#0A2918] hover:bg-[#0A2918]/90 text-white ${isLimitReached ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Invite Member

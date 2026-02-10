@@ -8,6 +8,8 @@ import { Platform } from "@/app/onboarding/hooks/useOnboardingApi";
 import { Plus } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import { LimitIndicator } from "@/components/LimitIndicator";
 
 const PLATFORM_IMAGES: Record<string, string> = {
   devto: "/integration/devto.png",
@@ -28,8 +30,27 @@ export default function IntegrationsClientPage() {
     null,
   );
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const { hasReachedLimit, usage, tier } = useFeatureAccess();
+
+  // Calculate current integration usage
+  const activeIntegrationsCount =
+    getIntegrations.data?.filter((p) => p.is_connected).length || 0;
+
+  // Usage limit check
+  const isLimitReached = hasReachedLimit(
+    "integrations",
+    activeIntegrationsCount,
+  );
 
   const handleConnect = (platform: Platform) => {
+    if (isLimitReached && !platform.is_connected) {
+      import("sonner").then((mod) =>
+        mod.toast.error(
+          `Integration limit reached for ${tier} tier. Please upgrade.`,
+        ),
+      );
+      return;
+    }
     setSelectedPlatform(platform);
     setIsSheetOpen(true);
   };
@@ -82,9 +103,6 @@ export default function IntegrationsClientPage() {
       if (localImage) {
         return { ...p, logo_url: localImage };
       }
-      if (localImage) {
-        return { ...p, logo_url: localImage };
-      }
       return p;
     })
     .reduce((acc: any[], current) => {
@@ -115,9 +133,17 @@ export default function IntegrationsClientPage() {
     <div className="space-y-8 pb-4">
       {/* Available Integrations Section */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold font-poppins text-[#0A2918]">
-          Available Integrations
-        </h2>
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold font-poppins text-[#0A2918]">
+            Available Integrations
+          </h2>
+          <LimitIndicator
+            feature="integrations"
+            label="Integrations"
+            currentUsage={activeIntegrationsCount}
+          />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {allPlatforms.map((platform) => (
             <PlatformCard
@@ -133,8 +159,16 @@ export default function IntegrationsClientPage() {
             (p) => p.platform === "custom_webhook" || p.id === "custom_webhook",
           ).length < 5 && (
             <Card
-              className="flex flex-col justify-center items-center h-full min-h-[200px] border-none shadow-none cursor-pointer group bg-white"
+              className={`flex flex-col justify-center items-center h-full min-h-[200px] border-none shadow-none cursor-pointer group bg-white ${isLimitReached ? "opacity-50 grayscale cursor-not-allowed" : ""}`}
               onClick={() => {
+                if (isLimitReached) {
+                  import("sonner").then((mod) =>
+                    mod.toast.error(
+                      `Integration limit reached for ${tier} tier. Please upgrade.`,
+                    ),
+                  );
+                  return;
+                }
                 const dummy: Platform = {
                   id: "custom_webhook",
                   name: "Custom Webhook",

@@ -11,8 +11,6 @@ import {
   Microscope,
   Paperclip,
   Settings,
-  ArrowRightToLine,
-  MessageCircleQuestion,
   Newspaper,
   TableOfContents,
   ExternalLink,
@@ -22,6 +20,7 @@ import {
   ImageIcon,
   Users,
   Sparkles,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +35,8 @@ import { useAppStore } from "@/store/appStore";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useGetWallet } from "./settings/hooks/useUsageApi";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 
 const SideBarGeneral = [
   {
@@ -121,6 +122,13 @@ const SideBarOptionExternal = [
   },
 ];
 
+// Add feature mapping
+const FEATURE_MAP: Record<string, string> = {
+  "/keyword-discovery": "keyword_discoveries",
+  "/competitor-analysis": "competitors",
+  "/team": "team_members",
+};
+
 interface SidebarItemProps {
   icon: React.ReactNode;
   title: string;
@@ -128,6 +136,7 @@ interface SidebarItemProps {
   isSideOpen: boolean;
   external?: boolean;
   isActive?: boolean;
+  locked?: boolean;
 }
 
 const SidebarItem = ({
@@ -137,6 +146,7 @@ const SidebarItem = ({
   isSideOpen,
   external,
   isActive,
+  locked,
 }: SidebarItemProps) => {
   const button = (
     <Button
@@ -149,7 +159,12 @@ const SidebarItem = ({
         {icon}
       </div>
       {isSideOpen && (
-        <p className="font-poppins font-base whitespace-nowrap">{title}</p>
+        <div className="flex items-center justify-between w-full min-w-0">
+          <p className="font-poppins font-base whitespace-nowrap truncate">
+            {title}
+          </p>
+          {locked && <Lock className="h-3 w-3 text-gray-400 ml-2 shrink-0" />}
+        </div>
       )}
       {external && isSideOpen && (
         <ExternalLink className="size-3 stroke-2 text-black ml-auto" />
@@ -183,7 +198,9 @@ const SidebarItem = ({
           </Link>
         </TooltipTrigger>
         <TooltipContent side="right">
-          <p>{title}</p>
+          <p>
+            {title} {locked && "(Locked)"}
+          </p>
         </TooltipContent>
       </Tooltip>
     );
@@ -205,10 +222,12 @@ const AppSidebar = () => {
   const [isSideOpen, setIsSideOpen] = useState(true);
   const [isHydrated, setIsHydrated] = useState(false);
   const { blogs, mainLoading, clear } = useAppStore();
+  const { data: wallet } = useGetWallet(blogs?.id);
   const router = useRouter();
   const pathname = usePathname();
 
   const { role, research_tools, settings } = usePermissions();
+  const { isLocked } = useFeatureAccess();
 
   // Initialize from localStorage on mount
   useEffect(() => {
@@ -253,6 +272,15 @@ const AppSidebar = () => {
       clear();
       window.location.href = "/login";
     }
+  };
+
+  // Helper to check lock
+  const checkLocked = (href: string) => {
+    const feature = FEATURE_MAP[href];
+    if (!feature) return false;
+    // Special case for Team: it might be quota based 0.
+    // useFeatureAccess isLocked returns true if limit === 0.
+    return isLocked(feature);
   };
 
   // Filter General Options
@@ -382,6 +410,7 @@ const AppSidebar = () => {
                     pathname === sidebar.href ||
                     pathname.startsWith(`${sidebar.href}/`)
                   }
+                  locked={checkLocked(sidebar.href)}
                 />
               ))}
             </div>
@@ -407,6 +436,7 @@ const AppSidebar = () => {
                     pathname === sidebar.href ||
                     pathname.startsWith(`${sidebar.href}/`)
                   }
+                  locked={checkLocked(sidebar.href)}
                 />
               ))}
             </div>
@@ -433,25 +463,63 @@ const AppSidebar = () => {
             />
           ))}
         </div>
+
+        {/* --- Credits Card (Inside Navigation Container) --- */}
+        {!mainLoading && wallet && (
+          <div
+            className={`mt-6 p-3 bg-[#104127] text-white rounded-xl cursor-pointer group relative overflow-hidden transition-all border-none shadow-none ${
+              !isSideOpen
+                ? "p-2 aspect-square flex items-center justify-center mx-1"
+                : "mx-1"
+            }`}
+            onClick={() => router.push("/settings/usage")}
+          >
+            <div className="relative z-10 flex gap-3 items-center">
+              <Sparkles
+                className={`shrink-0 text-white ${isSideOpen ? "h-4 w-4" : "h-5 w-5"}`}
+              />
+              {isSideOpen && (
+                <div className="flex flex-col">
+                  <p className="text-xs font-bold font-poppins">
+                    {wallet.balance.toLocaleString()} Credits
+                  </p>
+                  <p className="text-[10px] text-white/70 font-inter truncate w-32">
+                    {wallet.predicted_usage || "Available"}
+                  </p>
+                </div>
+              )}
+            </div>
+            {/* Background decorative element */}
+            <div className="absolute top-[-50%] right-[-20%] w-16 h-16 bg-white/10 rounded-full" />
+
+            {!isSideOpen && (
+              <div className="absolute left-full ml-2 px-2 py-1 bg-[#104127] text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
+                {wallet.balance.toLocaleString()} Credits
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      <Tooltip open={isSideOpen ? false : undefined}>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            className={`bg-red-200 p-2 rounded-xl w-full hover:bg-red-200 flex gap-2 ${
-              isSideOpen ? "justify-start" : "justify-center"
-            }`}
-            onClick={handleLogout}
-          >
-            <LogOutIcon className="size-4 shrink-0" />
-            {isSideOpen && <p className="font-poppins text-normal">Logout</p>}
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="right">
-          <p>Logout</p>
-        </TooltipContent>
-      </Tooltip>
+      <div className="px-2">
+        <Tooltip open={isSideOpen ? false : undefined}>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              className={`bg-red-200 p-2 rounded-xl w-full hover:bg-red-200 flex gap-2 ${
+                isSideOpen ? "justify-start" : "justify-center"
+              }`}
+              onClick={handleLogout}
+            >
+              <LogOutIcon className="size-4 shrink-0" />
+              {isSideOpen && <p className="font-poppins text-normal">Logout</p>}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <p>Logout</p>
+          </TooltipContent>
+        </Tooltip>
+      </div>
     </div>
   );
 };

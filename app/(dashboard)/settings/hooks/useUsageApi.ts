@@ -17,3 +17,31 @@ export const useGetUsage = (blogId?: string, options = {}) => {
     ...options,
   });
 };
+
+// Get wallet balance and predicted usage
+export const useGetWallet = (blogId?: string, options = {}) => {
+  return useQuery({
+    queryKey: ["wallet", blogId],
+    queryFn: async () => {
+      const url = `/api/v1/blogs/${blogId}/wallet`;
+      const response = await axiosInstance.get(url);
+      return response.data;
+    },
+    enabled: !!blogId,
+    ...options,
+  });
+};
+
+// Get credit transactions history
+export const useGetTransactions = (blogId?: string, options = {}) => {
+  return useQuery({
+    queryKey: ["credit_transactions", blogId],
+    queryFn: async () => {
+      const url = `/api/v1/blogs/${blogId}/credit_transactions`;
+      const response = await axiosInstance.get(url);
+      return response.data;
+    },
+    enabled: !!blogId,
+    ...options,
+  });
+};

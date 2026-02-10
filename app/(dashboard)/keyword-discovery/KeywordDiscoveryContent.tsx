@@ -19,6 +19,7 @@ import { KeywordDiscoveryTable } from "./components/KeywordDiscoveryTable";
 import { ProcessingState } from "./components/ProcessingState";
 import { useSavedResultsApi } from "../saved/hooks/useSavedResultsApi";
 import { useQueryClient } from "@tanstack/react-query";
+import { FeatureLockOverlay } from "@/components/FeatureLockOverlay";
 
 // Filter options
 const SOURCE_OPTIONS = [
@@ -67,7 +68,7 @@ export default function KeywordDiscoveryContent() {
 
   // Add opportunity filters
   const selectedOpp = OPPORTUNITY_OPTIONS.find(
-    (opt) => opt.id === opportunityFilter
+    (opt) => opt.id === opportunityFilter,
   );
   if (selectedOpp && selectedOpp.id !== "all") {
     if ("min" in selectedOpp) filters.min_opportunity = selectedOpp.min;
@@ -76,7 +77,7 @@ export default function KeywordDiscoveryContent() {
 
   // Add competitor filter
   const selectedComp = COMPETITOR_OPTIONS.find(
-    (opt) => opt.id === competitorFilter
+    (opt) => opt.id === competitorFilter,
   );
   if (selectedComp && selectedComp.id !== "all" && "value" in selectedComp) {
     filters.competitor_only = selectedComp.value;
@@ -96,7 +97,7 @@ export default function KeywordDiscoveryContent() {
   const { data: discoveryStatus } = useDiscoveryStatus(
     blogs?.id,
     discovery?.id,
-    discovery?.status === "processing"
+    discovery?.status === "processing",
   );
 
   // Effect to refetch latest data when polling completes
@@ -141,7 +142,7 @@ export default function KeywordDiscoveryContent() {
     if (!blogs?.id) return;
     if (!canDiscover) {
       toast.error(
-        "You've reached your monthly limit. Upgrade to discover more keywords."
+        "You've reached your monthly limit. Upgrade to discover more keywords.",
       );
       return;
     }
@@ -149,7 +150,7 @@ export default function KeywordDiscoveryContent() {
     try {
       await triggerDiscovery.mutateAsync(blogs.id);
       toast.success(
-        "Keyword discovery started! This may take up to 2 minutes."
+        "Keyword discovery started! This may take up to 2 minutes.",
       );
       // Invalidate queries to start polling
       queryClient.invalidateQueries({
@@ -185,7 +186,7 @@ export default function KeywordDiscoveryContent() {
           setSavedKeywords((prev) => new Set(prev).add(term));
           toast.success("Keyword saved successfully!");
         },
-      }
+      },
     );
   };
 
@@ -209,128 +210,136 @@ export default function KeywordDiscoveryContent() {
   };
 
   return (
-    <div className="flex flex-col space-y-6">
-      {/* Header with filters and discover button */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Source Filter */}
-          <CustomDropdown
-            open={sourceDropdownOpen}
-            onOpenChange={setSourceDropdownOpen}
-            options={SOURCE_OPTIONS}
-            value={sourceFilter}
-            onSelect={handleSourceChange}
-            trigger={
-              <Button
-                variant="outline"
-                className="h-9 bg-white hover:bg-white rounded-md font-inter text-sm border-none flex items-center gap-2 px-3"
-              >
-                <span className="font-medium text-gray-700">
-                  {selectedSource?.name}
-                </span>
-                <ChevronDown className="h-4 w-4 text-gray-500" />
-              </Button>
-            }
-          />
+    <FeatureLockOverlay
+      feature="keyword_discoveries"
+      title="Keyword Discovery Locked"
+      description="Unlock deep keyword insights and market analysis with the Professional plan."
+    >
+      <div className="flex flex-col space-y-6">
+        {/* Header with filters and discover button */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Source Filter */}
+            <CustomDropdown
+              open={sourceDropdownOpen}
+              onOpenChange={setSourceDropdownOpen}
+              options={SOURCE_OPTIONS}
+              value={sourceFilter}
+              onSelect={handleSourceChange}
+              trigger={
+                <Button
+                  variant="outline"
+                  className="h-9 bg-white hover:bg-white rounded-md font-inter text-sm border-none flex items-center gap-2 px-3"
+                >
+                  <span className="font-medium text-gray-700">
+                    {selectedSource?.name}
+                  </span>
+                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                </Button>
+              }
+            />
 
-          {/* Opportunity Filter */}
-          <CustomDropdown
-            open={opportunityDropdownOpen}
-            onOpenChange={setOpportunityDropdownOpen}
-            options={OPPORTUNITY_OPTIONS}
-            value={opportunityFilter}
-            onSelect={handleOpportunityChange}
-            trigger={
-              <Button
-                variant="outline"
-                className="h-9 bg-white hover:bg-white rounded-md font-inter text-sm border-none flex items-center gap-2 px-3"
-              >
-                <span className="font-medium text-gray-700">
-                  {selectedOpportunity?.name}
-                </span>
-                <ChevronDown className="h-4 w-4 text-gray-500" />
-              </Button>
-            }
-          />
+            {/* Opportunity Filter */}
+            <CustomDropdown
+              open={opportunityDropdownOpen}
+              onOpenChange={setOpportunityDropdownOpen}
+              options={OPPORTUNITY_OPTIONS}
+              value={opportunityFilter}
+              onSelect={handleOpportunityChange}
+              trigger={
+                <Button
+                  variant="outline"
+                  className="h-9 bg-white hover:bg-white rounded-md font-inter text-sm border-none flex items-center gap-2 px-3"
+                >
+                  <span className="font-medium text-gray-700">
+                    {selectedOpportunity?.name}
+                  </span>
+                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                </Button>
+              }
+            />
 
-          {/* Competitor Filter */}
-          <CustomDropdown
-            open={competitorDropdownOpen}
-            onOpenChange={setCompetitorDropdownOpen}
-            options={COMPETITOR_OPTIONS}
-            value={competitorFilter}
-            onSelect={handleCompetitorChange}
-            trigger={
-              <Button
-                variant="outline"
-                className="h-9 bg-white hover:bg-white rounded-md font-inter text-sm border-none flex items-center gap-2 px-3"
-              >
-                <span className="font-medium text-gray-700">
-                  {selectedCompetitor?.name}
-                </span>
-                <ChevronDown className="h-4 w-4 text-gray-500" />
-              </Button>
-            }
-          />
-        </div>
+            {/* Competitor Filter */}
+            <CustomDropdown
+              open={competitorDropdownOpen}
+              onOpenChange={setCompetitorDropdownOpen}
+              options={COMPETITOR_OPTIONS}
+              value={competitorFilter}
+              onSelect={handleCompetitorChange}
+              trigger={
+                <Button
+                  variant="outline"
+                  className="h-9 bg-white hover:bg-white rounded-md font-inter text-sm border-none flex items-center gap-2 px-3"
+                >
+                  <span className="font-medium text-gray-700">
+                    {selectedCompetitor?.name}
+                  </span>
+                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                </Button>
+              }
+            />
+          </div>
 
-        {/* Right side: Usage stats (when >= 50%) and Discover Button */}
-        <div className="flex items-center gap-4">
-          {/* Usage Stats - Show only when 50% or more used */}
-          {showUsage && (
-            <div className="flex flex-col items-end">
-              <p className="text-xs text-gray-500 font-inter">
-                Keyword Discoveries
-              </p>
-              <p className="text-sm font-semibold font-poppins text-[#0A2918]">
-                {usage.used} / {usage.limit}{" "}
-                <span className="text-xs font-normal text-gray-500">
-                  this month
-                </span>
-              </p>
-            </div>
-          )}
-
-          {/* Discover Button */}
-          <Button
-            onClick={handleTriggerDiscovery}
-            disabled={
-              !canDiscover || triggerDiscovery.isPending || isProcessing
-            }
-            className="h-9 bg-[#104127] hover:bg-[#104127]/90 font-inter gap-2 relative overflow-hidden group"
-          >
-            {/* Shimmer effect on hover */}
-            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-
-            {triggerDiscovery.isPending || isProcessing ? (
-              <Loader2 className="h-4 w-4 animate-spin relative z-10" />
-            ) : (
-              <Sparkles className="h-4 w-4 relative z-10" />
+          {/* Right side: Usage stats (when >= 50%) and Discover Button */}
+          <div className="flex items-center gap-4">
+            {/* Usage Stats - Show only when 50% or more used */}
+            {showUsage && (
+              <div className="flex flex-col items-end">
+                <p className="text-xs text-gray-500 font-inter">
+                  Keyword Discoveries
+                </p>
+                <p className="text-sm font-semibold font-poppins text-[#0A2918]">
+                  {usage.used} / {usage.limit}{" "}
+                  <span className="text-xs font-normal text-gray-500">
+                    this month
+                  </span>
+                </p>
+              </div>
             )}
-            <span className="relative z-10">
-              {isProcessing ? "Processing..." : "Discover Keywords"}
-            </span>
-          </Button>
-        </div>
-      </div>
 
-      {/* Content - Always show table */}
-      {isProcessing ? (
-        <ProcessingState
-          totalKeywords={discovery?.total_keywords}
-          progress={discoveryStatus?.progress}
-        />
-      ) : (
-        <div className="bg-white rounded-xl overflow-hidden border-none shadow-none">
-          <KeywordDiscoveryTable
-            data={hasDiscovery ? discovery?.keywords || [] : []}
-            isLoading={discoveryLoading || (!discovery && !error)}
-            onSave={handleSaveKeyword}
-            onGenerateTopic={handleGenerateTopic}
-            savedKeywords={savedKeywords}
-          />
+            {/* Discover Button */}
+            <Button
+              onClick={handleTriggerDiscovery}
+              disabled={
+                !canDiscover || triggerDiscovery.isPending || isProcessing
+              }
+              className="h-9 bg-[#104127] hover:bg-[#104127]/90 font-inter gap-2 relative overflow-hidden group"
+            >
+              {/* Shimmer effect on hover */}
+              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+
+              {triggerDiscovery.isPending || isProcessing ? (
+                <Loader2 className="h-4 w-4 animate-spin relative z-10" />
+              ) : (
+                <Sparkles className="h-4 w-4 relative z-10" />
+              )}
+              <span className="relative z-10">
+                {isProcessing
+                  ? "Processing..."
+                  : "Discover Keywords (350 Credits)"}
+              </span>
+            </Button>
+          </div>
         </div>
-      )}
-    </div>
+
+        {/* Content - Always show table */}
+        {isProcessing ? (
+          <ProcessingState
+            totalKeywords={discovery?.total_keywords}
+            progress={discoveryStatus?.progress}
+          />
+        ) : (
+          <div className="bg-white rounded-xl overflow-hidden border-none shadow-none">
+            <KeywordDiscoveryTable
+              data={hasDiscovery ? discovery?.keywords || [] : []}
+              isLoading={discoveryLoading || (!discovery && !error)}
+              onSave={handleSaveKeyword}
+              onGenerateTopic={handleGenerateTopic}
+              savedKeywords={savedKeywords}
+            />
+          </div>
+        )}
+      </div>
+    </FeatureLockOverlay>
   );
 }

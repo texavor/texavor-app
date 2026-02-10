@@ -19,6 +19,7 @@ import AddCompetitorSheet from "./components/AddCompetitorSheet";
 import { CustomTable } from "@/components/ui/CustomTable";
 import { createColumns } from "./columns";
 import { useRouter } from "next/navigation";
+import { FeatureLockOverlay } from "@/components/FeatureLockOverlay";
 
 export default function CompetitorAnalysisClient() {
   const { blogs } = useAppStore();
@@ -72,7 +73,7 @@ export default function CompetitorAnalysisClient() {
       });
       if (error.response?.status === 429) {
         toast.error(
-          error.response.data.message || "Weekly analysis limit reached."
+          error.response.data.message || "Weekly analysis limit reached.",
         );
       } else {
         toast.error("Failed to start analysis. Please try again.");
@@ -92,7 +93,7 @@ export default function CompetitorAnalysisClient() {
       try {
         const statusData = await competitorApi.getAnalysisStatus(
           blogs.id,
-          competitorId
+          competitorId,
         );
 
         const status = statusData.analysis_status;
@@ -163,7 +164,7 @@ export default function CompetitorAnalysisClient() {
     handleAnalyze,
     setDeleteId,
     analyzingIds,
-    router
+    router,
   );
 
   if (!blogs?.id) {
@@ -176,53 +177,59 @@ export default function CompetitorAnalysisClient() {
   }
 
   return (
-    <div className="space-y-8 mx-auto">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Competitor Analysis
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Track and analyze your competitors' content strategy and SEO
-            performance.
-          </p>
+    <FeatureLockOverlay
+      feature="competitors"
+      title="Competitor Analysis Locked"
+      description="Track and analyze your competitors' content strategy with the Professional plan."
+    >
+      <div className="space-y-8 mx-auto">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Competitor Analysis
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Track and analyze your competitors' content strategy and SEO
+              performance.
+            </p>
+          </div>
+          <AddCompetitorSheet blogId={blogs.id} onSuccess={loadCompetitors} />
         </div>
-        <AddCompetitorSheet blogId={blogs.id} onSuccess={loadCompetitors} />
+
+        <CustomTable
+          columns={columns}
+          data={competitors}
+          isLoading={loading}
+          onClick={(row: Competitor) => {
+            router.push(`/competitor-analysis/${row.id}`);
+          }}
+          className="cursor-pointer"
+        />
+
+        <AlertDialog
+          open={!!deleteId}
+          onOpenChange={(open) => !open && setDeleteId(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the
+                competitor and all associated analysis data.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
-
-      <CustomTable
-        columns={columns}
-        data={competitors}
-        isLoading={loading}
-        onClick={(row: Competitor) => {
-          router.push(`/competitor-analysis/${row.id}`);
-        }}
-        className="cursor-pointer"
-      />
-
-      <AlertDialog
-        open={!!deleteId}
-        onOpenChange={(open) => !open && setDeleteId(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              competitor and all associated analysis data.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+    </FeatureLockOverlay>
   );
 }
