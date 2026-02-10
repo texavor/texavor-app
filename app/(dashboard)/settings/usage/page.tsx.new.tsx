@@ -17,25 +17,19 @@ import {
   History,
   Info,
   ChevronRight,
-  BarChart3,
+  TrendingUp,
   FileText,
   Search,
   Lightbulb,
   ListTree,
   Puzzle,
-  Zap,
-  Target,
   Image as ImageIcon,
-  Users,
-  TrendingUp,
 } from "lucide-react";
 import { useAppStore } from "@/store/appStore";
 import { format } from "date-fns";
 import { CreditTransaction } from "../types";
-import { useRouter } from "next/navigation";
 
 export default function UsagePage() {
-  const router = useRouter();
   const { blogs } = useAppStore();
   const { data: usage, isLoading: isUsageLoading } = useGetUsage(blogs?.id);
   const { data: wallet, isLoading: isWalletLoading } = useGetWallet(blogs?.id);
@@ -68,7 +62,7 @@ export default function UsagePage() {
   const forecast = usage?.credits?.usage_forecast;
 
   return (
-    <div className="pb-4 space-y-8 animate-in fade-in duration-500">
+    <div className="p-6 space-y-8 animate-in fade-in duration-500">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -79,10 +73,7 @@ export default function UsagePage() {
             Manage your AI credits, view forecasts, and track your consumption.
           </p>
         </div>
-        <Button
-          onClick={() => router.push("/pricing")}
-          className="bg-[#104127] hover:bg-[#104127]/90 text-white gap-2 h-11 px-6 rounded-xl shadow-none border-none"
-        >
+        <Button className="bg-[#104127] hover:bg-[#104127]/90 text-white gap-2 h-11 px-6 rounded-xl shadow-none border-none">
           <Sparkles className="h-4 w-4" />
           Top Up Credits
         </Button>
@@ -123,83 +114,58 @@ export default function UsagePage() {
               Forecast
             </span>
           </div>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center text-xs">
+          <div className="space-y-3">
+            <div className="flex justify-between items-center text-sm">
               <span className="text-gray-600 font-inter">Articles</span>
               <span className="font-bold text-[#0A2918]">
                 {forecast?.articles || 0}
               </span>
             </div>
-            <div className="flex justify-between items-center text-xs">
+            <div className="flex justify-between items-center text-sm">
               <span className="text-gray-600 font-inter">Research</span>
               <span className="font-bold text-[#0A2918]">
-                {forecast?.detailed_research || 0}
+                {forecast?.deep_research || 0}
               </span>
             </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-gray-600 font-inter">Comp. Analysis</span>
-              <span className="font-bold text-[#0A2918]">
-                {forecast?.competitor_analysis || 0}
-              </span>
-            </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-gray-600 font-inter">Images</span>
-              <span className="font-bold text-[#0A2918]">
-                {forecast?.image_generations || 0}
-              </span>
-            </div>
-            <div className="flex justify-between items-center text-sm text-[#104127] bg-[#104127]/5 p-2 rounded-lg mt-1">
-              <Info className="h-3 w-3 shrink-0" />
-              <p className="text-[9px] leading-tight font-inter">
-                Estimates based on current balance
+            <div className="flex justify-between items-center text-sm text-[#104127] bg-[#104127]/5 p-2 rounded-lg mt-2">
+              <Info className="h-4 w-4 shrink-0" />
+              <p className="text-[10px] leading-tight font-inter">
+                Based on your balance of {wallet?.balance}
               </p>
             </div>
           </div>
         </Card>
 
-        {/* Consumption Snapshot */}
+        {/* Current Month Limit (Legacy Compat) */}
         <Card className="p-6 border-none shadow-none bg-primary/5 rounded-2xl flex flex-col justify-between">
-          <div className="flex items-center gap-2 text-[#104127]/60 mb-3">
-            <BarChart3 className="h-4 w-4" />
-            <span className="font-semibold font-poppins text-xs uppercase tracking-widest">
-              Consumption
+          <div className="flex items-center gap-2 text-gray-500 mb-2">
+            <FileText className="h-4 w-4" />
+            <span className="font-semibold font-poppins text-sm uppercase tracking-wider">
+              Monthly Limit
             </span>
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-            {[
-              {
-                label: "Articles",
-                value: usage?.current_month?.articles_created,
-                icon: FileText,
-              },
-              {
-                label: "Outlines",
-                value: usage?.current_month?.outlines_created,
-                icon: ListTree,
-              },
-              {
-                label: "Research",
-                value: usage?.current_month?.keyword_queries,
-                icon: Search,
-              },
-              {
-                label: "Images",
-                value: usage?.current_month?.image_generations,
-                icon: ImageIcon,
-              },
-            ].map((stat) => (
-              <div key={stat.label} className="flex flex-col">
-                <div className="flex items-center gap-1.5 mb-0.5">
-                  <stat.icon className="h-2.5 w-2.5 text-gray-400" />
-                  <span className="text-[10px] text-gray-500 font-inter uppercase tracking-tighter">
-                    {stat.label}
-                  </span>
-                </div>
-                <span className="text-xl font-bold text-[#0A2918] font-poppins tabular-nums">
-                  {stat.value || 0}
-                </span>
-              </div>
-            ))}
+          <div>
+            <p className="text-2xl font-bold text-[#0A2918] font-poppins">
+              {usage?.current_month?.articles_created || 0}
+              <span className="text-sm font-normal text-gray-400 ml-1">
+                /{" "}
+                {usage?.current_month?.articles_limit === -1
+                  ? "∞"
+                  : usage?.current_month?.articles_limit}
+              </span>
+            </p>
+            <div className="mt-2">
+              <Progress
+                value={
+                  usage?.current_month?.articles_limit === -1
+                    ? 0
+                    : (usage?.current_month?.articles_created /
+                        usage?.current_month?.articles_limit) *
+                      100
+                }
+                className="h-1.5 bg-gray-200"
+              />
+            </div>
           </div>
         </Card>
       </div>
@@ -217,51 +183,31 @@ export default function UsagePage() {
                 Transaction History
               </h3>
             </div>
+            <Button
+              variant="ghost"
+              className="text-sm text-gray-500 hover:text-[#104127] gap-1"
+            >
+              View All <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
 
-          <div className="max-h-[500px] overflow-y-auto no-scrollbar space-y-3 pr-2">
-            {transactions?.transactions?.length > 0 ? (
-              transactions.transactions.map((tx: CreditTransaction) => (
+          <div className="space-y-4">
+            {transactions?.length > 0 ? (
+              transactions.map((tx: CreditTransaction) => (
                 <div
                   key={tx.id}
-                  className="flex items-center justify-between p-4 rounded-2xl bg-[#104127]/5 hover:bg-[#104127]/10 transition-all group border-none shadow-none"
+                  className="flex items-center justify-between p-4 rounded-2xl hover:bg-primary/5 transition-all group border border-transparent hover:border-primary/10"
                 >
                   <div className="flex items-center gap-4">
                     <div
-                      className={`p-3 rounded-xl border-none shadow-none bg-white text-[#104127] flex items-center justify-center`}
+                      className={`p-3 rounded-xl ${tx.amount < 0 ? "bg-orange-50 text-orange-600" : "bg-green-50 text-green-600"}`}
                     >
-                      {tx.feature_name.toLowerCase().includes("keyword") ? (
-                        <Search className="h-5 w-5" />
-                      ) : tx.feature_name
-                          .toLowerCase()
-                          .includes("competitor") ? (
-                        <Users className="h-5 w-5" />
-                      ) : (
-                        <Sparkles className="h-5 w-5" />
-                      )}
+                      <Sparkles className="h-5 w-5" />
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-bold text-[#0A2918] capitalize font-poppins text-base">
-                          {tx.feature_name.replace(/_/g, " ")}
-                        </p>
-                        {tx.metadata?.competitor_name && (
-                          <Badge
-                            variant="outline"
-                            className="text-[10px] py-0 h-4 border-[#10412720] text-[#104127] font-inter"
-                          >
-                            {tx.metadata.competitor_name}
-                          </Badge>
-                        )}
-                        {tx.metadata?.keyword && (
-                          <Badge
-                            variant="outline"
-                            className="text-[10px] py-0 h-4 border-[#10412720] text-[#104127] font-inter"
-                          >
-                            {tx.metadata.keyword}
-                          </Badge>
-                        )}
-                      </div>
+                      <p className="font-bold text-[#0A2918] capitalize font-poppins">
+                        {tx.feature_name.replace(/_/g, " ")}
+                      </p>
                       <p className="text-xs text-gray-400 font-inter">
                         {format(
                           new Date(tx.created_at),
@@ -272,7 +218,7 @@ export default function UsagePage() {
                   </div>
                   <div className="text-right">
                     <p
-                      className={`font-bold font-poppins text-lg ${tx.amount < 0 ? "text-orange-600" : "text-green-600"}`}
+                      className={`font-bold font-poppins ${tx.amount < 0 ? "text-orange-600" : "text-green-600"}`}
                     >
                       {tx.amount > 0 ? "+" : ""}
                       {tx.amount}
@@ -285,7 +231,7 @@ export default function UsagePage() {
               ))
             ) : (
               <div className="text-center py-12">
-                <div className="bg-primary/5 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border-none shadow-none">
+                <div className="bg-primary/5 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <History className="h-8 w-8 text-gray-300" />
                 </div>
                 <p className="text-gray-500 font-inter">
@@ -303,62 +249,59 @@ export default function UsagePage() {
               <Info className="h-5 w-5 text-[#104127]" />
               Credit Cost Guide
             </h3>
-
-            <div className="space-y-6">
+            <div className="space-y-4">
               {[
                 {
-                  category: "Content Creation",
-                  items: [
-                    { label: "Article Writing", cost: 10, icon: FileText },
-                    { label: "Outline Gen", cost: 1, icon: ListTree },
-                    { label: "Topic Gen", cost: 5, icon: Lightbulb },
-                    { label: "Images (Flux)", cost: 40, icon: ImageIcon },
-                  ],
+                  label: "Standard Article",
+                  cost: "10-20",
+                  icon: FileText,
+                  color: "text-blue-500",
+                  bg: "bg-blue-50",
                 },
                 {
-                  category: "SEO Research",
-                  items: [
-                    { label: "Keyword Research", cost: 25, icon: Search },
-                    { label: "Keyword Discovery", cost: 350, icon: Target },
-                    { label: "Comp. Analysis", cost: 75, icon: Users },
-                  ],
+                  label: "Deep Research",
+                  cost: "75-150",
+                  icon: Search,
+                  color: "text-purple-500",
+                  bg: "bg-purple-50",
                 },
                 {
-                  category: "Optimization",
-                  items: [
-                    { label: "AEO Analysis", cost: 5, icon: Puzzle },
-                    { label: "Freshness Guard", cost: 1, icon: Zap },
-                  ],
+                  label: "Outline Gen",
+                  cost: "5",
+                  icon: ListTree,
+                  color: "text-orange-500",
+                  bg: "bg-orange-50",
                 },
                 {
-                  category: "Workflows",
-                  items: [
-                    { label: "Authority Article", cost: 91, icon: Sparkles },
-                  ],
+                  label: "Topic Discovery",
+                  cost: "2",
+                  icon: Lightbulb,
+                  color: "text-yellow-500",
+                  bg: "bg-yellow-50",
                 },
-              ].map((cat) => (
-                <div key={cat.category} className="space-y-3">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest font-inter px-1">
-                    {cat.category}
-                  </p>
-                  <div className="grid grid-cols-1 gap-2">
-                    {cat.items.map((item) => (
-                      <div
-                        key={item.label}
-                        className="flex items-center justify-between p-2.5 rounded-xl bg-primary/5 border-none shadow-none"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <item.icon className="h-3.5 w-3.5 text-[#104127]" />
-                          <span className="text-xs font-medium text-[#0A2918] font-inter">
-                            {item.label}
-                          </span>
-                        </div>
-                        <span className="text-xs font-bold text-[#104127] font-poppins">
-                          {item.cost} cr.
-                        </span>
-                      </div>
-                    ))}
+                {
+                  label: "AI Images",
+                  cost: "15",
+                  icon: ImageIcon,
+                  color: "text-pink-500",
+                  bg: "bg-pink-50",
+                },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100/50"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${item.bg} ${item.color}`}>
+                      <item.icon className="h-4 w-4" />
+                    </div>
+                    <span className="text-sm font-medium text-[#0A2918] font-inter">
+                      {item.label}
+                    </span>
                   </div>
+                  <span className="text-xs font-bold text-gray-500 font-poppins">
+                    ~{item.cost} cr.
+                  </span>
                 </div>
               ))}
             </div>
@@ -372,10 +315,7 @@ export default function UsagePage() {
               Upgrade to a professional plan for lower credit costs and higher
               limits.
             </p>
-            <Button
-              onClick={() => router.push("/pricing")}
-              className="w-full bg-white text-[#104127] hover:bg-white/90 rounded-xl font-bold border-none shadow-none relative z-10"
-            >
+            <Button className="w-full bg-white text-[#104127] hover:bg-white/90 rounded-xl font-bold shadow-none relative z-10">
               Upgrade Plan
             </Button>
             <Sparkles className="absolute bottom-[-10px] right-[-10px] h-24 w-24 text-white/5 rotate-12" />

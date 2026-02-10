@@ -11,7 +11,15 @@ import {
 } from "../hooks/useSubscriptionApi";
 import { useGetUsage } from "../hooks/useUsageApi";
 import { useRouter } from "next/navigation";
-import { Calendar, CreditCard, XCircle } from "lucide-react";
+import {
+  Calendar,
+  CreditCard,
+  XCircle,
+  FileText,
+  ListTree,
+  Search,
+  Image as ImageIcon,
+} from "lucide-react";
 import { useState } from "react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { CancelSubscriptionDialog } from "./CancelSubscriptionDialog";
@@ -66,7 +74,8 @@ export default function SubscriptionPage() {
     }
   };
 
-  const formatLimit = (limit: number) => {
+  const formatLimit = (limit?: number) => {
+    if (limit === undefined || limit === null) return "Unlimited";
     if (limit === -1) return "Unlimited";
     return limit.toLocaleString();
   };
@@ -295,124 +304,43 @@ export default function SubscriptionPage() {
           {/* Usage This Month */}
           <Card className="p-6 border-none shadow-none">
             <h3 className="font-poppins font-semibold text-lg text-[#0A2918] mb-4">
-              Usage This Month
+              Monthly Consumption
             </h3>
-            <div className="space-y-6">
-              {usageData?.current_month && (
-                <>
-                  {/* Articles */}
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-inter text-sm text-gray-700">
-                        Articles
-                      </span>
-                      <span className="font-inter text-sm font-medium text-gray-900">
-                        {usageData.current_month.articles_created} /{" "}
-                        {formatLimit(usageData.current_month.articles_limit)}
-                      </span>
-                    </div>
-                    {usageData.current_month.articles_limit !== -1 && (
-                      <ScoreMeter
-                        value={
-                          usageData.current_month.articles_created /
-                          usageData.current_month.articles_limit
-                        }
-                        inverse={true}
-                      />
-                    )}
-                  </div>
-
-                  {/* Outlines */}
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-inter text-sm text-gray-700">
-                        Outlines
-                      </span>
-                      <span className="font-inter text-sm font-medium text-gray-900">
-                        {usageData.current_month.outlines_created} /{" "}
-                        {formatLimit(usageData.current_month.outlines_limit)}
-                      </span>
-                    </div>
-                    {usageData.current_month.outlines_limit !== -1 && (
-                      <ScoreMeter
-                        value={
-                          usageData.current_month.outlines_created /
-                          usageData.current_month.outlines_limit
-                        }
-                        inverse={true}
-                      />
-                    )}
-                  </div>
-
-                  {/* Topics */}
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-inter text-sm text-gray-700">
-                        Topic Ideas
-                      </span>
-                      <span className="font-inter text-sm font-medium text-gray-900">
-                        {usageData.current_month.topics_generated} /{" "}
-                        {formatLimit(usageData.current_month.topics_limit)}
-                      </span>
-                    </div>
-                    {usageData.current_month.topics_limit !== -1 && (
-                      <ScoreMeter
-                        value={
-                          usageData.current_month.topics_generated /
-                          usageData.current_month.topics_limit
-                        }
-                        inverse={true}
-                      />
-                    )}
-                  </div>
-
-                  {/* Keyword Queries */}
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-inter text-sm text-gray-700">
-                        Keyword Queries
-                      </span>
-                      <span className="font-inter text-sm font-medium text-gray-900">
-                        {usageData.current_month.keyword_queries} /{" "}
-                        {formatLimit(usageData.current_month.keyword_limit)}
-                      </span>
-                    </div>
-                    {usageData.current_month.keyword_limit !== -1 && (
-                      <ScoreMeter
-                        value={
-                          usageData.current_month.keyword_queries /
-                          usageData.current_month.keyword_limit
-                        }
-                        inverse={true}
-                      />
-                    )}
-                  </div>
-
-                  {/* Integrations */}
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-inter text-sm text-gray-700">
-                        Integrations
-                      </span>
-                      <span className="font-inter text-sm font-medium text-gray-900">
-                        {usageData.current_month.integrations_used} /{" "}
-                        {formatLimit(
-                          usageData.current_month.integrations_limit,
-                        )}
-                      </span>
-                    </div>
-                    {usageData.current_month.integrations_limit !== -1 && (
-                      <ScoreMeter
-                        value={
-                          usageData.current_month.integrations_used /
-                          usageData.current_month.integrations_limit
-                        }
-                        inverse={true}
-                      />
-                    )}
-                  </div>
-                </>
-              )}
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                {
+                  label: "Articles",
+                  value: usageData?.current_month?.articles_created,
+                  icon: FileText,
+                },
+                {
+                  label: "Outlines",
+                  value: usageData?.current_month?.outlines_created,
+                  icon: ListTree,
+                },
+                {
+                  label: "Research",
+                  value: usageData?.current_month?.keyword_queries,
+                  icon: Search,
+                },
+                {
+                  label: "Images",
+                  value: usageData?.current_month?.image_generations,
+                  icon: ImageIcon,
+                },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className="p-4 bg-gray-50 rounded-xl flex flex-col"
+                >
+                  <span className="text-[10px] text-gray-500 font-inter uppercase tracking-wider mb-1">
+                    {stat.label}
+                  </span>
+                  <span className="text-2xl font-bold text-[#0A2918] font-poppins">
+                    {stat.value || 0}
+                  </span>
+                </div>
+              ))}
             </div>
           </Card>
 

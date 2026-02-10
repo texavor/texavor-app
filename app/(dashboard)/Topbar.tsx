@@ -101,7 +101,7 @@ const Topbar = () => {
     // Check if segment is a UUID
     const isUUID =
       /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
-        segment
+        segment,
       );
 
     if (isUUID) {
@@ -152,7 +152,7 @@ const Topbar = () => {
                   onClick={() => {
                     const isArticleId =
                       /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
-                        segment
+                        segment,
                       );
 
                     if (role === "viewer" && isArticleId) {
