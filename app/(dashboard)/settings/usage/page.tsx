@@ -2,40 +2,39 @@
 
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useGetUsage } from "../hooks/useUsageApi";
+import { useGetCredits } from "../hooks/useCreditsApi";
 import { ScoreMeter } from "@/components/ScoreMeter";
 import {
   FileText,
   Search,
   Lightbulb,
-  ListTree,
-  Zap,
-  TrendingUp,
-  FileCheck,
-  Puzzle,
   Image,
+  CreditCard,
+  PieChart,
+  CalendarClock,
+  Zap,
 } from "lucide-react";
 
 import { useAppStore } from "@/store/appStore";
 
 export default function UsagePage() {
   const { blogs } = useAppStore();
-  const { data: usage, isLoading } = useGetUsage(blogs?.id);
+  const { data: creditResponse, isLoading } = useGetCredits(blogs?.id);
 
   if (isLoading) {
     return (
       <div>
         <div className="mb-6">
           <h1 className="text-2xl font-poppins font-semibold text-[#0A2918] mb-2">
-            Usage & Statistics
+            Usage & Credits
           </h1>
           <p className="font-inter text-gray-600">
-            View your usage metrics and limits
+            View your credit usage and plan details
           </p>
         </div>
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5].map((i) => (
+            {[1, 2, 3].map((i) => (
               <Card key={i} className="p-6 border-none">
                 <Skeleton className="h-12 w-12 rounded-full bg-[#f9f4f0] mb-4" />
                 <Skeleton className="h-8 w-20 bg-[#f9f4f0] mb-2" />
@@ -48,12 +47,27 @@ export default function UsagePage() {
     );
   }
 
-  const currentMonth = usage?.current_month;
-  const allTime = usage?.all_time;
+  const credits = creditResponse?.credits;
+  const tier = creditResponse?.tier;
 
-  const formatLimit = (limit: number) => {
-    if (limit === -1) return "Unlimited";
-    return limit.toLocaleString();
+  const formatNumber = (num: number | string | undefined) => {
+    if (num === undefined) return "0";
+    return Number(num).toLocaleString(undefined, {
+      maximumFractionDigits: 1,
+    });
+  };
+
+  const formatDateWithOrdinal = (dateString: string) => {
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = date.toLocaleString("default", { month: "short" });
+    const year = date.getFullYear();
+
+    const suffix = ["th", "st", "nd", "rd"];
+    const v = day % 100;
+    const ord = suffix[(v - 20) % 10] || suffix[v] || suffix[0]; // standard ordinal rules
+
+    return `${day}${ord} ${month}, ${year}`;
   };
 
   const UsageCard = ({
@@ -61,20 +75,18 @@ export default function UsagePage() {
     colorClass,
     bgClass,
     label,
-    used,
-    limit,
+    value,
+    subValue,
   }: {
     icon: any;
     colorClass: string;
     bgClass: string;
     label: string;
-    used: number;
-    limit: number;
+    value: string | number;
+    subValue?: string;
   }) => {
-    const percentage = limit === -1 ? 0 : Math.min(used / limit, 1);
-
     return (
-      <Card className="p-6 border-none shadow-none flex flex-col justify-between h-full">
+      <Card className="p-6 border-none shadow-none flex flex-col justify-between h-full bg-white">
         <div>
           <div className="flex items-center gap-4 mb-4">
             <div
@@ -84,156 +96,143 @@ export default function UsagePage() {
             </div>
             <div>
               <p className="text-sm text-gray-600 font-inter">{label}</p>
-              <p className="text-2xl font-bold font-poppins text-[#0A2918]">
-                {used.toLocaleString()}
-                <span className="text-sm text-gray-400 font-normal ml-1">
-                  / {formatLimit(limit)}
-                </span>
+              <p className="text-2xl font-bold font-poppins text-[#0A2918] whitespace-nowrap">
+                {value}
+                {subValue && (
+                  <span className="text-sm text-gray-400 font-normal ml-1">
+                    {subValue}
+                  </span>
+                )}
               </p>
             </div>
           </div>
         </div>
-        {limit !== -1 && (
-          <div className="mt-2">
-            <ScoreMeter value={percentage} inverse={true} />
-            <p className="text-xs text-right text-gray-500 mt-1 font-inter">
-              {Math.round(percentage * 100)}% used
-            </p>
-          </div>
-        )}
       </Card>
     );
   };
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-poppins font-semibold text-[#0A2918] mb-2">
-          Usage & Statistics
-        </h1>
-        <p className="font-inter text-gray-600">
-          View your usage metrics and limits
-        </p>
+      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-poppins font-semibold text-[#0A2918] mb-2">
+            Usage & Credits
+          </h1>
+          <p className="font-inter text-gray-600">
+            View your credit usage and plan details
+          </p>
+        </div>
+        <div className="px-4 py-2 bg-[#104127] rounded-lg text-white font-medium capitalization font-poppins">
+          Current Plan: <span className="uppercase">{tier || "Free"}</span>
+        </div>
       </div>
 
       <div className="space-y-8">
-        {/* Current Month Usage */}
+        {/* Credit Overview */}
         <div>
           <h3 className="font-poppins font-semibold text-lg text-[#0A2918] mb-4">
-            Current Month Usage
+            Credit Overview
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <UsageCard
-              icon={FileText}
-              bgClass="bg-blue-100"
+              icon={CreditCard}
+              bgClass="bg-blue-50"
               colorClass="text-blue-600"
-              label="Articles Created"
-              used={currentMonth?.articles_created || 0}
-              limit={currentMonth?.articles_limit || 0}
+              label="Remaining Credits"
+              value={formatNumber(credits?.remaining)}
+              subValue={`/ ${formatNumber(credits?.limit)}`}
             />
 
             <UsageCard
-              icon={ListTree}
-              bgClass="bg-orange-100"
+              icon={PieChart}
+              bgClass="bg-orange-50"
               colorClass="text-orange-600"
-              label="Outlines Generated"
-              used={currentMonth?.outlines_created || 0}
-              limit={currentMonth?.outlines_limit || 0}
+              label="Used This Month"
+              value={formatNumber(credits?.used_this_month)}
             />
 
             <UsageCard
-              icon={Lightbulb}
-              bgClass="bg-green-100"
-              colorClass="text-green-600"
-              label="Topic Ideas"
-              used={currentMonth?.topics_generated || 0}
-              limit={currentMonth?.topics_limit || 0}
-            />
-
-            <UsageCard
-              icon={Search}
-              bgClass="bg-purple-100"
-              colorClass="text-purple-600"
-              label="Keyword Queries"
-              used={currentMonth?.keyword_queries || 0}
-              limit={currentMonth?.keyword_limit || 0}
-            />
-
-            <UsageCard
-              icon={Puzzle}
-              bgClass="bg-yellow-100"
+              icon={Zap}
+              bgClass="bg-yellow-50"
               colorClass="text-yellow-600"
-              label="Integrations Used"
-              used={currentMonth?.integrations_used || 0}
-              limit={currentMonth?.integrations_limit || 0}
+              label="Usage Percentage"
+              value={`${formatNumber(credits?.usage_percentage)}%`}
             />
 
             <UsageCard
-              icon={Image}
-              bgClass="bg-pink-100"
-              colorClass="text-pink-600"
-              label="Image Generations"
-              used={currentMonth?.image_generations || 0}
-              limit={currentMonth?.image_generations_limit || 0}
+              icon={CalendarClock}
+              bgClass="bg-purple-50"
+              colorClass="text-purple-600"
+              label="Resets At"
+              value={
+                credits?.reset_at
+                  ? formatDateWithOrdinal(credits.reset_at)
+                  : "-"
+              }
             />
           </div>
+          {credits?.usage_percentage !== undefined && (
+            <div className="mt-6 bg-white p-6 rounded-xl">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium text-gray-700">
+                  Monthly Limit Progress
+                </span>
+                <span className="text-sm font-medium text-gray-900">
+                  {formatNumber(credits?.usage_percentage)}%
+                </span>
+              </div>
+              <ScoreMeter
+                value={Number(credits?.usage_percentage) / 100}
+                inverse={true}
+              />
+            </div>
+          )}
         </div>
 
-        {/* All-Time Statistics */}
-        <div>
-          <h3 className="font-poppins font-semibold text-lg text-[#0A2918] mb-4">
-            All-Time Statistics
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="p-6 border-none shadow-none">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
-                  <FileCheck className="h-6 w-6 text-indigo-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-3xl font-bold font-poppins text-[#0A2918]">
-                    {allTime?.total_articles?.toLocaleString() || 0}
-                  </p>
-                  <p className="text-sm text-gray-600 font-inter">
-                    Total Articles
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6 border-none shadow-none">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-pink-100 flex items-center justify-center">
-                  <TrendingUp className="h-6 w-6 text-pink-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-3xl font-bold font-poppins text-[#0A2918]">
-                    {allTime?.total_words?.toLocaleString() || 0}
-                  </p>
-                  <p className="text-sm text-gray-600 font-inter">
-                    Total Words
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6 border-none shadow-none">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center">
-                  <ListTree className="h-6 w-6 text-teal-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-3xl font-bold font-poppins text-[#0A2918]">
-                    {allTime?.total_outlines?.toLocaleString() || 0}
-                  </p>
-                  <p className="text-sm text-gray-600 font-inter">
-                    Total Outlines
-                  </p>
-                </div>
-              </div>
-            </Card>
+        {/* Potential Usage */}
+        {credits?.potential_usage && (
+          <div>
+            <h3 className="font-poppins font-semibold text-lg text-[#0A2918] mb-4">
+              Potential Usage (Based on {formatNumber(credits.remaining)}{" "}
+              Credits)
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <UsageCard
+                icon={FileText}
+                bgClass="bg-indigo-50"
+                colorClass="text-indigo-600"
+                label="Article Analyses"
+                value={formatNumber(
+                  credits.potential_usage.article_analysis_approx,
+                )}
+                subValue="approx"
+              />
+              <UsageCard
+                icon={Search}
+                bgClass="bg-teal-50"
+                colorClass="text-teal-600"
+                label="Keyword Queries"
+                value={formatNumber(
+                  credits.potential_usage.keyword_research_queries,
+                )}
+              />
+              <UsageCard
+                icon={Image}
+                bgClass="bg-pink-50"
+                colorClass="text-pink-600"
+                label="Image Generations"
+                value={formatNumber(credits.potential_usage.image_generations)}
+              />
+              <UsageCard
+                icon={Lightbulb}
+                bgClass="bg-green-50"
+                colorClass="text-green-600"
+                label="Topic Generations"
+                value={formatNumber(credits.potential_usage.topic_generations)}
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

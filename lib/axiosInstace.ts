@@ -33,7 +33,7 @@ axiosInstance.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 axiosInstance.interceptors.response.use(
@@ -54,6 +54,26 @@ axiosInstance.interceptors.response.use(
           limit: response.data.limit || 0,
           suggested_tier: response.data.suggested_tier || "professional",
           upgrade_required: true,
+        });
+      });
+      return Promise.reject(error);
+    }
+
+    // Handle Insufficient Credits (402)
+    if (response?.status === 402) {
+      // Import dynamically to avoid circular dependencies
+      import("@/lib/upgradePromptState").then(({ triggerUpgradePrompt }) => {
+        triggerUpgradePrompt({
+          error: response.data.error || "Insufficient credits",
+          message:
+            response.data.message ||
+            "You don't have enough credits for this action.",
+          current_usage: 0, // Not used for credit errors
+          limit: 0, // Not used for credit errors
+          suggested_tier: "professional", // Default to professional for now
+          upgrade_required: true,
+          required: response.data.required,
+          available: response.data.available,
         });
       });
       return Promise.reject(error);
@@ -129,5 +149,5 @@ axiosInstance.interceptors.response.use(
     }
     Sentry.captureException(error);
     return Promise.reject(error);
-  }
+  },
 );

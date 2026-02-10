@@ -37,6 +37,8 @@ export function UpgradePromptProvider({
           currentUsage={promptData.current_usage}
           limit={promptData.limit}
           suggestedTier={promptData.suggested_tier}
+          required={promptData.required}
+          available={promptData.available}
         />
       )}
     </>

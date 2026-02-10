@@ -20,6 +20,8 @@ interface UpgradePromptProps {
   currentUsage: number;
   limit: number;
   suggestedTier: string;
+  required?: number;
+  available?: number;
 }
 
 export function UpgradePrompt({
@@ -29,6 +31,8 @@ export function UpgradePrompt({
   currentUsage,
   limit,
   suggestedTier,
+  required,
+  available,
 }: UpgradePromptProps) {
   const router = useRouter();
 
@@ -55,20 +59,46 @@ export function UpgradePrompt({
         </DialogHeader>
 
         <div className="py-4">
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="font-inter text-sm text-gray-600">
-                Usage this month
-              </span>
-              <span className="font-inter text-sm font-medium text-gray-900">
-                {currentUsage} / {limit}
-              </span>
+          {required !== undefined && available !== undefined ? (
+            <div className="space-y-3 pt-2">
+              <div className="bg-red-50 p-3 rounded-lg border border-red-100">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm font-medium text-red-800">
+                    Required
+                  </span>
+                  <span className="text-sm font-bold text-red-800">
+                    {required} Credits
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-red-600">
+                    Available
+                  </span>
+                  <span className="text-sm font-bold text-red-600">
+                    {available} Credits
+                  </span>
+                </div>
+              </div>
+              <p className="font-inter text-xs text-center text-gray-500">
+                Upgrade your plan to get more credits.
+              </p>
             </div>
-            <Progress value={100} className="h-2" />
-            <p className="font-inter text-xs text-gray-500">
-              You've reached your plan limit
-            </p>
-          </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="font-inter text-sm text-gray-600">
+                  Usage this month
+                </span>
+                <span className="font-inter text-sm font-medium text-gray-900">
+                  {currentUsage} / {limit}
+                </span>
+              </div>
+              <Progress value={(currentUsage / limit) * 100} className="h-2" />
+              <p className="font-inter text-xs text-gray-500">
+                You've reached your plan limit
+              </p>
+            </div>
+          )}
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2">

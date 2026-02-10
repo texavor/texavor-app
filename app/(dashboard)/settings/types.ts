@@ -144,6 +144,30 @@ export interface UpgradePromptData {
   limit: number;
   suggested_tier: string;
   upgrade_required: boolean;
+  required?: number;
+  available?: number;
+}
+
+export interface PotentialUsage {
+  article_analysis_approx: number;
+  keyword_research_queries: number;
+  image_generations: number;
+  topic_generations: number;
+}
+
+export interface Credits {
+  remaining: number | string;
+  limit: number | string;
+  used_this_month: number | string;
+  total_used: number | string;
+  usage_percentage: number | string;
+  reset_at: string;
+  potential_usage: PotentialUsage;
+}
+
+export interface CreditResponse {
+  credits: Credits;
+  tier: string;
 }
 
 export interface SettingCategory {
