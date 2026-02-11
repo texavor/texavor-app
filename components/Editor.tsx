@@ -14,6 +14,7 @@ import { useAppStore } from "@/store/appStore";
 // import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import { CustomToolbar } from "./CustomToolbar";
+import { TableBubbleMenu } from "./TableBubbleMenu";
 import { CustomHardBreak } from "./editor/extensions/CustomHardBreak";
 import { CustomImage } from "./editor/extensions/CustomImage";
 import { SearchHighlight } from "./editor/extensions/SearchHighlight";
@@ -663,6 +664,7 @@ const Editor = ({
     >
       {/* Custom Floating Toolbar - appears on text selection */}
       <CustomToolbar editor={editor} title={title} />
+      <TableBubbleMenu editor={editor} />
 
       {/* Top Right Controls (Zen, Settings) */}
       <div

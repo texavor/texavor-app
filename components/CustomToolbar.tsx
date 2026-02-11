@@ -10,6 +10,7 @@ import {
   Sparkles,
   Image as ImageIcon,
   FileCode,
+  Table as TableIcon,
 } from "lucide-react";
 import {
   Select,
@@ -29,6 +30,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 type CustomToolbarProps = {
   editor: Editor | null;
@@ -92,7 +94,9 @@ export const CustomToolbar = ({ editor, title }: CustomToolbarProps) => {
     };
   }, [editor]);
 
-  if (!editor || !isVisible) return null;
+  if (!editor) return null;
+
+  // Render logic continues here, utilizing CSS visibility instead of conditional return
 
   const onSetLink = (url: string) => {
     if (url) {
@@ -246,6 +250,17 @@ export const CustomToolbar = ({ editor, title }: CustomToolbarProps) => {
       icon: <Sparkles className="w-4 h-4 text-purple-500" />,
       tooltip: "Generate Image with AI",
     },
+    {
+      name: "Insert Table",
+      command: () =>
+        editor
+          .chain()
+          .focus()
+          .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+          .run(),
+      icon: <TableIcon className="w-4 h-4" />,
+      tooltip: "Insert Table",
+    },
   ];
 
   return (
@@ -253,10 +268,19 @@ export const CustomToolbar = ({ editor, title }: CustomToolbarProps) => {
       {/* Floating Toolbar */}
       <div
         ref={toolbarRef}
-        className="fixed z-50 flex items-center gap-1 p-2 bg-white rounded-lg shadow-lg border border-gray-200 animate-in fade-in duration-200"
+        className={cn(
+          "fixed z-50 flex items-center gap-1 p-2 bg-white rounded-lg shadow-lg border border-gray-200 transition-opacity duration-200",
+          isVisible
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none",
+        )}
         style={{
           top: `${position.top}px`,
           left: `${position.left}px`,
+        }}
+        onMouseDown={(e) => {
+          // Prevent focus loss when clicking toolbar items
+          e.preventDefault();
         }}
       >
         <TooltipProvider>
