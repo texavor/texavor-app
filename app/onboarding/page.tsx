@@ -50,10 +50,10 @@ function OnboardingContent() {
           // Reset auth-check query to remove stale data and force fresh fetch
           // This prevents AuthChecker from serving stale empty-blog data while fetching
           queryClient.resetQueries({ queryKey: ["auth-check"] });
-          toast.success("Onboarding complete! Redirecting to dashboard...");
+          toast.success("Welcome! Choose your plan to get started...");
           setTimeout(() => {
-            router.push("/dashboard");
-          }, 10000);
+            router.push("/pricing");
+          }, 6000);
         }
       } catch (err) {
         clearInterval(interval);

@@ -38,9 +38,8 @@ const SortableHeader = ({
   const sort = column.getIsSorted();
 
   return (
-    <Button
-      variant="ghost"
-      className="px-0 hover:bg-transparent"
+    <div
+      className="flex items-center cursor-pointer hover:bg-transparent px-0 font-medium"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => {
@@ -65,7 +64,7 @@ const SortableHeader = ({
           }`}
         />
       )}
-    </Button>
+    </div>
   );
 };
 
@@ -73,7 +72,7 @@ export const createColumns = (
   onAnalyze: (competitorId: string) => void,
   onDelete: (competitorId: string) => void,
   analyzingIds: Set<string>,
-  router: any
+  router: any,
 ): ColumnDef<Competitor>[] => [
   {
     accessorKey: "name",
@@ -82,6 +81,7 @@ export const createColumns = (
     ),
     cell: ({ row }) => {
       const competitor = row.original;
+      const competitorName = competitor.name || "Unknown Competitor";
       const faviconUrl = `https://www.google.com/s2/favicons?domain=${competitor.website_url}&sz=128`;
 
       return (
@@ -89,14 +89,14 @@ export const createColumns = (
           <Avatar className="h-8 w-8 rounded-lg border bg-white">
             <AvatarImage
               src={faviconUrl}
-              alt={competitor.name}
+              alt={competitorName}
               className="object-contain p-1"
             />
             <AvatarFallback className="rounded-lg uppercase">
-              {competitor.name.substring(0, 2)}
+              {competitorName.substring(0, 2)}
             </AvatarFallback>
           </Avatar>
-          <div className="font-medium">{competitor.name}</div>
+          <div className="font-medium">{competitorName}</div>
         </div>
       );
     },

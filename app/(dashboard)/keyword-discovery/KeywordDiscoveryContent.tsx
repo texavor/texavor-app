@@ -20,6 +20,9 @@ import { ProcessingState } from "./components/ProcessingState";
 import { useSavedResultsApi } from "../saved/hooks/useSavedResultsApi";
 import { useQueryClient } from "@tanstack/react-query";
 import { FeatureLockOverlay } from "@/components/FeatureLockOverlay";
+import { Lock } from "lucide-react";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import { DEMO_KEYWORDS } from "@/lib/demo-data";
 
 // Filter options
 const SOURCE_OPTIONS = [
@@ -128,18 +131,43 @@ export default function KeywordDiscoveryContent() {
     discoveryStatus?.status === "processing" ||
     discovery?.status === "processing";
 
+  const { isLocked } = useFeatureAccess();
+  const locked = isLocked("keyword_discoveries");
+
+  // Mock discovery object for demo mode
+  const demoDiscovery = locked
+    ? {
+        id: "demo",
+        status: "completed",
+        total_keywords: DEMO_KEYWORDS.length,
+        keywords: DEMO_KEYWORDS,
+        created_at: new Date().toISOString(),
+        source_filter: "all",
+      }
+    : null;
+
+  // Use real or demo data
+  const activeDiscovery = locked ? demoDiscovery : discovery;
+  const activeLoading = locked ? false : discoveryLoading;
+
   // Show table if we have keywords or if completed
   const hasDiscovery =
-    (discoveryStatus?.status === "completed" ||
+    (locked ||
+      discoveryStatus?.status === "completed" ||
       discovery?.status === "completed") &&
-    (discovery?.keywords?.length || 0) > 0;
+    (activeDiscovery?.keywords?.length || 0) > 0;
 
   // Show usage when 50% or more of limit is used
-  const showUsage = usage && usage.used / usage.limit >= 0.5;
+  const showUsage = usage && usage.limit > 0 && usage.used / usage.limit >= 0.5;
 
   // Handlers
   const handleTriggerDiscovery = async () => {
     if (!blogs?.id) return;
+    if (locked) {
+      toast.error("This is a demo. Upgrade to discover real keywords.");
+      router.push("/pricing");
+      return;
+    }
     if (!canDiscover) {
       toast.error(
         "You've reached your monthly limit. Upgrade to discover more keywords.",
@@ -165,6 +193,10 @@ export default function KeywordDiscoveryContent() {
   };
 
   const handleSaveKeyword = (keyword: KeywordDiscoveryKeyword) => {
+    if (locked) {
+      toast.error("Upgrade to save keywords.");
+      return;
+    }
     // Safely extract the keyword term string
     const term =
       typeof keyword.keyword === "string"
@@ -191,6 +223,10 @@ export default function KeywordDiscoveryContent() {
   };
 
   const handleGenerateTopic = (keyword: string) => {
+    if (locked) {
+      toast.error("Upgrade to generate topics.");
+      return;
+    }
     router.push(`/topic-generation?keyword=${encodeURIComponent(keyword)}`);
   };
 
@@ -210,136 +246,157 @@ export default function KeywordDiscoveryContent() {
   };
 
   return (
-    <FeatureLockOverlay
-      feature="keyword_discoveries"
-      title="Keyword Discovery Locked"
-      description="Unlock deep keyword insights and market analysis with the Professional plan."
-    >
-      <div className="flex flex-col space-y-6">
-        {/* Header with filters and discover button */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Source Filter */}
-            <CustomDropdown
-              open={sourceDropdownOpen}
-              onOpenChange={setSourceDropdownOpen}
-              options={SOURCE_OPTIONS}
-              value={sourceFilter}
-              onSelect={handleSourceChange}
-              trigger={
-                <Button
-                  variant="outline"
-                  className="h-9 bg-white hover:bg-white rounded-md font-inter text-sm border-none flex items-center gap-2 px-3"
-                >
-                  <span className="font-medium text-gray-700">
-                    {selectedSource?.name}
-                  </span>
-                  <ChevronDown className="h-4 w-4 text-gray-500" />
-                </Button>
-              }
-            />
-
-            {/* Opportunity Filter */}
-            <CustomDropdown
-              open={opportunityDropdownOpen}
-              onOpenChange={setOpportunityDropdownOpen}
-              options={OPPORTUNITY_OPTIONS}
-              value={opportunityFilter}
-              onSelect={handleOpportunityChange}
-              trigger={
-                <Button
-                  variant="outline"
-                  className="h-9 bg-white hover:bg-white rounded-md font-inter text-sm border-none flex items-center gap-2 px-3"
-                >
-                  <span className="font-medium text-gray-700">
-                    {selectedOpportunity?.name}
-                  </span>
-                  <ChevronDown className="h-4 w-4 text-gray-500" />
-                </Button>
-              }
-            />
-
-            {/* Competitor Filter */}
-            <CustomDropdown
-              open={competitorDropdownOpen}
-              onOpenChange={setCompetitorDropdownOpen}
-              options={COMPETITOR_OPTIONS}
-              value={competitorFilter}
-              onSelect={handleCompetitorChange}
-              trigger={
-                <Button
-                  variant="outline"
-                  className="h-9 bg-white hover:bg-white rounded-md font-inter text-sm border-none flex items-center gap-2 px-3"
-                >
-                  <span className="font-medium text-gray-700">
-                    {selectedCompetitor?.name}
-                  </span>
-                  <ChevronDown className="h-4 w-4 text-gray-500" />
-                </Button>
-              }
-            />
+    <div className="flex flex-col space-y-6">
+      {locked && (
+        <div className="bg-[#104127] text-white p-4 rounded-xl flex items-center justify-between shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/10 rounded-lg">
+              <Lock className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h3 className="font-bold font-poppins">Demo Mode</h3>
+              <p className="text-sm text-white/80 font-inter">
+                You are viewing sample data. Filters are disabled. Upgrade to
+                unlock full access.
+              </p>
+            </div>
           </div>
+          <Button
+            onClick={() => router.push("/pricing")}
+            className="bg-white text-[#104127] hover:bg-white/90 font-bold border-none shadow-none"
+          >
+            Upgrade Plan
+          </Button>
+        </div>
+      )}
 
-          {/* Right side: Usage stats (when >= 50%) and Discover Button */}
-          <div className="flex items-center gap-4">
-            {/* Usage Stats - Show only when 50% or more used */}
-            {showUsage && (
-              <div className="flex flex-col items-end">
-                <p className="text-xs text-gray-500 font-inter">
-                  Keyword Discoveries
-                </p>
-                <p className="text-sm font-semibold font-poppins text-[#0A2918]">
-                  {usage.used} / {usage.limit}{" "}
-                  <span className="text-xs font-normal text-gray-500">
-                    this month
-                  </span>
-                </p>
-              </div>
-            )}
+      {/* Header with filters and discover button */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Source Filter */}
+          <CustomDropdown
+            open={sourceDropdownOpen}
+            onOpenChange={setSourceDropdownOpen}
+            options={SOURCE_OPTIONS}
+            value={sourceFilter}
+            onSelect={handleSourceChange}
+            trigger={
+              <Button
+                variant="outline"
+                className="h-9 bg-white hover:bg-white rounded-md font-inter text-sm border-none flex items-center gap-2 px-3"
+              >
+                <span className="font-medium text-gray-700">
+                  {selectedSource?.name}
+                </span>
+                <ChevronDown className="h-4 w-4 text-gray-500" />
+              </Button>
+            }
+          />
 
-            {/* Discover Button */}
-            <Button
-              onClick={handleTriggerDiscovery}
-              disabled={
-                !canDiscover || triggerDiscovery.isPending || isProcessing
-              }
-              className="h-9 bg-[#104127] hover:bg-[#104127]/90 font-inter gap-2 relative overflow-hidden group"
-            >
-              {/* Shimmer effect on hover */}
-              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+          {/* Opportunity Filter */}
+          <CustomDropdown
+            open={opportunityDropdownOpen}
+            onOpenChange={setOpportunityDropdownOpen}
+            options={OPPORTUNITY_OPTIONS}
+            value={opportunityFilter}
+            onSelect={handleOpportunityChange}
+            trigger={
+              <Button
+                variant="outline"
+                className="h-9 bg-white hover:bg-white rounded-md font-inter text-sm border-none flex items-center gap-2 px-3"
+              >
+                <span className="font-medium text-gray-700">
+                  {selectedOpportunity?.name}
+                </span>
+                <ChevronDown className="h-4 w-4 text-gray-500" />
+              </Button>
+            }
+          />
 
-              {triggerDiscovery.isPending || isProcessing ? (
-                <Loader2 className="h-4 w-4 animate-spin relative z-10" />
-              ) : (
-                <Sparkles className="h-4 w-4 relative z-10" />
-              )}
-              <span className="relative z-10">
-                {isProcessing
-                  ? "Processing..."
-                  : "Discover Keywords (350 Credits)"}
-              </span>
-            </Button>
-          </div>
+          {/* Competitor Filter */}
+          <CustomDropdown
+            open={competitorDropdownOpen}
+            onOpenChange={setCompetitorDropdownOpen}
+            options={COMPETITOR_OPTIONS}
+            value={competitorFilter}
+            onSelect={handleCompetitorChange}
+            trigger={
+              <Button
+                variant="outline"
+                className="h-9 bg-white hover:bg-white rounded-md font-inter text-sm border-none flex items-center gap-2 px-3"
+              >
+                <span className="font-medium text-gray-700">
+                  {selectedCompetitor?.name}
+                </span>
+                <ChevronDown className="h-4 w-4 text-gray-500" />
+              </Button>
+            }
+          />
         </div>
 
-        {/* Content - Always show table */}
-        {isProcessing ? (
-          <ProcessingState
-            totalKeywords={discovery?.total_keywords}
-            progress={discoveryStatus?.progress}
-          />
-        ) : (
-          <div className="bg-white rounded-xl overflow-hidden border-none shadow-none">
-            <KeywordDiscoveryTable
-              data={hasDiscovery ? discovery?.keywords || [] : []}
-              isLoading={discoveryLoading || (!discovery && !error)}
-              onSave={handleSaveKeyword}
-              onGenerateTopic={handleGenerateTopic}
-              savedKeywords={savedKeywords}
-            />
-          </div>
-        )}
+        {/* Right side: Usage stats (when >= 50%) and Discover Button */}
+        <div className="flex items-center gap-4">
+          {/* Usage Stats - Show only when 50% or more used */}
+          {showUsage && !locked && (
+            <div className="flex flex-col items-end">
+              <p className="text-xs text-gray-500 font-inter">
+                Keyword Discoveries
+              </p>
+              <p className="text-sm font-semibold font-poppins text-[#0A2918]">
+                {usage.used} / {usage.limit}{" "}
+                <span className="text-xs font-normal text-gray-500">
+                  this month
+                </span>
+              </p>
+            </div>
+          )}
+
+          {/* Discover Button */}
+          <Button
+            onClick={handleTriggerDiscovery}
+            disabled={
+              (!locked && !canDiscover) ||
+              triggerDiscovery.isPending ||
+              isProcessing
+            }
+            className="h-9 bg-[#104127] hover:bg-[#104127]/90 font-inter gap-2 relative overflow-hidden group"
+          >
+            {/* Shimmer effect on hover */}
+            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+
+            {triggerDiscovery.isPending || isProcessing ? (
+              <Loader2 className="h-4 w-4 animate-spin relative z-10" />
+            ) : (
+              <Sparkles className="h-4 w-4 relative z-10" />
+            )}
+            <span className="relative z-10">
+              {isProcessing
+                ? "Processing..."
+                : locked
+                  ? "Discover (Upgrade)"
+                  : "Discover Keywords (350 Credits)"}
+            </span>
+          </Button>
+        </div>
       </div>
-    </FeatureLockOverlay>
+
+      {/* Content - Always show table */}
+      {isProcessing ? (
+        <ProcessingState
+          totalKeywords={discovery?.total_keywords}
+          progress={discoveryStatus?.progress}
+        />
+      ) : (
+        <div className="bg-white rounded-xl overflow-hidden border-none shadow-none">
+          <KeywordDiscoveryTable
+            data={hasDiscovery ? activeDiscovery?.keywords || [] : []}
+            isLoading={activeLoading || (!activeDiscovery && !error && !locked)}
+            onSave={handleSaveKeyword}
+            onGenerateTopic={handleGenerateTopic}
+            savedKeywords={savedKeywords}
+          />
+        </div>
+      )}
+    </div>
   );
 }

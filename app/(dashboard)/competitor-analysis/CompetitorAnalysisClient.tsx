@@ -19,7 +19,10 @@ import AddCompetitorSheet from "./components/AddCompetitorSheet";
 import { CustomTable } from "@/components/ui/CustomTable";
 import { createColumns } from "./columns";
 import { useRouter } from "next/navigation";
-import { FeatureLockOverlay } from "@/components/FeatureLockOverlay";
+import { Button } from "@/components/ui/button";
+import { Lock } from "lucide-react";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import { DEMO_COMPETITORS } from "@/lib/demo-data";
 
 export default function CompetitorAnalysisClient() {
   const { blogs } = useAppStore();
@@ -30,11 +33,14 @@ export default function CompetitorAnalysisClient() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const pollIntervalsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
+  const { isLocked } = useFeatureAccess();
+  const locked = isLocked("competitors");
+
   useEffect(() => {
     if (blogs?.id) {
       loadCompetitors();
     }
-  }, [blogs?.id]);
+  }, [blogs?.id, locked]);
 
   // Cleanup polling intervals on unmount
   useEffect(() => {
@@ -47,6 +53,14 @@ export default function CompetitorAnalysisClient() {
   const loadCompetitors = async () => {
     try {
       setLoading(true);
+      if (locked) {
+        // Demo mode: simulate delay then load mock data
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        setCompetitors(DEMO_COMPETITORS as any); // Cast if types don't perfectly match, though they should
+        setLoading(false);
+        return;
+      }
+
       const data = await competitorApi.list(blogs.id);
       setCompetitors(data.competitors);
     } catch (error) {
@@ -57,6 +71,11 @@ export default function CompetitorAnalysisClient() {
   };
 
   const handleAnalyze = async (competitorId: string) => {
+    if (locked) {
+      toast.error("This is a demo. Upgrade to analyze real competitors.");
+      router.push("/pricing");
+      return;
+    }
     try {
       setAnalyzingIds((prev) => new Set(prev).add(competitorId));
       await competitorApi.analyze(blogs.id, competitorId);
@@ -149,6 +168,11 @@ export default function CompetitorAnalysisClient() {
 
   const handleDelete = async () => {
     if (!deleteId) return;
+    if (locked) {
+      toast.error("Cannot delete demo data.");
+      setDeleteId(null);
+      return;
+    }
     try {
       await competitorApi.delete(blogs.id, deleteId);
       toast.success("Competitor removed successfully");
@@ -177,59 +201,88 @@ export default function CompetitorAnalysisClient() {
   }
 
   return (
-    <FeatureLockOverlay
-      feature="competitors"
-      title="Competitor Analysis Locked"
-      description="Track and analyze your competitors' content strategy with the Professional plan."
-    >
-      <div className="space-y-8 mx-auto">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              Competitor Analysis
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Track and analyze your competitors' content strategy and SEO
-              performance.
-            </p>
+    <div className="space-y-8 mx-auto relative">
+      {locked && (
+        <div className="bg-[#104127] text-white p-4 rounded-xl mb-6 flex items-center justify-between shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/10 rounded-lg">
+              <Lock className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h3 className="font-bold font-poppins">Demo Mode</h3>
+              <p className="text-sm text-white/80 font-inter">
+                You are viewing sample data. Upgrade to track real competitors.
+              </p>
+            </div>
           </div>
-          <AddCompetitorSheet blogId={blogs.id} onSuccess={loadCompetitors} />
+          <Button
+            onClick={() => router.push("/pricing")}
+            className="bg-white text-[#104127] hover:bg-white/90 font-bold border-none shadow-none"
+          >
+            Upgrade Plan
+          </Button>
         </div>
+      )}
 
-        <CustomTable
-          columns={columns}
-          data={competitors}
-          isLoading={loading}
-          onClick={(row: Competitor) => {
-            router.push(`/competitor-analysis/${row.id}`);
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Competitor Analysis
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Track and analyze your competitors' content strategy and SEO
+            performance.
+          </p>
+        </div>
+        <div
+          onClick={() => {
+            if (locked) {
+              toast.error("Upgrade to add real competitors.");
+              router.push("/pricing");
+            }
           }}
-          className="cursor-pointer"
-        />
-
-        <AlertDialog
-          open={!!deleteId}
-          onOpenChange={(open) => !open && setDeleteId(null)}
         >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the
-                competitor and all associated analysis data.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          <AddCompetitorSheet
+            blogId={blogs.id}
+            onSuccess={loadCompetitors}
+            disabled={locked}
+          />
+        </div>
       </div>
-    </FeatureLockOverlay>
+
+      <CustomTable
+        columns={columns}
+        data={competitors}
+        isLoading={loading}
+        onClick={(row: Competitor) => {
+          router.push(`/competitor-analysis/${row.id}`);
+        }}
+        className="cursor-pointer"
+      />
+
+      <AlertDialog
+        open={!!deleteId}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+      >
+        <AlertDialogContent className="bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              competitor and all associated analysis data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }

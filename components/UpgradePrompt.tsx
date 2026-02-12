@@ -26,11 +26,28 @@ export function UpgradePrompt({
   open,
   onClose,
   message,
-  currentUsage,
-  limit,
+  currentUsage: currentUsageProp,
+  limit: limitProp,
   suggestedTier,
 }: UpgradePromptProps) {
   const router = useRouter();
+
+  // Try to extract numbers from message if they aren't provided correctly
+  // Format typically: "Insufficient credits. Required: 25, Available: 10"
+  let currentUsage = currentUsageProp;
+  let limit = limitProp;
+
+  if (message && (currentUsage === 0 || limit === 0)) {
+    const availableMatch = message.match(/Available:\s*(\d+)/i);
+    const requiredMatch = message.match(/Required:\s*(\d+)/i);
+
+    if (availableMatch && currentUsage === 0) {
+      currentUsage = parseInt(availableMatch[1], 10);
+    }
+    if (requiredMatch && limit === 0) {
+      limit = parseInt(requiredMatch[1], 10);
+    }
+  }
 
   const handleUpgrade = () => {
     onClose();
@@ -39,7 +56,7 @@ export function UpgradePrompt({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-white">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
             <div
@@ -65,7 +82,7 @@ export function UpgradePrompt({
             <div className="flex justify-between items-center">
               <span className="font-inter text-sm text-gray-600">
                 {message?.toLowerCase().includes("credit")
-                  ? "Credits Available"
+                  ? "Credits (Available / Required)"
                   : "Usage this month"}
               </span>
               <span className="font-inter text-sm font-medium text-gray-900">
@@ -73,11 +90,11 @@ export function UpgradePrompt({
               </span>
             </div>
             <Progress
-              value={
-                message?.toLowerCase().includes("credit")
-                  ? (currentUsage / limit) * 100
-                  : 100
-              }
+              value={(() => {
+                if (!message?.toLowerCase().includes("credit")) return 100;
+                if (!limit || limit === 0) return 0;
+                return Math.min((currentUsage / limit) * 100, 100);
+              })()}
               className="h-2"
             />
             <p className="font-inter text-xs text-gray-500">

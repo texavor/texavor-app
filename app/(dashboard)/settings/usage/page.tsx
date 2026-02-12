@@ -83,8 +83,8 @@ export default function UsagePage() {
           onClick={() => router.push("/pricing")}
           className="bg-[#104127] hover:bg-[#104127]/90 text-white gap-2 h-11 px-6 rounded-xl shadow-none border-none"
         >
-          <Sparkles className="h-4 w-4" />
-          Top Up Credits
+          <ArrowUpRight className="h-4 w-4" />
+          Upgrade Plan
         </Button>
       </div>
 
