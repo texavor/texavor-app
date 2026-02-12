@@ -50,8 +50,9 @@ axiosInstance.interceptors.response.use(
         triggerUpgradePrompt({
           error: response.data.error || "Limit exceeded",
           message: response.data.message || "You've reached your plan limit",
-          current_usage: response.data.current_usage || 0,
-          limit: response.data.limit || 0,
+          current_usage:
+            response.data.current_usage ?? response.data.usage ?? 0,
+          limit: response.data.limit ?? response.data.max_limit ?? 0,
           suggested_tier: response.data.suggested_tier || "professional",
           upgrade_required: true,
         });
@@ -67,9 +68,17 @@ axiosInstance.interceptors.response.use(
           message:
             response.data.message ||
             "You have run out of credits. Please upgrade your plan or top up to continue.",
-          current_usage: response.data.available || 0,
-          limit: response.data.required || 0,
-          suggested_tier: "professional", // Default suggestion
+          current_usage:
+            response.data.available ??
+            response.data.credits?.available ??
+            response.data.current_usage ??
+            0,
+          limit:
+            response.data.required ??
+            response.data.credits?.required ??
+            response.data.limit ??
+            0,
+          suggested_tier: response.data.suggested_tier || "professional",
           upgrade_required: true,
         });
       });

@@ -12,6 +12,7 @@ import { ContentInsightsCard } from "./components/ContentInsightsCard";
 import { useRouter } from "next/navigation";
 import { getStatusColor } from "@/lib/constants";
 import { DashboardSkeleton } from "./components/DashboardSkeleton";
+import NextImage from "next/image";
 
 interface DashboardData {
   highlights: {
@@ -58,7 +59,7 @@ const DashboardClientPage = () => {
     queryKey: ["dashboard", blogs?.id],
     queryFn: async () => {
       const res = await axiosInstance.get(
-        `/api/v1/blogs/${blogs?.id}/dashboard`
+        `/api/v1/blogs/${blogs?.id}/dashboard`,
       );
       return res?.data?.data || {};
     },
@@ -127,44 +128,66 @@ const DashboardClientPage = () => {
             {/* Recent Activity List */}
             <div className="bg-white rounded-xl p-6 shadow-none border-none">
               <div className="space-y-6">
-                {overview?.recent_activity?.map((item: any, i) => (
-                  <div
-                    key={i}
-                    className="flex items-start justify-between group"
-                  >
-                    <div className="flex gap-4">
-                      <div className="mt-1 w-2 h-2 rounded-full bg-gray-300 group-hover:bg-blue-500 transition-colors" />
-                      <div>
-                        <h4 className="text-sm font-semibold text-gray-900">
-                          {item.title}
-                        </h4>
-                        <p className="text-xs text-gray-500 mt-0.5">
-                          {item?.description}
-                        </p>
+                {overview?.recent_activity &&
+                overview.recent_activity.length > 0 ? (
+                  overview.recent_activity.map((item: any, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start justify-between group"
+                    >
+                      <div className="flex gap-4">
+                        <div className="mt-1 w-2 h-2 rounded-full bg-gray-300 group-hover:bg-[#104127] transition-colors" />
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-900">
+                            {item.title}
+                          </h4>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {item?.description}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div
-                        className="flex items-center gap-2 px-2 py-1 rounded text-xs font-medium"
-                        style={{
-                          backgroundColor: getStatusColor(item?.status).bg,
-                          color: getStatusColor(item?.status).text,
-                        }}
-                      >
+                      <div className="flex items-center gap-4">
                         <div
-                          className="w-1.5 h-1.5 rounded-full"
+                          className="flex items-center gap-2 px-2 py-1 rounded text-xs font-medium"
                           style={{
-                            backgroundColor: getStatusColor(item?.status).text,
+                            backgroundColor: getStatusColor(item?.status).bg,
+                            color: getStatusColor(item?.status).text,
                           }}
-                        />
-                        <p className="capitalize">{item?.status}</p>
+                        >
+                          <div
+                            className="w-1.5 h-1.5 rounded-full"
+                            style={{
+                              backgroundColor: getStatusColor(item?.status)
+                                .text,
+                            }}
+                          />
+                          <p className="capitalize">{item?.status}</p>
+                        </div>
+                        <span className="text-xs text-gray-500 font-medium w-16 text-right">
+                          {item?.time_ago}
+                        </span>
                       </div>
-                      <span className="text-xs text-gray-500 font-medium w-16 text-right">
-                        {item?.time_ago}
-                      </span>
                     </div>
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="relative w-48 h-48 mb-4 opacity-60">
+                      <NextImage
+                        src="/empty-state.png"
+                        alt="No Recent Activity"
+                        fill
+                        className="object-contain grayscale"
+                      />
+                    </div>
+                    <h4 className="text-lg font-semibold text-[#0A2918] font-poppins">
+                      No Activity Yet
+                    </h4>
+                    <p className="text-sm text-gray-500 font-inter max-w-xs mx-auto">
+                      Your recent article actions and updates will appear here.
+                      Start by creating a new article!
+                    </p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>

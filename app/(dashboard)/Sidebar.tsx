@@ -90,11 +90,11 @@ const SideBarOptionSettings = [
     title: "Integrations",
     href: "/integrations",
   },
-  {
-    icon: <ImageIcon className="h-4 w-4" />,
-    title: "Thumbnail Styles",
-    href: "/thumbnail-styles",
-  },
+  // {
+  //   icon: <ImageIcon className="h-4 w-4" />,
+  //   title: "Thumbnail Styles",
+  //   href: "/thumbnail-styles",
+  // },
   {
     icon: <Settings className="h-4 w-4" />,
     title: "Settings",
@@ -163,7 +163,16 @@ const SidebarItem = ({
           <p className="font-poppins font-base whitespace-nowrap truncate">
             {title}
           </p>
-          {locked && <Lock className="h-3 w-3 text-gray-400 ml-2 shrink-0" />}
+          {locked && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Lock className="h-3 w-3 text-gray-400 ml-2 shrink-0" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Premium Feature - Demo Mode Available</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
       )}
       {external && isSideOpen && (

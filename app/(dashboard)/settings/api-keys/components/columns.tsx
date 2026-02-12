@@ -90,7 +90,7 @@ export const getColumns = ({ onRevoke }: ColumnsProps): ColumnDef<ApiKey>[] => [
               Revoke
             </Button>
           </AlertDialogTrigger>
-          <AlertDialogContent>
+          <AlertDialogContent className="bg-white">
             <AlertDialogHeader>
               <AlertDialogTitle>Revoke API Key</AlertDialogTitle>
               <AlertDialogDescription>

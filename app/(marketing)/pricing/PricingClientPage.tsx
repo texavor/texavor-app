@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { PRICING_TIERS, BillingPeriodType } from "@/lib/pricing";
-import { Check, LogOut, AlertCircle } from "lucide-react";
+import { Check, LogOut, AlertCircle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -62,6 +62,18 @@ export default function PricingClientPage() {
   return (
     <div className="min-h-screen bg-[#f9f4f0] py-20 px-4">
       <div className="max-w-6xl mx-auto">
+        {/* Return to Dashboard */}
+        <div className="mb-8">
+          <Button
+            onClick={() => router.back()}
+            variant="ghost"
+            className="flex items-center gap-2 text-gray-600 hover:text-[#0A2918] hover:bg-transparent pl-0"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+        </div>
+
         {/* Logout Button Moved to Footer */}
 
         {/* Payment Failure Banner */}

@@ -42,7 +42,7 @@ export const NewApiKeyDisplayDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl bg-white">
         <DialogHeader>
           <DialogTitle>API Key Created Successfully</DialogTitle>
           <DialogDescription>
