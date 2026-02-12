@@ -135,6 +135,7 @@ export interface SubscriptionUsageData {
   integrations: number;
   authors: number;
   competitors: number;
+  team_members: number;
 }
 
 export interface SubscriptionUsagePercentages {
