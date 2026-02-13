@@ -156,23 +156,11 @@ const SidebarItem = ({
       } ${isActive ? "bg-[#f9f4f0]" : ""}`}
     >
       <div className={`shrink-0 ${isActive ? "text-[#104127]" : ""}`}>
-        {icon}
+        {locked ? <Lock className="h-4 w-4" /> : icon}
       </div>
       {isSideOpen && (
-        <div className="flex items-center justify-between w-full min-w-0">
-          <p className="font-poppins font-base whitespace-nowrap truncate">
-            {title}
-          </p>
-          {locked && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Lock className="h-3 w-3 text-gray-400 ml-2 shrink-0" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Premium Feature - Demo Mode Available</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
+        <div className="flex items-center justify-between w-full">
+          <p className="font-poppins text-sm whitespace-nowrap">{title}</p>
         </div>
       )}
       {external && isSideOpen && (
