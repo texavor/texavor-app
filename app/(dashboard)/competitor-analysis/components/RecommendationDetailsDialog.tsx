@@ -159,7 +159,7 @@ export default function RecommendationDetailsDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-4xl w-full max-h-[90vh] overflow-y-auto bg-white">
         <DialogHeader>
           <div className="flex items-center gap-2 mb-2">
             <Badge
@@ -168,8 +168,8 @@ export default function RecommendationDetailsDialog({
                 recommendation.priority === "high"
                   ? "bg-red-50 text-red-700 border-red-200"
                   : recommendation.priority === "medium"
-                  ? "bg-amber-50 text-amber-700 border-amber-200"
-                  : "bg-blue-50 text-blue-700 border-blue-200"
+                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                    : "bg-blue-50 text-blue-700 border-blue-200"
               }`}
             >
               {recommendation.priority} Priority

@@ -26,11 +26,28 @@ export function UpgradePrompt({
   open,
   onClose,
   message,
-  currentUsage,
-  limit,
+  currentUsage: currentUsageProp,
+  limit: limitProp,
   suggestedTier,
 }: UpgradePromptProps) {
   const router = useRouter();
+
+  // Try to extract numbers from message if they aren't provided correctly
+  // Format typically: "Insufficient credits. Required: 25, Available: 10"
+  let currentUsage = currentUsageProp;
+  let limit = limitProp;
+
+  if (message && (currentUsage === 0 || limit === 0)) {
+    const availableMatch = message.match(/Available:\s*(\d+)/i);
+    const requiredMatch = message.match(/Required:\s*(\d+)/i);
+
+    if (availableMatch && currentUsage === 0) {
+      currentUsage = parseInt(availableMatch[1], 10);
+    }
+    if (requiredMatch && limit === 0) {
+      limit = parseInt(requiredMatch[1], 10);
+    }
+  }
 
   const handleUpgrade = () => {
     onClose();
@@ -39,14 +56,20 @@ export function UpgradePrompt({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-white">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-orange-100 rounded-full">
-              <AlertCircle className="w-6 h-6 text-orange-600" />
+            <div
+              className={`p-2 ${message?.toLowerCase().includes("credit") ? "bg-indigo-100" : "bg-orange-100"} rounded-full`}
+            >
+              <AlertCircle
+                className={`w-6 h-6 ${message?.toLowerCase().includes("credit") ? "text-indigo-600" : "text-orange-600"}`}
+              />
             </div>
             <DialogTitle className="font-poppins text-xl">
-              Upgrade Required
+              {message?.toLowerCase().includes("credit")
+                ? "Credit Exhausted"
+                : "Upgrade Required"}
             </DialogTitle>
           </div>
           <DialogDescription className="font-inter text-base">
@@ -58,15 +81,26 @@ export function UpgradePrompt({
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <span className="font-inter text-sm text-gray-600">
-                Usage this month
+                {message?.toLowerCase().includes("credit")
+                  ? "Credits (Available / Required)"
+                  : "Usage this month"}
               </span>
               <span className="font-inter text-sm font-medium text-gray-900">
                 {currentUsage} / {limit}
               </span>
             </div>
-            <Progress value={100} className="h-2" />
+            <Progress
+              value={(() => {
+                if (!message?.toLowerCase().includes("credit")) return 100;
+                if (!limit || limit === 0) return 0;
+                return Math.min((currentUsage / limit) * 100, 100);
+              })()}
+              className="h-2"
+            />
             <p className="font-inter text-xs text-gray-500">
-              You've reached your plan limit
+              {message?.toLowerCase().includes("credit")
+                ? "Top up to continue using AI features"
+                : "You've reached your plan limit"}
             </p>
           </div>
         </div>
@@ -81,9 +115,11 @@ export function UpgradePrompt({
           </Button>
           <Button
             onClick={handleUpgrade}
-            className="w-full sm:w-auto bg-[#0A2918] hover:bg-[#0A2918]/90"
+            className="w-full sm:w-auto bg-[#104127] hover:bg-[#104127]/90 text-white"
           >
-            Upgrade to {suggestedTier}
+            {message?.toLowerCase().includes("credit")
+              ? "Go to Pricing"
+              : `Upgrade to ${suggestedTier}`}
           </Button>
         </DialogFooter>
       </DialogContent>

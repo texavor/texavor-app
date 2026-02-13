@@ -19,6 +19,10 @@ import { KeywordDiscoveryTable } from "./components/KeywordDiscoveryTable";
 import { ProcessingState } from "./components/ProcessingState";
 import { useSavedResultsApi } from "../saved/hooks/useSavedResultsApi";
 import { useQueryClient } from "@tanstack/react-query";
+import { FeatureLockOverlay } from "@/components/FeatureLockOverlay";
+import { Lock } from "lucide-react";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import { DEMO_KEYWORDS } from "@/lib/demo-data";
 
 // Filter options
 const SOURCE_OPTIONS = [
@@ -67,7 +71,7 @@ export default function KeywordDiscoveryContent() {
 
   // Add opportunity filters
   const selectedOpp = OPPORTUNITY_OPTIONS.find(
-    (opt) => opt.id === opportunityFilter
+    (opt) => opt.id === opportunityFilter,
   );
   if (selectedOpp && selectedOpp.id !== "all") {
     if ("min" in selectedOpp) filters.min_opportunity = selectedOpp.min;
@@ -76,7 +80,7 @@ export default function KeywordDiscoveryContent() {
 
   // Add competitor filter
   const selectedComp = COMPETITOR_OPTIONS.find(
-    (opt) => opt.id === competitorFilter
+    (opt) => opt.id === competitorFilter,
   );
   if (selectedComp && selectedComp.id !== "all" && "value" in selectedComp) {
     filters.competitor_only = selectedComp.value;
@@ -96,7 +100,7 @@ export default function KeywordDiscoveryContent() {
   const { data: discoveryStatus } = useDiscoveryStatus(
     blogs?.id,
     discovery?.id,
-    discovery?.status === "processing"
+    discovery?.status === "processing",
   );
 
   // Effect to refetch latest data when polling completes
@@ -127,21 +131,46 @@ export default function KeywordDiscoveryContent() {
     discoveryStatus?.status === "processing" ||
     discovery?.status === "processing";
 
+  const { isLocked } = useFeatureAccess();
+  const locked = isLocked("keyword_discoveries");
+
+  // Mock discovery object for demo mode
+  const demoDiscovery = locked
+    ? {
+        id: "demo",
+        status: "completed",
+        total_keywords: DEMO_KEYWORDS.length,
+        keywords: DEMO_KEYWORDS,
+        created_at: new Date().toISOString(),
+        source_filter: "all",
+      }
+    : null;
+
+  // Use real or demo data
+  const activeDiscovery = locked ? demoDiscovery : discovery;
+  const activeLoading = locked ? false : discoveryLoading;
+
   // Show table if we have keywords or if completed
   const hasDiscovery =
-    (discoveryStatus?.status === "completed" ||
+    (locked ||
+      discoveryStatus?.status === "completed" ||
       discovery?.status === "completed") &&
-    (discovery?.keywords?.length || 0) > 0;
+    (activeDiscovery?.keywords?.length || 0) > 0;
 
   // Show usage when 50% or more of limit is used
-  const showUsage = usage && usage.used / usage.limit >= 0.5;
+  const showUsage = usage && usage.limit > 0 && usage.used / usage.limit >= 0.5;
 
   // Handlers
   const handleTriggerDiscovery = async () => {
     if (!blogs?.id) return;
+    if (locked) {
+      toast.error("This is a demo. Upgrade to discover real keywords.");
+      router.push("/pricing");
+      return;
+    }
     if (!canDiscover) {
       toast.error(
-        "You've reached your monthly limit. Upgrade to discover more keywords."
+        "You've reached your monthly limit. Upgrade to discover more keywords.",
       );
       return;
     }
@@ -149,7 +178,7 @@ export default function KeywordDiscoveryContent() {
     try {
       await triggerDiscovery.mutateAsync(blogs.id);
       toast.success(
-        "Keyword discovery started! This may take up to 2 minutes."
+        "Keyword discovery started! This may take up to 2 minutes.",
       );
       // Invalidate queries to start polling
       queryClient.invalidateQueries({
@@ -164,6 +193,10 @@ export default function KeywordDiscoveryContent() {
   };
 
   const handleSaveKeyword = (keyword: KeywordDiscoveryKeyword) => {
+    if (locked) {
+      toast.error("Upgrade to save keywords.");
+      return;
+    }
     // Safely extract the keyword term string
     const term =
       typeof keyword.keyword === "string"
@@ -185,11 +218,15 @@ export default function KeywordDiscoveryContent() {
           setSavedKeywords((prev) => new Set(prev).add(term));
           toast.success("Keyword saved successfully!");
         },
-      }
+      },
     );
   };
 
   const handleGenerateTopic = (keyword: string) => {
+    if (locked) {
+      toast.error("Upgrade to generate topics.");
+      return;
+    }
     router.push(`/topic-generation?keyword=${encodeURIComponent(keyword)}`);
   };
 
@@ -210,6 +247,29 @@ export default function KeywordDiscoveryContent() {
 
   return (
     <div className="flex flex-col space-y-6">
+      {locked && (
+        <div className="bg-[#104127] text-white p-4 rounded-xl flex items-center justify-between shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/10 rounded-lg">
+              <Lock className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h3 className="font-bold font-poppins">Demo Mode</h3>
+              <p className="text-sm text-white/80 font-inter">
+                You are viewing sample data. Filters are disabled. Upgrade to
+                unlock full access.
+              </p>
+            </div>
+          </div>
+          <Button
+            onClick={() => router.push("/pricing")}
+            className="bg-white text-[#104127] hover:bg-white/90 font-bold border-none shadow-none"
+          >
+            Upgrade Plan
+          </Button>
+        </div>
+      )}
+
       {/* Header with filters and discover button */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex flex-wrap items-center gap-3">
@@ -277,7 +337,7 @@ export default function KeywordDiscoveryContent() {
         {/* Right side: Usage stats (when >= 50%) and Discover Button */}
         <div className="flex items-center gap-4">
           {/* Usage Stats - Show only when 50% or more used */}
-          {showUsage && (
+          {showUsage && !locked && (
             <div className="flex flex-col items-end">
               <p className="text-xs text-gray-500 font-inter">
                 Keyword Discoveries
@@ -295,7 +355,9 @@ export default function KeywordDiscoveryContent() {
           <Button
             onClick={handleTriggerDiscovery}
             disabled={
-              !canDiscover || triggerDiscovery.isPending || isProcessing
+              (!locked && !canDiscover) ||
+              triggerDiscovery.isPending ||
+              isProcessing
             }
             className="h-9 bg-[#104127] hover:bg-[#104127]/90 font-inter gap-2 relative overflow-hidden group"
           >
@@ -308,7 +370,11 @@ export default function KeywordDiscoveryContent() {
               <Sparkles className="h-4 w-4 relative z-10" />
             )}
             <span className="relative z-10">
-              {isProcessing ? "Processing..." : "Discover Keywords"}
+              {isProcessing
+                ? "Processing..."
+                : locked
+                  ? "Discover (Upgrade)"
+                  : "Discover Keywords (350 Credits)"}
             </span>
           </Button>
         </div>
@@ -323,8 +389,8 @@ export default function KeywordDiscoveryContent() {
       ) : (
         <div className="bg-white rounded-xl overflow-hidden border-none shadow-none">
           <KeywordDiscoveryTable
-            data={hasDiscovery ? discovery?.keywords || [] : []}
-            isLoading={discoveryLoading || (!discovery && !error)}
+            data={hasDiscovery ? activeDiscovery?.keywords || [] : []}
+            isLoading={activeLoading || (!activeDiscovery && !error && !locked)}
             onSave={handleSaveKeyword}
             onGenerateTopic={handleGenerateTopic}
             savedKeywords={savedKeywords}

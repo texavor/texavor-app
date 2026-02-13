@@ -33,7 +33,7 @@ axiosInstance.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 axiosInstance.interceptors.response.use(
@@ -50,8 +50,34 @@ axiosInstance.interceptors.response.use(
         triggerUpgradePrompt({
           error: response.data.error || "Limit exceeded",
           message: response.data.message || "You've reached your plan limit",
-          current_usage: response.data.current_usage || 0,
-          limit: response.data.limit || 0,
+          current_usage:
+            response.data.current_usage ?? response.data.usage ?? 0,
+          limit: response.data.limit ?? response.data.max_limit ?? 0,
+          suggested_tier: response.data.suggested_tier || "professional",
+          upgrade_required: true,
+        });
+      });
+      return Promise.reject(error);
+    }
+
+    // Handle credit exhaustion (402 Payment Required)
+    if (response?.status === 402) {
+      import("@/lib/upgradePromptState").then(({ triggerUpgradePrompt }) => {
+        triggerUpgradePrompt({
+          error: response.data.error || "Credit exhausted",
+          message:
+            response.data.message ||
+            "You have run out of credits. Please upgrade your plan or top up to continue.",
+          current_usage:
+            response.data.available ??
+            response.data.credits?.available ??
+            response.data.current_usage ??
+            0,
+          limit:
+            response.data.required ??
+            response.data.credits?.required ??
+            response.data.limit ??
+            0,
           suggested_tier: response.data.suggested_tier || "professional",
           upgrade_required: true,
         });
@@ -129,5 +155,5 @@ axiosInstance.interceptors.response.use(
     }
     Sentry.captureException(error);
     return Promise.reject(error);
-  }
+  },
 );

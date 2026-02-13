@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { PRICING_TIERS, BillingPeriodType } from "@/lib/pricing";
-import { Check, LogOut, AlertCircle } from "lucide-react";
+import { Check, LogOut, AlertCircle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -62,6 +62,18 @@ export default function PricingClientPage() {
   return (
     <div className="min-h-screen bg-[#f9f4f0] py-20 px-4">
       <div className="max-w-6xl mx-auto">
+        {/* Return to Dashboard */}
+        <div className="mb-8">
+          <Button
+            onClick={() => router.back()}
+            variant="ghost"
+            className="flex items-center gap-2 text-gray-600 hover:text-[#0A2918] hover:bg-transparent pl-0"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+        </div>
+
         {/* Logout Button Moved to Footer */}
 
         {/* Payment Failure Banner */}
@@ -158,34 +170,31 @@ export default function PricingClientPage() {
 
         {/* Pricing Cards Grid - All 3 Tiers */}
         <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-          {/* Starter Plan */}
+          {/* Free Plan */}
           <div className="bg-white rounded-2xl p-8 shadow-xs border border-gray-200 flex flex-col">
             <h3 className="font-poppins font-semibold text-2xl text-[#0A2918] mb-2">
-              {PRICING_TIERS.starter.name}
+              {PRICING_TIERS.free.name}
             </h3>
             <p className="font-inter text-sm text-gray-600 mb-6">
-              {PRICING_TIERS.starter.description}
+              {PRICING_TIERS.free.description}
             </p>
 
             <div className="mb-6">
               <div className="flex items-baseline gap-1">
                 <span className="font-poppins font-bold text-4xl text-[#0A2918]">
-                  ${PRICING_TIERS.starter[billingPeriod].price}
+                  $0
                 </span>
               </div>
-              {billingPeriod === "yearly" &&
-                PRICING_TIERS.starter.yearly.savings && (
-                  <p className="font-inter text-sm text-green-600 mt-1 font-medium">
-                    Save ${PRICING_TIERS.starter.yearly.savings}/year
-                  </p>
-                )}
+              <p className="font-inter text-sm text-gray-500 mt-1 font-medium">
+                Forever free
+              </p>
             </div>
 
             <div className="space-y-3 mb-8 flex-grow">
-              {PRICING_TIERS.starter.features.map((feature, i) => (
+              {PRICING_TIERS.free.features.map((feature, i) => (
                 <div key={i} className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-5 h-5 rounded-full border-2 border-[#0A2918] flex items-center justify-center mt-0.5">
-                    <Check className="w-3 h-3 text-[#0A2918]" strokeWidth={3} />
+                  <div className="flex-shrink-0 w-5 h-5 rounded-full border-2 border-gray-300 flex items-center justify-center mt-0.5">
+                    <Check className="w-3 h-3 text-gray-500" strokeWidth={3} />
                   </div>
                   <span className="font-inter text-sm text-gray-700">
                     {feature}
@@ -195,44 +204,44 @@ export default function PricingClientPage() {
             </div>
 
             <Button
-              onClick={() => handleSubscribe("starter")}
-              disabled={loadingTier === "starter"}
-              className="w-full bg-[#0A2918] hover:bg-[#0A2918]/90"
+              onClick={() => router.push("/dashboard")}
+              variant="outline"
+              className="w-full border-[#0A2918] text-[#0A2918] hover:bg-[#0A2918]/5"
             >
-              {loadingTier === "starter" ? "Loading..." : "Get Started"}
+              Get Started
             </Button>
           </div>
 
-          {/* Professional Plan (Recommended) */}
-          <div className="bg-[#0A2918] text-white rounded-2xl p-8 shadow-lg flex flex-col relative">
+          {/* Starter Plan (Recommended) */}
+          <div className="bg-[#0A2918] text-white rounded-2xl p-8 shadow-lg flex flex-col relative transform md:-translate-y-4 md:h-[calc(100%+2rem)]">
             {/* Recommended Badge */}
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-1 rounded-full text-xs font-medium">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-1 rounded-full text-xs font-medium border-2 border-[#0A2918]">
               Recommended
             </div>
 
             <h3 className="font-poppins font-semibold text-2xl mb-2">
-              {PRICING_TIERS.professional.name}
+              {PRICING_TIERS.starter.name}
             </h3>
             <p className="font-inter text-sm text-white/80 mb-6">
-              {PRICING_TIERS.professional.description}
+              {PRICING_TIERS.starter.description}
             </p>
 
             <div className="mb-6">
               <div className="flex items-baseline gap-1">
                 <span className="font-poppins font-bold text-4xl">
-                  ${PRICING_TIERS.professional[billingPeriod].price}
+                  ${PRICING_TIERS.starter[billingPeriod].price}
                 </span>
               </div>
               {billingPeriod === "yearly" &&
-                PRICING_TIERS.professional.yearly.savings && (
+                PRICING_TIERS.starter.yearly.savings && (
                   <p className="font-inter text-sm text-green-400 mt-1 font-medium">
-                    Save ${PRICING_TIERS.professional.yearly.savings}/year
+                    Save ${PRICING_TIERS.starter.yearly.savings}/year
                   </p>
                 )}
             </div>
 
             <div className="space-y-3 mb-8 flex-grow">
-              {PRICING_TIERS.professional.features.map((feature, i) => (
+              {PRICING_TIERS.starter.features.map((feature, i) => (
                 <div key={i} className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center mt-0.5">
                     <Check className="w-3 h-3 text-white" strokeWidth={3} />
@@ -245,40 +254,40 @@ export default function PricingClientPage() {
             </div>
 
             <Button
-              onClick={() => handleSubscribe("professional")}
-              disabled={loadingTier === "professional"}
+              onClick={() => handleSubscribe("starter")}
+              disabled={loadingTier === "starter"}
               variant="secondary"
               className="w-full bg-white text-[#0A2918] hover:bg-white/90"
             >
-              {loadingTier === "professional" ? "Loading..." : "Get Started"}
+              {loadingTier === "starter" ? "Loading..." : "Get Started"}
             </Button>
           </div>
 
-          {/* Business Plan */}
+          {/* Professional Plan */}
           <div className="bg-white rounded-2xl p-8 shadow-xs border border-gray-200 flex flex-col">
             <h3 className="font-poppins font-semibold text-2xl text-[#0A2918] mb-2">
-              {PRICING_TIERS.business.name}
+              {PRICING_TIERS.professional.name}
             </h3>
             <p className="font-inter text-sm text-gray-600 mb-6">
-              {PRICING_TIERS.business.description}
+              {PRICING_TIERS.professional.description}
             </p>
 
             <div className="mb-6">
               <div className="flex items-baseline gap-1">
                 <span className="font-poppins font-bold text-4xl text-[#0A2918]">
-                  ${PRICING_TIERS.business[billingPeriod].price}
+                  ${PRICING_TIERS.professional[billingPeriod].price}
                 </span>
               </div>
               {billingPeriod === "yearly" &&
-                PRICING_TIERS.business.yearly.savings && (
+                PRICING_TIERS.professional.yearly.savings && (
                   <p className="font-inter text-sm text-green-600 mt-1 font-medium">
-                    Save ${PRICING_TIERS.business.yearly.savings}/year
+                    Save ${PRICING_TIERS.professional.yearly.savings}/year
                   </p>
                 )}
             </div>
 
             <div className="space-y-3 mb-8 flex-grow">
-              {PRICING_TIERS.business.features.map((feature, i) => (
+              {PRICING_TIERS.professional.features.map((feature, i) => (
                 <div key={i} className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-5 h-5 rounded-full border-2 border-[#0A2918] flex items-center justify-center mt-0.5">
                     <Check className="w-3 h-3 text-[#0A2918]" strokeWidth={3} />
@@ -291,11 +300,11 @@ export default function PricingClientPage() {
             </div>
 
             <Button
-              onClick={() => handleSubscribe("business")}
-              disabled={loadingTier === "business"}
+              onClick={() => handleSubscribe("professional")}
+              disabled={loadingTier === "professional"}
               className="w-full bg-[#0A2918] hover:bg-[#0A2918]/90"
             >
-              {loadingTier === "business" ? "Loading..." : "Get Started"}
+              {loadingTier === "professional" ? "Loading..." : "Get Started"}
             </Button>
           </div>
         </div>

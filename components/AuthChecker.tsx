@@ -161,7 +161,8 @@ const AuthChecker = () => {
           !isSubscriptionPage &&
           (subscriptionTier === "trial" ||
             (subscriptionStatus !== "active" &&
-              subscriptionStatus !== "on_trial"))
+              subscriptionStatus !== "on_trial" &&
+              subscriptionStatus !== "free"))
         ) {
           let reason = "";
           if (

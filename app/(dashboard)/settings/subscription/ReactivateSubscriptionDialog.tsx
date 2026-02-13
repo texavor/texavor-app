@@ -57,7 +57,7 @@ export function ReactivateSubscriptionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] border-none shadow-none">
+      <DialogContent className="sm:max-w-[500px] border-none shadow-none bg-white">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-green-100 rounded-full">

@@ -33,7 +33,9 @@ import CompetitorAnalysisDetail from "../components/CompetitorAnalysisDetail";
 import AnalysisStatusBadge from "../components/AnalysisStatusBadge";
 import AnalysisErrorAlert from "../components/AnalysisErrorAlert";
 import CustomDropdown from "@/components/ui/CustomDropdown";
+
 import { CompetitorDetailSkeleton } from "../components/CompetitorDetailSkeleton";
+import { DEMO_ANALYSIS, DEMO_COMPETITORS } from "@/lib/demo-data";
 
 export default function CompetitorDetailPage() {
   const params = useParams();
@@ -58,6 +60,22 @@ export default function CompetitorDetailPage() {
   }, [blogs?.id, competitorId]);
 
   const loadData = async (silent = false) => {
+    if (typeof competitorId === "string" && competitorId.startsWith("demo-")) {
+      const demoCompetitor = DEMO_COMPETITORS.find(
+        (c) => c.id === competitorId,
+      );
+      if (demoCompetitor) {
+        setCompetitor(demoCompetitor as any);
+        setAnalyses([DEMO_ANALYSIS] as any);
+        if (!selectedAnalysisId) {
+          setSelectedAnalysisId(DEMO_ANALYSIS.id);
+        }
+        setFullAnalysis(DEMO_ANALYSIS as any);
+        setLoading(false);
+        return { competitor: demoCompetitor, analyses: [DEMO_ANALYSIS] };
+      }
+    }
+
     try {
       if (!silent) setLoading(true);
       const data = await competitorApi.getAnalyses(blogs.id, competitorId);
@@ -83,6 +101,11 @@ export default function CompetitorDetailPage() {
 
   const handleAnalyze = async () => {
     if (!competitor) return;
+    if (typeof competitorId === "string" && competitorId.startsWith("demo-")) {
+      toast.error("This is a demo. Upgrade to analyze real competitors.");
+      router.push("/pricing");
+      return;
+    }
     try {
       setAnalyzing(true);
       const data = await competitorApi.analyze(blogs.id, competitor.id);
@@ -199,6 +222,8 @@ export default function CompetitorDetailPage() {
     let isPolling = true;
 
     const poll = async () => {
+      if (typeof competitorId === "string" && competitorId.startsWith("demo-"))
+        return;
       if (!selectedAnalysisId || !blogs?.id || !competitorId) return;
 
       try {

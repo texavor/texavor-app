@@ -21,12 +21,14 @@ import { Separator } from "@/components/ui/separator";
 
 interface AddCompetitorSheetProps {
   blogId: string;
-  onSuccess: () => void;
+  onSuccess: () => Promise<void>;
+  disabled?: boolean;
 }
 
 export default function AddCompetitorSheet({
   blogId,
   onSuccess,
+  disabled,
 }: AddCompetitorSheetProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -71,7 +73,10 @@ export default function AddCompetitorSheet({
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button className="gap-2">
+        <Button
+          className="gap-2 bg-[#104127] text-white hover:bg-[#104127]/90"
+          disabled={disabled}
+        >
           <Plus className="h-4 w-4" />
           Add Competitor
         </Button>
