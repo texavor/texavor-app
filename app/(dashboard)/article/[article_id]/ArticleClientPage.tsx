@@ -394,32 +394,68 @@ export default function ArticleClientPage() {
       // Use exact_match (actual text in article) instead of anchor_text
       const textToReplace = exact_match || anchor_text;
 
-      // Verify the text at the position matches
-      const actualText = prevContent.substring(
+      // 1. Try exact position first
+      const actualTextAtPos = prevContent.substring(
         position,
         position + textToReplace.length,
       );
 
-      if (actualText !== textToReplace) {
-        console.error("Link application failed - text mismatch:", {
-          expected: textToReplace,
-          found: actualText,
-          position,
-          suggestion,
-        });
-        return prevContent;
+      let targetPosition = position;
+
+      if (actualTextAtPos !== textToReplace) {
+        console.warn(
+          "Link application: Exact position mismatch. Searching nearby...",
+          {
+            expected: textToReplace,
+            foundAtPos: actualTextAtPos,
+            position,
+          },
+        );
+
+        // 2. Search for the text near the original position
+        // We look 100 chars before and after
+        const searchWindow = 200;
+        const startSearch = Math.max(0, position - searchWindow);
+        const endSearch = Math.min(prevContent.length, position + searchWindow);
+
+        const contentSnippet = prevContent.substring(startSearch, endSearch);
+        const relativeIndex = contentSnippet.indexOf(textToReplace);
+
+        if (relativeIndex !== -1) {
+          targetPosition = startSearch + relativeIndex;
+          console.log("Found text at new position:", targetPosition);
+        } else {
+          // 3. Fallback: Search entire document if not found nearby
+          const globalIndex = prevContent.indexOf(textToReplace);
+          if (globalIndex !== -1) {
+            // Check if it's the only occurrence or try to find the one closest to original pos
+            // For now, simpler fallback: check if it's unique or close enough
+            // If there are multiple, this might pick the wrong one, but better than failing?
+            // Let's stick to the window search for safety first.
+            // If not found in window, we probably shouldn't apply blindly to avoid wrong context.
+            console.error(
+              "Link application failed - text not found near position.",
+            );
+            return prevContent;
+          }
+          console.error(
+            "Link application failed - text not found in document.",
+          );
+          return prevContent;
+        }
       }
 
       // Check if already linked
       const beforeText = prevContent.substring(
-        Math.max(0, position - 1),
-        position,
+        Math.max(0, targetPosition - 1),
+        targetPosition,
       );
       const afterText = prevContent.substring(
-        position + textToReplace.length,
-        position + textToReplace.length + 2,
+        targetPosition + textToReplace.length,
+        targetPosition + textToReplace.length + 2,
       );
 
+      // Simple markdown link check: [ ... ](...)
       if (beforeText === "[" || afterText.startsWith("](")) {
         console.warn("This text is already part of a link");
         return prevContent;
@@ -428,11 +464,11 @@ export default function ArticleClientPage() {
       // Create markdown link
       const markdownLink = `[${textToReplace}](${url})`;
 
-      // Replace text at the exact position
+      // Replace text at the calculated position
       const newContent =
-        prevContent.substring(0, position) +
+        prevContent.substring(0, targetPosition) +
         markdownLink +
-        prevContent.substring(position + textToReplace.length);
+        prevContent.substring(targetPosition + textToReplace.length);
 
       return newContent;
     });

@@ -40,7 +40,7 @@ export const SmartLinkingPanel = ({
   onRemoveLink,
   onHighlightText,
 }: SmartLinkingPanelProps) => {
-  const [includeExternal, setIncludeExternal] = useState(false);
+  const [includeExternal, setIncludeExternal] = useState(true);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
   // Local state for URL edits
@@ -109,8 +109,8 @@ export const SmartLinkingPanel = ({
   const handleApplyAll = () => {
     if (!displayData) return;
 
-    const internalSuggestions = displayData.suggestions?.result?.internal || [];
-    const externalSuggestions = displayData.suggestions?.result?.external || [];
+    const internalSuggestions = displayData.suggestions?.internal || [];
+    const externalSuggestions = displayData.suggestions?.external || [];
 
     const internalToApply = internalSuggestions.filter(
       (item) => !dismissed.has(item.url + item.anchor_text) && !item.is_applied,
@@ -153,12 +153,12 @@ export const SmartLinkingPanel = ({
   };
 
   const internalSuggestions =
-    displayData?.suggestions?.result?.internal?.filter(
+    displayData?.suggestions?.internal?.filter(
       (item) => !dismissed.has(item.url + item.anchor_text),
     ) || [];
 
   const externalSuggestions =
-    displayData?.suggestions?.result?.external?.filter(
+    displayData?.suggestions?.external?.filter(
       (item) => !dismissed.has(item.url + item.anchor_text),
     ) || [];
 
