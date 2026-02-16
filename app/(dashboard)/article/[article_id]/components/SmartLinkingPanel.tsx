@@ -109,8 +109,8 @@ export const SmartLinkingPanel = ({
   const handleApplyAll = () => {
     if (!displayData) return;
 
-    const internalSuggestions = displayData.suggestions?.internal || [];
-    const externalSuggestions = displayData.suggestions?.external || [];
+    const internalSuggestions = displayData.suggestions?.result?.internal || [];
+    const externalSuggestions = displayData.suggestions?.result?.external || [];
 
     const internalToApply = internalSuggestions.filter(
       (item) => !dismissed.has(item.url + item.anchor_text) && !item.is_applied,
@@ -153,12 +153,12 @@ export const SmartLinkingPanel = ({
   };
 
   const internalSuggestions =
-    displayData?.suggestions?.internal?.filter(
+    displayData?.suggestions?.result?.internal?.filter(
       (item) => !dismissed.has(item.url + item.anchor_text),
     ) || [];
 
   const externalSuggestions =
-    displayData?.suggestions?.external?.filter(
+    displayData?.suggestions?.result?.external?.filter(
       (item) => !dismissed.has(item.url + item.anchor_text),
     ) || [];
 

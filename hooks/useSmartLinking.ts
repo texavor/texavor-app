@@ -20,8 +20,14 @@ export interface ExistingLink {
 
 export interface SmartLinksData {
   suggestions: {
-    internal: LinkSuggestion[];
-    external: LinkSuggestion[];
+    result: {
+      internal: LinkSuggestion[];
+      external: LinkSuggestion[];
+    };
+    usage?: {
+      azure_input_token: number;
+      azure_output_token: number;
+    };
     existing: ExistingLink[];
   };
   cached: boolean;
@@ -180,8 +186,12 @@ export const useUpdateLinkStatus = () => {
         (old) => {
           if (!old || !old.suggestions) return old;
 
-          let newInternal = [...(old.suggestions.internal || [])];
-          let newExternal = [...(old.suggestions.external || [])];
+          const suggestionsResult = old.suggestions.result || {
+            internal: [],
+            external: [],
+          };
+          let newInternal = [...(suggestionsResult.internal || [])];
+          let newExternal = [...(suggestionsResult.external || [])];
 
           if (newLinkStatus.applyAll) {
             newInternal = newInternal.map((link) => ({
@@ -209,8 +219,10 @@ export const useUpdateLinkStatus = () => {
             ...old,
             suggestions: {
               ...old.suggestions,
-              internal: newInternal,
-              external: newExternal,
+              result: {
+                internal: newInternal,
+                external: newExternal,
+              },
             },
           };
         },
