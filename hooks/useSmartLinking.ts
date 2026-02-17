@@ -6,7 +6,9 @@ export interface LinkSuggestion {
   anchor_text: string;
   url: string;
   reason?: string;
+  simulated_click_text?: string; // New field from backend
   is_applied: boolean; // Added backend status
+  valid?: boolean; // New field from backend
   position: number; // Character position in article where anchor text starts
   exact_match: string; // The actual text found in article (may differ in case from anchor_text)
   match_type: "exact" | "case_insensitive"; // Type of match
@@ -20,10 +22,8 @@ export interface ExistingLink {
 
 export interface SmartLinksData {
   suggestions: {
-    result: {
-      internal: LinkSuggestion[];
-      external: LinkSuggestion[];
-    };
+    internal: LinkSuggestion[];
+    external: LinkSuggestion[];
     usage?: {
       azure_input_token: number;
       azure_output_token: number;
@@ -70,7 +70,7 @@ export const useSmartLinksQuery = (
   enabled: boolean = true,
 ) => {
   return useQuery({
-    queryKey: ["smartLinks", blogId, articleId, includeExternal],
+    queryKey: ["smartLinks", blogId, articleId],
     queryFn: async () => {
       const response = await axiosInstance.get(
         `/api/v1/blogs/${blogId}/articles/${articleId}/link_suggestions`,
@@ -186,12 +186,8 @@ export const useUpdateLinkStatus = () => {
         (old) => {
           if (!old || !old.suggestions) return old;
 
-          const suggestionsResult = old.suggestions.result || {
-            internal: [],
-            external: [],
-          };
-          let newInternal = [...(suggestionsResult.internal || [])];
-          let newExternal = [...(suggestionsResult.external || [])];
+          let newInternal = [...(old.suggestions.internal || [])];
+          let newExternal = [...(old.suggestions.external || [])];
 
           if (newLinkStatus.applyAll) {
             newInternal = newInternal.map((link) => ({
@@ -219,10 +215,8 @@ export const useUpdateLinkStatus = () => {
             ...old,
             suggestions: {
               ...old.suggestions,
-              result: {
-                internal: newInternal,
-                external: newExternal,
-              },
+              internal: newInternal,
+              external: newExternal,
             },
           };
         },
