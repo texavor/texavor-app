@@ -162,6 +162,7 @@ const AuthChecker = () => {
           (subscriptionTier === "trial" ||
             (subscriptionStatus !== "active" &&
               subscriptionStatus !== "on_trial" &&
+              subscriptionStatus !== "expired" &&
               subscriptionStatus !== "free"))
         ) {
           let reason = "";

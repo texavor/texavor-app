@@ -158,7 +158,8 @@ export interface Subscription {
     | "on_trial"
     | "past_due"
     | "unpaid"
-    | "free";
+    | "free"
+    | "expired";
   subscription_details: SubscriptionDetails | null;
   limits: SubscriptionLimits;
   usage: SubscriptionUsageData;
