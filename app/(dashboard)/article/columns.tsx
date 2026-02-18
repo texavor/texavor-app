@@ -14,6 +14,7 @@ import {
   Pencil,
   Trash2,
   Eye,
+  Share2,
 } from "lucide-react";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ import { FreshnessScoreBadge } from "./components/FreshnessScoreBadge";
 import { useState } from "react";
 import { format } from "date-fns";
 import { CustomAlertDialog } from "@/components/ui/CustomAlertDialog";
+import { RepurposeDialog } from "@/components/repurposing/RepurposeDialog";
 
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends unknown, TValue> {
@@ -210,6 +212,7 @@ export const columns: ColumnDef<Article, any>[] = [
       const isFetched = article.source === "fetched";
 
       const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+      const [repurposeOpen, setRepurposeOpen] = useState(false);
 
       const handleDelete = async () => {
         try {
@@ -259,6 +262,14 @@ export const columns: ColumnDef<Article, any>[] = [
         });
       }
 
+      // Repurpose Content - Available for ALL articles
+      actions.push({
+        id: "repurpose",
+        name: "Repurpose Content",
+        icon: <Share2 className="h-4 w-4 text-gray-500" />,
+        action: () => setRepurposeOpen(true),
+      });
+
       // Delete (Hide for Viewers)
       if (!isViewer) {
         actions.push({
@@ -298,6 +309,12 @@ export const columns: ColumnDef<Article, any>[] = [
                 handleDelete();
                 setDeleteDialogOpen(false);
               }}
+            />
+            <RepurposeDialog
+              open={repurposeOpen}
+              onOpenChange={setRepurposeOpen}
+              articleId={article.id}
+              blogId={article.blog_id}
             />
           </div>
         </>
