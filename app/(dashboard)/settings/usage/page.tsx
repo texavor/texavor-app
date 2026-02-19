@@ -28,6 +28,7 @@ import {
   Image as ImageIcon,
   Users,
   TrendingUp,
+  Recycle,
 } from "lucide-react";
 import { useAppStore } from "@/store/appStore";
 import { format } from "date-fns";
@@ -219,7 +220,7 @@ export default function UsagePage() {
             </div>
           </div>
 
-          <div className="max-h-[500px] overflow-y-auto no-scrollbar space-y-3 pr-2">
+          <div className="max-h-[900px] overflow-y-auto no-scrollbar space-y-3 pr-2">
             {transactions?.transactions?.length > 0 ? (
               transactions.transactions.map((tx: CreditTransaction) => (
                 <div
@@ -313,6 +314,7 @@ export default function UsagePage() {
                     { label: "Outline Gen", cost: 1, icon: ListTree },
                     { label: "Topic Gen", cost: 5, icon: Lightbulb },
                     { label: "Images (Flux)", cost: 40, icon: ImageIcon },
+                    { label: "Repurpose Content", cost: 3, icon: Recycle },
                   ],
                 },
                 {
