@@ -233,13 +233,13 @@ const platformSettings: Record<
       description: "Author to publish as",
       optionsKey: "authors",
     },
-    // {
-    //   key: "category",
-    //   label: "Category",
-    //   type: "text",
-    //   placeholder: "e.g. key:value or category_name",
-    //   description: "Custom data to send with webhook",
-    // },
+    {
+      key: "external_article_id",
+      label: "External Article ID",
+      type: "text",
+      placeholder: "e.g. 12345",
+      description: "The ID of this article in your external system",
+    },
   ],
   hashnode: [
     {

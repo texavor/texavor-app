@@ -18,6 +18,8 @@ export interface ArticleDetails {
   article_publications: string[];
   platform_settings?: Record<string, any>;
   content_html?: string;
+  source?: string;
+  url?: string;
 }
 
 interface ArticleSettingsState {
@@ -31,12 +33,12 @@ interface ArticleSettingsState {
   setFormData: (
     updater:
       | Partial<ArticleDetails>
-      | ((prev: ArticleDetails) => Partial<ArticleDetails>)
+      | ((prev: ArticleDetails) => Partial<ArticleDetails>),
   ) => void;
   setPlatformSettings: (
     updater:
       | Record<string, any>
-      | ((prev: Record<string, any>) => Record<string, any>)
+      | ((prev: Record<string, any>) => Record<string, any>),
   ) => void;
   setPublishMode: (mode: "publish" | "schedule") => void;
   reset: () => void;

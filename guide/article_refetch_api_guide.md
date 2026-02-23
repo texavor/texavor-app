@@ -74,3 +74,31 @@ Since the refetching happens in a background job, you should poll the article da
 2.  Frontend shows a loading state/toast "Refetching started...".
 3.  Wait 5-10 seconds.
 4.  Invalidate the article query: `queryClient.invalidateQueries(['article', id])`.
+
+---
+
+### 3. Linking External IDs
+
+When you import or link an article that exists on an external platform, you can provide the `external_id` through `article_publications_attributes`. This allows the "Update" functionality to work for that specific integration.
+
+#### Example Update/Link Request
+
+```typescript
+const updateMutation = useMutation({
+  mutationFn: async (payload: any) => {
+    return axiosInstance.patch(
+      `/api/v1/blogs/${blogId}/articles/${articleId}`,
+      {
+        article: {
+          article_publications_attributes: [
+            {
+              integration_id: "your-integration-uuid",
+              external_id: "external-post-id-123", // The ID from your platform
+            },
+          ],
+        },
+      },
+    );
+  },
+});
+```

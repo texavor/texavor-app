@@ -126,6 +126,10 @@ export default function ArticleDetailsSheet({
         title: currentTitle ?? prev.title,
         content: currentContent ?? prev.content,
         content_html: currentContentHtml ?? prev.content_html,
+        canonical_url:
+          prev.source === "fetched" && !prev.canonical_url
+            ? prev.url || prev.canonical_url
+            : prev.canonical_url,
       }));
     }
   }, [
@@ -169,12 +173,21 @@ export default function ArticleDetailsSheet({
 
   // set publishMode based on state when sheet opens or state changes
   useEffect(() => {
-    if (isPublished) {
-      setPublishMode("publish"); // Default to publish tab view for published
+    if (
+      isPublished ||
+      (formData.source === "fetched" && !formData.scheduled_at)
+    ) {
+      setPublishMode("publish"); // Default to publish tab view for published or fetched articles
     } else if (isScheduled) {
       setPublishMode("schedule");
     }
-  }, [isPublished, isScheduled, setPublishMode]);
+  }, [
+    isPublished,
+    isScheduled,
+    setPublishMode,
+    formData.source,
+    formData.scheduled_at,
+  ]);
 
   const [savingStatus, setSavingStatus] = useState<
     "idle" | "saving_draft" | "scheduling" | "publishing"
@@ -313,6 +326,11 @@ export default function ArticleDetailsSheet({
             attr.publication_settings = {
               [normalizedPlatform]: platformSettings[intId],
             };
+
+            // Map external_article_id to external_id for the API
+            if (platformSettings[intId]?.external_article_id) {
+              attr.external_id = platformSettings[intId].external_article_id;
+            }
           }
         }
 
@@ -900,7 +918,7 @@ export default function ArticleDetailsSheet({
           {/* Publishing Section */}
           <section className="space-y-4">
             <h3 className="text-sm font-poppins font-medium text-[#0A2918] uppercase tracking-wider">
-              Publishing
+              {formData.source === "fetched" ? "Update Details" : "Publishing"}
             </h3>
 
             <div className="space-y-4">
@@ -915,14 +933,16 @@ export default function ArticleDetailsSheet({
                       value="publish"
                       className="cursor-pointer data-[state=active]:bg-[#104127] data-[state=active]:text-white"
                     >
-                      Publish Now
+                      {formData.source === "fetched" ? "Update" : "Publish Now"}
                     </TabsTrigger>
 
                     <TabsTrigger
                       value="schedule"
                       className="cursor-pointer data-[state=active]:bg-[#104127] data-[state=active]:text-white"
                     >
-                      Schedule
+                      {formData.source === "fetched"
+                        ? "Scheduled Update"
+                        : "Schedule"}
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
@@ -990,11 +1010,24 @@ export default function ArticleDetailsSheet({
                   />
                 </div>
               )}
-              {/* Filter connected integrations first */}
               {(() => {
-                const connectedIntegrations = allIntegrations.filter(
-                  (i) => i.is_connected,
-                );
+                const connectedIntegrations = allIntegrations.filter((i) => {
+                  if (!i.is_connected) return false;
+                  if (formData.source === "fetched") {
+                    const platform = (i.platform || "").toLowerCase();
+                    const name = (i.name || "").toLowerCase();
+                    const id = (i.id || "").toLowerCase();
+
+                    return (
+                      platform.includes("webhook") ||
+                      platform === "customwebhook" ||
+                      platform === "custom_webhook" ||
+                      name.includes("webhook") ||
+                      id.includes("webhook")
+                    );
+                  }
+                  return true;
+                });
 
                 if (connectedIntegrations.length === 0) return null;
 
@@ -1094,10 +1127,17 @@ export default function ArticleDetailsSheet({
               </Button>
               <Button
                 onClick={handleUpdatePublished}
-                disabled={isUpdatingPublished}
+                disabled={
+                  isUpdatingPublished ||
+                  formData.article_publications.length === 0
+                }
                 className="bg-[#104127] hover:bg-[#0A2918] flex-1"
               >
-                {isUpdatingPublished ? "Updating..." : "Update Published"}
+                {isUpdatingPublished
+                  ? "Updating..."
+                  : formData.article_publications.length === 0
+                    ? "Select platform to Update"
+                    : "Update Published"}
               </Button>
             </div>
           ) : publishMode === "schedule" ? (
@@ -1113,13 +1153,20 @@ export default function ArticleDetailsSheet({
               <Button
                 onClick={() => handleSave("publish_or_schedule")}
                 className="bg-[#104127] hover:bg-[#0A2918] flex-1"
-                disabled={savingStatus !== "idle"}
+                disabled={
+                  savingStatus !== "idle" ||
+                  formData.article_publications.length === 0
+                }
               >
                 {savingStatus === "scheduling"
                   ? "Scheduling..."
-                  : isScheduled
-                    ? "Update Schedule"
-                    : "Schedule"}
+                  : formData.article_publications.length === 0
+                    ? "Select platform to Schedule"
+                    : isScheduled
+                      ? "Update Schedule"
+                      : formData.source === "fetched"
+                        ? "Scheduled Update"
+                        : "Schedule"}
               </Button>
             </div>
           ) : (
@@ -1135,11 +1182,21 @@ export default function ArticleDetailsSheet({
               <Button
                 onClick={() => handleSave("publish_or_schedule")}
                 className="w-full bg-[#104127] hover:bg-[#0A2918] flex-1"
-                disabled={savingStatus !== "idle" || isPublishing}
+                disabled={
+                  savingStatus !== "idle" ||
+                  isPublishing ||
+                  formData.article_publications.length === 0
+                }
               >
                 {isPublishing || savingStatus === "publishing"
                   ? "Publishing..."
-                  : "Publish Now"}
+                  : formData.article_publications.length === 0
+                    ? `Select platform to ${
+                        formData.source === "fetched" ? "Update" : "Publish"
+                      }`
+                    : formData.source === "fetched"
+                      ? "Update"
+                      : "Publish Now"}
               </Button>
             </div>
           )}

@@ -216,6 +216,8 @@ export default function ArticleClientPage() {
           ),
         },
         id: fetchedArticle.id,
+        source: fetchedArticle.source,
+        url: fetchedArticle.url,
       };
 
       // Always update store with latest fetched data to ensure sync, especially for async loaded relationships
@@ -238,6 +240,8 @@ export default function ArticleClientPage() {
             tags: details.tags,
             categories: details.categories,
             key_phrases: details.key_phrases,
+            source: details.source,
+            url: details.url,
             // Don't overwrite title/content as user might be typing
           }));
         }, 0);
