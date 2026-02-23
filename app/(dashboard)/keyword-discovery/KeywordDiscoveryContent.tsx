@@ -356,7 +356,7 @@ export default function KeywordDiscoveryContent() {
             onClick={handleTriggerDiscovery}
             disabled={
               (!locked && !canDiscover) ||
-              triggerDiscovery.isPending ||
+              triggerDiscovery?.isPending ||
               isProcessing
             }
             className="h-9 bg-[#104127] hover:bg-[#104127]/90 font-inter gap-2 relative overflow-hidden group"
