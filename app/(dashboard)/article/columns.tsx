@@ -15,6 +15,8 @@ import {
   Trash2,
   Eye,
   Share2,
+  RefreshCcw,
+  Loader2,
 } from "lucide-react";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
@@ -47,6 +49,7 @@ export interface Article {
   freshness_score?: number | null;
   decay_risk?: number | null;
   needs_freshness_update?: boolean | null;
+  fetched_with_structure?: boolean | null;
 }
 
 import { Column, ColumnDef } from "@tanstack/react-table";
@@ -213,6 +216,22 @@ export const columns: ColumnDef<Article, any>[] = [
 
       const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
       const [repurposeOpen, setRepurposeOpen] = useState(false);
+      const [isRefetching, setIsRefetching] = useState(false);
+
+      const handleRefetch = async () => {
+        setIsRefetching(true);
+        try {
+          await axiosInstance.post(
+            `/api/v1/blogs/${article.blog_id}/articles/${article.id}/refetch`,
+          );
+          toast.success("Article refetched successfully!");
+          queryClient.invalidateQueries({ queryKey: ["articles"] });
+        } catch (error) {
+          console.error("Refetch failed", error);
+        } finally {
+          setIsRefetching(false);
+        }
+      };
 
       const handleDelete = async () => {
         try {
@@ -242,25 +261,23 @@ export const columns: ColumnDef<Article, any>[] = [
         });
       }
 
-      // Edit/View - Only for internal articles
-      if (!isFetched) {
-        actions.push({
-          id: isViewer ? "view" : "edit",
-          name: isViewer ? "View Article" : "Edit Article",
-          icon: isViewer ? (
-            <Eye className="h-4 w-4 text-gray-500" />
-          ) : (
-            <Pencil className="h-4 w-4 text-gray-500" />
-          ),
-          action: () => {
-            if (isViewer) {
-              router.push(`/article/view/${article.id}`);
-            } else {
-              router.push(`/article/${article.id}`);
-            }
-          },
-        });
-      }
+      // Edit/View Action - Available for ALL articles
+      actions.push({
+        id: isViewer ? "view" : "edit",
+        name: isViewer ? "View Article" : "Edit Article",
+        icon: isViewer ? (
+          <Eye className="h-4 w-4 text-gray-500" />
+        ) : (
+          <Pencil className="h-4 w-4 text-gray-500" />
+        ),
+        action: () => {
+          if (isViewer) {
+            router.push(`/article/view/${article.id}`);
+          } else {
+            router.push(`/article/${article.id}`);
+          }
+        },
+      });
 
       // Repurpose Content - Available for ALL articles
       actions.push({
@@ -269,6 +286,22 @@ export const columns: ColumnDef<Article, any>[] = [
         icon: <Share2 className="h-4 w-4 text-gray-500" />,
         action: () => setRepurposeOpen(true),
       });
+
+      // Refetch Content - Available for FETCHED articles
+      if (isFetched) {
+        actions.push({
+          id: "refetch",
+          name: isRefetching ? "Refetching..." : "Refetch Article",
+          icon: (
+            <RefreshCcw
+              className={`h-4 w-4 text-gray-500 ${
+                isRefetching ? "animate-spin" : ""
+              }`}
+            />
+          ),
+          action: handleRefetch,
+        });
+      }
 
       // Delete (Hide for Viewers)
       if (!isViewer) {
@@ -283,21 +316,27 @@ export const columns: ColumnDef<Article, any>[] = [
       return (
         <>
           <div onClick={(e) => e.stopPropagation()}>
-            <CustomDropdown
-              open={open}
-              onOpenChange={setOpen}
-              options={actions}
-              trigger={
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              }
-              onSelect={(option: any) => {
-                option.action();
-                setOpen(false);
-              }}
-            />
+            {isRefetching ? (
+              <div className="flex justify-center items-center h-8 w-8">
+                <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+              </div>
+            ) : (
+              <CustomDropdown
+                open={open}
+                onOpenChange={setOpen}
+                options={actions}
+                trigger={
+                  <Button variant="ghost" className="h-8 w-8 p-0">
+                    <span className="sr-only">Open menu</span>
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                }
+                onSelect={(option: any) => {
+                  option.action();
+                  setOpen(false);
+                }}
+              />
+            )}
             <CustomAlertDialog
               open={deleteDialogOpen}
               onOpenChange={setDeleteDialogOpen}

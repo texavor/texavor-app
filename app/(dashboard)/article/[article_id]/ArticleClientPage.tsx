@@ -17,6 +17,9 @@ import { useSmartLinksQuery, LinkSuggestion } from "@/hooks/useSmartLinking";
 import ArticleDetailsSheet from "@/components/ArticleDetailsSheet";
 import { ThumbnailUploadDialog } from "@/components/ThumbnailUploadDialog";
 import { usePermissions } from "@/hooks/usePermissions";
+import { RefetchAlert } from "../components/RefetchAlert";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 import {
   EditorSkeleton,
@@ -40,6 +43,7 @@ export default function ArticleClientPage() {
 
   const router = useRouter();
   const params = useParams();
+  const queryClient = useQueryClient();
   const { blogs, zenMode, toggleZenMode } = useAppStore();
   const {
     reset: resetArticleSettings,
@@ -311,6 +315,18 @@ export default function ArticleClientPage() {
       if (res?.data) {
         setArticleId((prev: any) => ({ ...prev, ...res.data }));
       }
+    },
+  });
+
+  const refetchMutation = useMutation({
+    mutationFn: async () => {
+      return axiosInstance.post(
+        `/api/v1/blogs/${blogs?.id}/articles/${existingId}/refetch`,
+      );
+    },
+    onSuccess: () => {
+      toast.success("Article refetched successfully!");
+      queryClient.invalidateQueries({ queryKey: ["article", existingId] });
     },
   });
 
@@ -685,6 +701,13 @@ export default function ArticleClientPage() {
             showMetrics && !zenMode ? "w-8/12" : "w-full"
           } space-y-4 transition-all duration-300`}
         >
+          {fetchedArticle?.source === "fetched" &&
+            !fetchedArticle?.fetched_with_structure && (
+              <RefetchAlert
+                onRefetch={() => refetchMutation.mutate()}
+                isRefetching={refetchMutation.isPending}
+              />
+            )}
           <Editor
             value={content}
             onChange={(md, html) => {

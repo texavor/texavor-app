@@ -13,6 +13,7 @@ import {
   Loader2,
   Search,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { useAppStore } from "@/store/appStore";
 import { axiosInstance } from "@/lib/axiosInstace";
@@ -47,6 +48,7 @@ interface Article {
   freshness_score?: number | null;
   decay_risk?: number | null;
   needs_freshness_update?: boolean | null;
+  fetched_with_structure?: boolean | null;
 }
 
 interface Pagination {
@@ -223,7 +225,7 @@ const ArticlePageContent = () => {
 
       const res = await axiosInstance.get(
         `/api/v1/blogs/${blogs?.id}/articles`,
-        { params }
+        { params },
       );
       return res?.data || { articles: [], pagination: {} };
     },
@@ -240,7 +242,7 @@ const ArticlePageContent = () => {
           title: "Untitled",
           content: "",
           source: "texavor",
-        }
+        },
       );
       return res.data;
     },
@@ -429,12 +431,9 @@ const ArticlePageContent = () => {
               data={data?.articles || []}
               isLoading={isLoading || !blogs?.id}
               onClick={(row: Article) => {
-                if (row?.source !== "fetched")
-                  router.push(`/article/${row?.id}`);
+                router.push(`/article/${row?.id}`);
               }}
-              getRowClassName={(row: Article) =>
-                row?.source === "platform" ? "cursor-pointer" : ""
-              }
+              getRowClassName={(row: Article) => "cursor-pointer"}
               className="bg-white rounded-lg border-none"
             />
             {data?.pagination && (
