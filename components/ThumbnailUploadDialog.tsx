@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Upload,
@@ -54,8 +55,12 @@ export function ThumbnailUploadDialog({
   // AI Generation fields
   const [customPrompt, setCustomPrompt] = useState("");
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(
-    null
+    null,
   );
+
+  // URL field
+  const [customUrl, setCustomUrl] = useState("");
+  const [activeTab, setActiveTab] = useState("upload");
 
   // Fetch selected thumbnail style
   const { data: stylesData } = useQuery<{
@@ -65,7 +70,7 @@ export function ThumbnailUploadDialog({
     queryKey: ["thumbnailStyles", blogs?.id],
     queryFn: async () => {
       const response = await axiosInstance.get(
-        `/api/v1/blogs/${blogs?.id}/thumbnail_styles`
+        `/api/v1/blogs/${blogs?.id}/thumbnail_styles`,
       );
       return response.data;
     },
@@ -73,7 +78,7 @@ export function ThumbnailUploadDialog({
   });
 
   const selectedStyle = stylesData?.styles?.find(
-    (s) => s.id === stylesData.selected_style_id
+    (s) => s.id === stylesData.selected_style_id,
   );
 
   // Generate mutation - using /generations endpoint like Toolbar.tsx
@@ -105,7 +110,7 @@ export function ThumbnailUploadDialog({
           style: "thumbnail", // Always use "thumbnail" style
           width: Number(blogs?.thumbnail_width || 1024),
           height: Number(blogs?.thumbnail_height || 416),
-        }
+        },
       );
       return response.data;
     },
@@ -126,14 +131,17 @@ export function ThumbnailUploadDialog({
     mutationFn: async () => {
       let imageUrl: string;
 
-      if (selectedFile) {
+      if (activeTab === "upload" && selectedFile) {
         // Upload file and get URL
         imageUrl = await uploadImage(selectedFile);
-      } else if (generatedImageUrl) {
+      } else if (activeTab === "generate" && generatedImageUrl) {
         // Use the AI-generated image URL
         imageUrl = generatedImageUrl;
+      } else if (activeTab === "url" && customUrl) {
+        // Use the user provided URL
+        imageUrl = customUrl;
       } else {
-        throw new Error("No image to save");
+        throw new Error("No image to save in current tab");
       }
 
       // Update article with the thumbnail_url
@@ -143,7 +151,7 @@ export function ThumbnailUploadDialog({
           article: {
             thumbnail_url: imageUrl,
           },
-        }
+        },
       );
 
       return response.data;
@@ -215,7 +223,11 @@ export function ThumbnailUploadDialog({
   };
 
   const handleSaveCover = () => {
-    if (selectedFile || generatedImageUrl) {
+    if (
+      (activeTab === "upload" && selectedFile) ||
+      (activeTab === "generate" && generatedImageUrl) ||
+      (activeTab === "url" && customUrl)
+    ) {
       saveCoverMutation.mutate();
     }
   };
@@ -253,6 +265,8 @@ export function ThumbnailUploadDialog({
     setError(null);
     setIsDragging(false);
     setCustomPrompt("");
+    setCustomUrl("");
+    setActiveTab("upload");
     onClose();
   };
 
@@ -273,10 +287,11 @@ export function ThumbnailUploadDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="upload" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="upload">Upload</TabsTrigger>
             <TabsTrigger value="generate">Generate AI</TabsTrigger>
+            <TabsTrigger value="url">Link</TabsTrigger>
           </TabsList>
 
           <TabsContent value="upload" className="space-y-4">
@@ -416,6 +431,42 @@ export function ThumbnailUploadDialog({
               </div>
             )}
           </TabsContent>
+
+          <TabsContent value="url" className="space-y-4">
+            <div className="space-y-3">
+              <Label htmlFor="coverUrl">Image URL</Label>
+              <Input
+                id="coverUrl"
+                placeholder="https://example.com/image.jpg"
+                value={customUrl}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setCustomUrl(e.target.value)
+                }
+                className="text-sm"
+              />
+            </div>
+            {customUrl && (
+              <div className="min-h-[200px] flex items-center justify-center border-2 border-dashed rounded-lg border-gray-200">
+                <div className="relative w-full h-full p-4">
+                  <img
+                    src={customUrl}
+                    alt="URL preview"
+                    className="w-full h-full object-contain rounded"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = ""; // Clear broken image
+                      setError("Failed to load image from URL");
+                    }}
+                    onLoad={() => setError(null)}
+                  />
+                </div>
+              </div>
+            )}
+            {error && activeTab === "url" && (
+              <div className="text-sm text-red-500 bg-red-50 p-3 rounded">
+                {error}
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
 
         <DialogFooter className="flex justify-between sm:justify-between">
@@ -425,7 +476,9 @@ export function ThumbnailUploadDialog({
           <Button
             onClick={handleSaveCover}
             disabled={
-              (!selectedFile && !generatedImageUrl) ||
+              (activeTab === "upload" && !selectedFile) ||
+              (activeTab === "generate" && !generatedImageUrl) ||
+              (activeTab === "url" && !customUrl) ||
               saveCoverMutation.isPending
             }
           >
