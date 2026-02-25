@@ -18,12 +18,14 @@ type MyForm = {
 
 function ResetPasswordLoading() {
   return (
-    <div className="mx-auto grid w-[450px] gap-6 p-10">
+    <div className="mx-auto grid w-full max-w-sm sm:max-w-md gap-6 p-6 sm:p-10 sm:border sm:border-border sm:bg-card sm:rounded-xl shadow-none self-center mt-10 md:mt-0">
       <div className="grid gap-2">
-        <h1 className="text-3xl font-bold text-[#0A2918] font-poppins">
+        <h1 className="text-3xl font-bold text-foreground font-poppins">
           Loading...
         </h1>
-        <p className="text-balance text-[#7A7A7A] font-inter">Please wait...</p>
+        <p className="text-balance text-muted-foreground font-inter text-sm md:text-base">
+          Please wait...
+        </p>
       </div>
     </div>
   );
@@ -69,12 +71,12 @@ function ResetPasswordContent() {
   });
 
   return (
-    <div className="mx-auto grid w-[450px] gap-6 p-10">
+    <div className="mx-auto grid w-full max-w-sm sm:max-w-md gap-6 p-6 sm:p-10 sm:border sm:border-border sm:bg-card sm:rounded-xl shadow-none self-center mt-10 md:mt-0">
       <div className="grid gap-2">
-        <h1 className="text-3xl font-bold text-[#0A2918] font-poppins">
+        <h1 className="text-3xl font-bold text-foreground font-poppins">
           Reset Password
         </h1>
-        <p className="text-balance text-[#7A7A7A] font-inter">
+        <p className="text-balance text-muted-foreground font-inter text-sm md:text-base">
           Enter your new password below.
         </p>
       </div>
@@ -99,7 +101,7 @@ function ResetPasswordContent() {
                 type={showPassword ? "text" : "password"}
                 placeholder="New Password"
                 required
-                className="bg-white text-black pr-10 font-inter"
+                className="bg-background text-foreground pr-10 font-inter"
               />
               <Button
                 type="button"
@@ -110,11 +112,14 @@ function ResetPasswordContent() {
               >
                 {showPassword ? (
                   <EyeOff
-                    className="h-4 w-4 text-gray-500"
+                    className="h-4 w-4 text-muted-foreground"
                     aria-hidden="true"
                   />
                 ) : (
-                  <Eye className="h-4 w-4 text-gray-500" aria-hidden="true" />
+                  <Eye
+                    className="h-4 w-4 text-muted-foreground"
+                    aria-hidden="true"
+                  />
                 )}
               </Button>
             </div>
@@ -133,7 +138,7 @@ function ResetPasswordContent() {
                 type={showPasswordConfirmation ? "text" : "password"}
                 placeholder="Confirm New Password"
                 required
-                className="bg-white text-black pr-10 font-inter"
+                className="bg-background text-foreground pr-10 font-inter"
               />
               <Button
                 type="button"
@@ -144,27 +149,30 @@ function ResetPasswordContent() {
               >
                 {showPasswordConfirmation ? (
                   <EyeOff
-                    className="h-4 w-4 text-gray-500"
+                    className="h-4 w-4 text-muted-foreground"
                     aria-hidden="true"
                   />
                 ) : (
-                  <Eye className="h-4 w-4 text-gray-500" aria-hidden="true" />
+                  <Eye
+                    className="h-4 w-4 text-muted-foreground"
+                    aria-hidden="true"
+                  />
                 )}
               </Button>
             </div>
           )}
         />
-        <div className="mt-3 text-right text-sm text-[#7A7A7A]">
+        <div className="mt-3 text-right text-sm text-muted-foreground">
           <Link
             href="/login"
-            className="underline text-[#271041] font-medium font-inter"
+            className="underline text-primary font-medium font-inter"
           >
             Back to Login
           </Link>
         </div>
         <Button
           type="submit"
-          className="w-full bg-[#104127] text-white hover:bg-[#104127]"
+          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-poppins"
           disabled={mutation.isPending}
         >
           {mutation.isPending ? "Resetting..." : "Reset Password"}

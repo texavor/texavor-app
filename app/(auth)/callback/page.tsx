@@ -6,12 +6,12 @@ import { toast } from "sonner";
 
 function AuthLoading() {
   return (
-    <div className="mx-auto grid w-[450px] gap-6 p-10 md:rounded-tl-lg md:rounded-bl-lg  bg-[#EEDED3]">
+    <div className="mx-auto grid w-full max-w-sm sm:max-w-md gap-6 p-6 sm:p-10 sm:border sm:border-border sm:bg-card sm:rounded-xl shadow-none self-center mt-10 md:mt-0">
       <div className="grid gap-2 text-center">
-        <h1 className="text-3xl font-bold text-[#0A2918] font-poppins">
+        <h1 className="text-3xl font-bold text-foreground font-poppins">
           Authenticating with Google...
         </h1>
-        <p className="text-balance text-[#7A7A7A] font-inter">
+        <p className="text-balance text-muted-foreground font-inter">
           Please wait while we log you in.
         </p>
       </div>

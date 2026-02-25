@@ -1,0 +1,143 @@
+{
+  "post": {
+    "subreddit": "micros_saas",
+    "author": "surajondev",
+    "title": "250 views, 4 signup, 0 sales. I just scrapped my old pricing and launched a Free Tier. Please roast my pivot/landing page."
+  },
+  "comments": [
+    {
+      "id": "c1",
+      "author": "GrrasssTastesBad",
+      "is_op": false,
+      "created": "2d ago",
+      "score": 2,
+      "body": "The biggest problem is you're calling yourself an \"authority engine\" but showing zero authority signals. No testimonials, no usage stats, no proof anyone uses this. That's why people bounce at pricing. They don't trust it enough to pay yet.\n\nYour headline also has the same issue. \"GEO era\" assumes I already know what GEO is and care about it. I ran a full breakdown on your page that covers the trust gap and a few other conversion blockers.\n\nYour footer CTA talks about \"team productivity\" when your whole pitch is about AI search ranking.",
+      "replies": [
+        {
+          "id": "c1_r1",
+          "author": "surajondev",
+          "is_op": true,
+          "created": "2d ago",
+          "score": 2,
+          "body": "Thanks, buddy, for the analysis. I feel like the headline is wrong for a general audience. I will try to optimize it.",
+          "replies": [
+            {
+              "id": "c1_r1_r1",
+              "author": "GrrasssTastesBad",
+              "is_op": false,
+              "created": "2d ago",
+              "score": 2,
+              "body": "Best of luck!",
+              "replies": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "author": "Ok_Revenue9041",
+      "is_op": false,
+      "created": "3d ago",
+      "score": 2,
+      "body": "Your pivot to a free tier and switching to credits is smart for getting new users to try it out. The GEO concept does make sense but people may not immediately get how it benefits their long term visibility with AI engines. For more inbound traction, it could be worth looking into tools like MentionDesk which help brands get noticed across AI driven platforms so you stand out even in new search environments.",
+      "replies": [
+        {
+          "id": "c2_r1",
+          "author": "surajondev",
+          "is_op": true,
+          "created": "3d ago",
+          "score": 1,
+          "body": "AI visibility will take time; we can only monitor those as of now using MentionDesk too. As of now, looking at feedback, what's stopping them from seeing credibility?",
+          "replies": []
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "author": "Alarming_Possible_45",
+      "is_op": false,
+      "created": "3d ago",
+      "score": 2,
+      "body": "I have the same amount of visitors approximately as you in around the same span of time too. Just because you had no sales doesn't mean your pricing is wrong. Since you're early stage people don't actually trust you just yet so it's totally normal. People don't just go around throwing $29 a month on a SaaS they found the first time.",
+      "replies": [
+        {
+          "id": "c3_r1",
+          "author": "surajondev",
+          "is_op": true,
+          "created": "3d ago",
+          "score": 2,
+          "body": "Yeah. That makes sense. But I did not lower the pricing but lowered the entry point. At our current pricing with the starter plan you are getting a lower amount of credits.\n\nA free plan is added to get initial feedback because I do not want to get in development hell.",
+          "replies": [
+            {
+              "id": "c3_r1_r1",
+              "author": "Alarming_Possible_45",
+              "is_op": false,
+              "created": "3d ago",
+              "score": 2,
+              "body": "Just be careful with your free tier. 350 AI credits seems like a lot. Don't know if it really is tho",
+              "replies": [
+                {
+                  "id": "c3_r1_r1_r1",
+                  "author": "surajondev",
+                  "is_op": true,
+                  "created": "3d ago",
+                  "score": 1,
+                  "body": "Thanks for your concern. I have added limits and credits calculation are also there. I also have budget restrictions and alerts to avoid unusual usage.",
+                  "replies": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c4",
+      "author": "MNFuturist",
+      "is_op": false,
+      "created": "2d ago",
+      "score": 2,
+      "body": "I'm impressed by what you've built! The main issue you have right now is that you're so far ahead of the market that very few people even understand or are aware of the problem you're helping them solve. You need to educate them on why they need your solution and then sell it to them, which is difficult. The right people will get it now. But there are so few of them currently it will take a while for everyone else to catch up to realize that they could benefit from your services.",
+      "replies": [
+        {
+          "id": "c4_r1",
+          "author": "surajondev",
+          "is_op": true,
+          "created": "2d ago",
+          "score": 1,
+          "body": "People can see the shift in search from Google to ChatGPT. It's not like people are unaware. The primary reason for not having paying customers is the lack of trust as a new brand. Because seeing results with GEO takes at least 3 months of consistent writing to see it.",
+          "replies": []
+        }
+      ]
+    },
+    {
+      "id": "c5",
+      "author": "HarjjotSinghh",
+      "is_op": false,
+      "created": "2d ago",
+      "score": 2,
+      "body": "Free tier's the new gold rush - go steal my dream.",
+      "replies": []
+    },
+    {
+      "id": "c6",
+      "author": "highfives23",
+      "is_op": false,
+      "created": "2d ago",
+      "score": 2,
+      "body": "You’re too early in the journey to change pricing. I’ve never liked free tiers. If you insist on lowering prices, don’t offer a free plan. Offer a 3-day trial for $1, which renews at your $29 price point.\n\nEither way, I don’t think your issue is pricing. This is a massive market with a lot of money. One major reason why you’re not getting sign-ups is your lack of credibility. You need testimonials and case studies. Give those 4 people who did sign-up full access for a month in exchange for a testimonial.",
+      "replies": [
+        {
+          "id": "c6_r1",
+          "author": "surajondev",
+          "is_op": true,
+          "created": "2d ago",
+          "score": 1,
+          "body": "I might eliminate the free tier when enough feedback is there. As you say, without credibility, I won't survive. Initial free users can provide me with testimonials and feedback.",
+          "replies": []
+        }
+      ]
+    }
+  ]
+}

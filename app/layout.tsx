@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Poppins, Inter } from "next/font/google";
+import { Poppins, Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import ReactQueryProvider from "./ReactQueryProvider";
@@ -17,6 +17,12 @@ const poppins = Poppins({
 const inter = Inter({
   weight: ["400", "500", "600", "700"],
   variable: "--font-inter",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
@@ -49,7 +55,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${poppins.variable} ${inter.variable} antialiased`}>
+      <body
+        className={`${poppins.variable} ${inter.variable} ${geistMono.variable} antialiased`}
+      >
         <ReactQueryProvider>
           <UpgradePromptProvider>
             <GlobalLoader />

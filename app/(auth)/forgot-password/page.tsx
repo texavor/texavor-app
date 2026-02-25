@@ -42,12 +42,12 @@ export default function ForgotPasswordPage() {
   });
 
   return (
-    <div className="mx-auto grid w-[450px] gap-6 p-10 md:rounded-tl-lg md:rounded-bl-lg h-full bg-[#EEDED3]">
+    <div className="mx-auto grid w-full max-w-sm sm:max-w-md gap-6 p-6 sm:p-10 sm:border sm:border-border sm:bg-card sm:rounded-xl shadow-none self-center mt-10 md:mt-0">
       <div className="grid gap-2">
-        <h1 className="text-3xl font-bold text-[#0A2918] font-poppins">
+        <h1 className="text-3xl font-bold text-foreground font-poppins">
           Forgot Password
         </h1>
-        <p className="text-balance text-[#7A7A7A] font-inter">
+        <p className="text-balance text-muted-foreground font-inter text-sm md:text-base">
           Enter your email and we will send you a link to reset your password.
         </p>
       </div>
@@ -71,21 +71,21 @@ export default function ForgotPasswordPage() {
               type="email"
               placeholder="Enter Email"
               required
-              className="bg-white text-black font-inter"
+              className="bg-background text-foreground font-inter"
             />
           )}
         />
         <Button
           type="submit"
-          className="w-full bg-[#104127] text-white hover:bg-[#104127]"
+          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-poppins"
           disabled={mutation.isPending}
         >
           {mutation.isPending ? "Sending..." : "Send password reset email"}
         </Button>
       </form>
-      <div className="mt-4 text-center text-sm text-[#7A7A7A] font-inter">
+      <div className="mt-4 text-center text-sm text-muted-foreground font-inter">
         Remember your password?{" "}
-        <Link href="/login" className="underline text-[#104127] font-medium">
+        <Link href="/login" className="underline text-primary font-medium">
           Login
         </Link>
       </div>

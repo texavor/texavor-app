@@ -117,13 +117,13 @@ function RegisterContent() {
   });
 
   return (
-    <div className="mx-auto grid w-[450px] gap-6 p-10">
+    <div className="mx-auto grid w-full max-w-sm sm:max-w-md gap-6 p-6 sm:p-10 sm:border sm:border-border sm:bg-card sm:rounded-xl shadow-none">
       <div className="grid gap-2">
-        <h1 className="text-3xl font-bold text-[#0A2918] font-poppins">
-          Sign up
+        <h1 className="text-3xl font-bold text-foreground font-poppins">
+          Claim your authority
         </h1>
-        <p className="text-balance text-[#7A7A7A] font-inter">
-          Create your account and build your authority in search.
+        <p className="text-balance text-muted-foreground font-inter text-sm md:text-base">
+          Start your 14-day free trial. No credit card required.
         </p>
       </div>
       <form
@@ -146,7 +146,7 @@ function RegisterContent() {
               type="text"
               placeholder="Enter First Name"
               required
-              className="bg-white text-black font-inter"
+              className="bg-background text-foreground font-inter"
             />
           )}
         />
@@ -162,7 +162,7 @@ function RegisterContent() {
               type="text"
               placeholder="Enter Last Name"
               required
-              className="bg-white text-black font-inter"
+              className="bg-background text-foreground font-inter"
             />
           )}
         />
@@ -178,7 +178,7 @@ function RegisterContent() {
               type="email"
               placeholder="Enter Email"
               required
-              className="bg-white  text-black col-span-2 font-inter"
+              className="bg-background text-foreground col-span-2 font-inter"
             />
           )}
         />
@@ -195,7 +195,7 @@ function RegisterContent() {
                 type={showPassword ? "text" : "password"}
                 placeholder="Create Password"
                 required
-                className="bg-white font-inter text-black pr-10"
+                className="bg-background font-inter text-foreground pr-10"
               />
               <Button
                 type="button"
@@ -232,7 +232,7 @@ function RegisterContent() {
                 type={showConfirmPassword ? "text" : "password"}
                 placeholder="Confirm Password"
                 required
-                className="bg-white font-inter text-black pr-10"
+                className="bg-background font-inter text-foreground pr-10"
               />
               <Button
                 type="button"
@@ -269,21 +269,21 @@ function RegisterContent() {
               />
               <Label
                 htmlFor={field.name}
-                className="text-sm font-inter font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-[#7A7A7A]"
+                className="text-sm font-inter font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-muted-foreground"
               >
-                I Agree To The
+                I Agree To The{" "}
                 <Link
                   href="https://www.texavor.com/terms-and-conditions"
                   target="_blank"
-                  className="underline text-[#104127] font-medium font-inter"
+                  className="underline text-primary font-medium font-inter"
                 >
                   Terms
-                </Link>
-                &
+                </Link>{" "}
+                &{" "}
                 <Link
                   href="https://www.texavor.com/privacy-policy"
                   target="_blank"
-                  className="underline text-[#104127] font-medium font-inter"
+                  className="underline text-primary font-medium font-inter"
                 >
                   Privacy Policy
                 </Link>
@@ -297,7 +297,7 @@ function RegisterContent() {
             <Button
               disabled={!terms || mutation.isPending}
               type="submit"
-              className="w-full bg-[#104127] text-white hover:bg-[#104127] col-span-2"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 col-span-2 font-poppins"
             >
               {mutation.isPending ? "Creating Account..." : "Create Account"}
             </Button>
@@ -306,10 +306,10 @@ function RegisterContent() {
       </form>
       <div className="relative my-4">
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-gray-400" />
+          <span className="w-full border-t border-border" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-[#EEE5DC] px-2 text-muted-foreground rounded-sm font-inter">
+          <span className="bg-background px-2 text-muted-foreground rounded-sm font-inter">
             or sign up via
           </span>
         </div>
@@ -321,7 +321,7 @@ function RegisterContent() {
         >
           <Button
             variant="outline"
-            className="bg-white border text-[#0A2918] w-full hover:bg-white"
+            className="bg-card border-border text-foreground w-full hover:bg-muted font-inter"
           >
             <Image
               src="/icons/google.png"
@@ -334,11 +334,11 @@ function RegisterContent() {
           </Button>
         </a>
       </div>
-      <div className="mt-4 text-center text-sm text-[#7A7A7A] font-inter">
+      <div className="mt-4 text-center text-sm text-muted-foreground font-inter">
         Already Have An Account?{" "}
         <Link
           href="/login"
-          className="underline text-[#104127] font-medium font-inter"
+          className="underline text-primary font-medium font-inter"
         >
           Login
         </Link>

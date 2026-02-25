@@ -1,0 +1,100 @@
+{
+  "comments_additional": [
+    {
+      "id": "c7",
+      "author": "HarjjotSinghh",
+      "is_op": false,
+      "created": "2d ago",
+      "score": 2,
+      "body": "this geo angle sounds revolutionary!",
+      "replies": [
+        {
+          "id": "c7_r1",
+          "author": "surajondev",
+          "is_op": true,
+          "created": "2d ago",
+          "score": 1,
+          "body": "It's not revolutionary, many other brands are also doing this because of the shift in the search.",
+          "replies": []
+        }
+      ]
+    },
+    {
+      "id": "c8",
+      "author": "EntertainmentThin237",
+      "is_op": false,
+      "created": "2d ago",
+      "score": 2,
+      "body": "The signup page is broken on mobile devices.",
+      "replies": [
+        {
+          "id": "c8_r1",
+          "author": "surajondev",
+          "is_op": true,
+          "created": "2d ago",
+          "score": 1,
+          "body": "I have to work on the mobile device actually. Currently focused on the desktop only. If you could try on a desktop much appreciated.",
+          "replies": [
+            {
+              "id": "c8_r1_r1",
+              "author": "EntertainmentThin237",
+              "is_op": false,
+              "created": "2d ago",
+              "score": 2,
+              "body": "Most people who use Reddit and X are on mobile devices. I think you should optimize first for mobile devices because most of the discovery happens on that platform. Later people switch to desktop.",
+              "replies": [
+                {
+                  "id": "c8_r1_r1_r1",
+                  "author": "surajondev",
+                  "is_op": true,
+                  "created": "2d ago",
+                  "score": 1,
+                  "body": "Thanks, buddy. I will optimize the platform for mobile devices too.",
+                  "replies": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c9",
+      "author": "HarjjotSinghh",
+      "is_op": false,
+      "created": "4d ago",
+      "score": 2,
+      "body": "this geo approach sounds genius actually.",
+      "replies": [
+        {
+          "id": "c9_r1",
+          "author": "surajondev",
+          "is_op": true,
+          "created": "4d ago",
+          "score": 1,
+          "body": "Thanks. Will love it if you could try the platform and provide feedback, man.",
+          "replies": []
+        }
+      ]
+    },
+    {
+      "id": "c10",
+      "author": "ManiAdhav",
+      "is_op": false,
+      "created": "4d ago",
+      "score": 2,
+      "body": "Hey, I am searching for blog writing AI assistance for the last one week for my SaaS and finalized FlipAEO two days before.\n\nYour tool looks interesting, but a few things make me rethink trying it.\n\nYour site didn't provide confidence or clarity to attempt because it looks completely AI written and unable to catch the USP.\n\nI finalized the tool after 2 days of continuous discussion with Gemini and ChatGPT. My prompt always intended to find startup-friendly and low-budget tools. Even your tool met the metrics and still was not visible in the AI search.\n\nWhen you think about conversion, I suggest reviewing your website and also building trust with results.\n\nI am also a founder like you and sharing this from a user perspective.",
+      "replies": [
+        {
+          "id": "c10_r1",
+          "author": "surajondev",
+          "is_op": true,
+          "created": "4d ago",
+          "score": 1,
+          "body": "Thanks Mani for your valuable feedback. I just launched the tool 2 weeks ago, which affects not getting citation as of now. Regarding your feedback:\n\nYes, I have used AI to build the landing page. Your point is valid as it looks generic. I realized this last week too. I think I need to work on the UI to avoid looking generic.\n\nResults are harder to get. It will require running for a few months to see actual results.\n\nAlso, I checked FlipAEO too. Unlike them, we are not a mass AI content generator as humans are still involved in our platform. We provide research, integration, and analysis tools to write citation-friendly content.\n\nIf you ever feel like trying the platform, please do it. It has a free tier too.",
+          "replies": []
+        }
+      ]
+    }
+  ]
+}

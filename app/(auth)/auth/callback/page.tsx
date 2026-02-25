@@ -6,10 +6,12 @@ import BouncingLogo from "@/components/BouncingLogo";
 
 function AuthCallbackLoading() {
   return (
-    <div className="mx-auto grid w-[450px] gap-6 p-10">
-      <div className="grid gap-2">
-        <h1 className="text-3xl font-bold text-[#0A2918]">Authenticating...</h1>
-        <p className="text-balance text-[#7A7A7A]">
+    <div className="mx-auto grid w-full max-w-sm sm:max-w-md gap-6 p-6 sm:p-10 sm:border sm:border-border sm:bg-card sm:rounded-xl shadow-none self-center mt-10 md:mt-0">
+      <div className="grid gap-2 text-center">
+        <h1 className="text-3xl font-bold text-foreground font-poppins">
+          Authenticating...
+        </h1>
+        <p className="text-balance text-muted-foreground font-inter">
           Please wait while we log you in.
         </p>
       </div>
@@ -33,12 +35,12 @@ function AuthCallbackContent() {
   }, [router, searchParams]);
 
   return (
-    <div className="mx-auto grid w-[450px] gap-6 p-10">
-      <div className="grid gap-2">
-        <h1 className="text-3xl font-bold text-[#0A2918]">
+    <div className="mx-auto grid w-full max-w-sm sm:max-w-md gap-6 p-6 sm:p-10 sm:border sm:border-border sm:bg-card sm:rounded-xl shadow-none self-center mt-10 md:mt-0">
+      <div className="grid gap-2 text-center">
+        <h1 className="text-3xl font-bold text-foreground font-poppins">
           Authenticating with Google...
         </h1>
-        <p className="text-balance text-[#7A7A7A]">
+        <p className="text-balance text-muted-foreground font-inter">
           Please wait while we log you in.
         </p>
       </div>

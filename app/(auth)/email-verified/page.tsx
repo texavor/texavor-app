@@ -17,12 +17,14 @@ type VerifyEmailForm = {
 
 function VerifyEmailLoading() {
   return (
-    <div className="flex items-center justify-center bg-[#EEDED3] p-6">
-      <div className="w-[450px] rounded-lg p-10 grid gap-6 text-center">
+    <div className="flex flex-col items-center justify-center w-full p-6">
+      <div className="w-full max-w-sm sm:max-w-md p-6 sm:p-10 grid gap-6 text-center sm:border sm:border-border sm:bg-card sm:rounded-xl shadow-none mx-auto">
         <div className="flex justify-center">
-          <Loader2 className="h-10 w-10 animate-spin text-[#104127]" />
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
         </div>
-        <p className="text-[#7A7A7A] font-inter">Verifying...</p>
+        <p className="text-muted-foreground font-inter text-sm md:text-base">
+          Verifying...
+        </p>
       </div>
     </div>
   );
@@ -63,37 +65,39 @@ function VerifyEmailContent() {
   });
 
   return (
-    <div className="flex items-center justify-center bg-[#EEDED3] p-6">
-      <div className="w-[450px] rounded-lg p-10 grid gap-6 text-center">
+    <div className="flex flex-col items-center justify-center w-full p-6">
+      <div className="w-full max-w-sm sm:max-w-md p-6 sm:p-10 grid gap-6 text-center sm:border sm:border-border sm:bg-card sm:rounded-xl shadow-none mx-auto">
         {success ? (
           <>
-            <h1 className="text-3xl font-bold text-[#0A2918] font-poppins">
+            <h1 className="text-3xl font-bold text-foreground font-poppins">
               Email Verified!
             </h1>
-            <p className="text-[#7A7A7A] font-inter">
+            <p className="text-muted-foreground font-inter text-sm md:text-base">
               Your email has been successfully verified. You can now log in to
               your account.
             </p>
             <Button
               asChild
-              className="w-full bg-[#104127] text-white hover:bg-[#104127]"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-poppins"
             >
               <Link href="/login">Login Now</Link>
             </Button>
           </>
         ) : (
           <>
-            <h1 className="text-3xl font-bold text-[#0A2918] font-poppins">
+            <h1 className="text-3xl font-bold text-foreground font-poppins">
               {errors === "Email was already confirmed, please try signing in"
                 ? "Email Already Confirmed"
                 : "Verification Failed"}
             </h1>
-            <p className="text-[#7A7A7A] font-inter">{errors}</p>
+            <p className="text-muted-foreground font-inter text-sm md:text-base">
+              {errors}
+            </p>
 
             {errors === "Email was already confirmed, please try signing in" ? (
               <Button
                 onClick={() => router.push("/login")}
-                className="w-full bg-[#104127] text-white hover:bg-[#104127]"
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-poppins"
               >
                 Go to Login
               </Button>
@@ -118,13 +122,13 @@ function VerifyEmailContent() {
                       type="email"
                       placeholder="Enter your email"
                       required
-                      className="bg-white text-black font-inter"
+                      className="bg-background text-foreground font-inter"
                     />
                   )}
                 />
                 <Button
                   type="submit"
-                  className="w-full bg-[#104127] text-white hover:bg-[#104127]"
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-poppins"
                   disabled={mutation.isPending}
                 >
                   {mutation.isPending

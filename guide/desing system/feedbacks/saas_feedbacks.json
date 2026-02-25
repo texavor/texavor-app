@@ -1,0 +1,51 @@
+{
+  "comments_additional_2": [
+    {
+      "id": "c11",
+      "author": "Hungry_Age5375",
+      "is_op": false,
+      "created": "18h ago",
+      "score": 2,
+      "body": "250 views means nothing. 0 sales screams trust deficit. Slap a \"X companies paying\" banner on top. Watch conversion double.",
+      "replies": [
+        {
+          "id": "c11_r1",
+          "author": "surajondev",
+          "is_op": true,
+          "created": "18h ago",
+          "score": 1,
+          "body": "250 means nothing then what should be ideal for a new SaaS.\n\nThanks for the other suggestion.",
+          "replies": []
+        }
+      ]
+    },
+    {
+      "id": "c12",
+      "author": "Old_Lab1576",
+      "is_op": false,
+      "created": "18h ago",
+      "score": 3,
+      "body": "I don’t think your problem was pricing.\n\n0% conversion usually means people don’t understand the urgency, not that it’s too expensive.\n\nRight now \"rank in AI search\" still feels abstract. Writers don’t wake up thinking about GEO, they wake up thinking \"I need traffic\".\n\nSo when they hit pricing they ask one question:\n\nWill this reliably get me more readers than WordPress + normal SEO?\n\nIf that answer isn’t obvious in 5 seconds they leave, free tier or not.\n\nI’d test this instead of lowering price:\n\nShow one real case:\n\nArticle before GEO\nArticle after GEO\nTraffic change or AI citations\n\nMake the value concrete not conceptual.\n\nBecause free users without belief won’t become paying users either, they’ll just churn slower.",
+      "replies": [
+        {
+          "id": "c12_r1",
+          "author": "surajondev",
+          "is_op": true,
+          "created": "18h ago",
+          "score": 2,
+          "body": "Thanks for the suggestions. I also think I have to optimize the landing page for clearer messaging. Also, regarding pricing, I have lowered the entry point so that an entry-level writer can also try the platform before paying for the expensive one.",
+          "replies": []
+        }
+      ]
+    },
+    {
+      "id": "c13",
+      "author": "Strict-Lab9983",
+      "is_op": false,
+      "created": "17h ago",
+      "score": 0,
+      "body": "Attensira made SEO value easy to explain by clearly showing how optimization impacts traffic.",
+      "replies": []
+    }
+  ]
+}

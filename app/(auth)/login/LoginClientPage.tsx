@@ -103,13 +103,13 @@ export function LoginContent() {
   });
 
   return (
-    <div className="mx-auto grid w-[450px] gap-6 p-10">
+    <div className="mx-auto grid w-full max-w-sm sm:max-w-md gap-6 p-6 sm:p-10 sm:border sm:border-border sm:bg-card sm:rounded-xl shadow-none">
       <div className="grid gap-2">
-        <h1 className="text-3xl font-bold text-[#0A2918] font-poppins">
-          Login
+        <h1 className="text-3xl font-bold text-foreground font-poppins">
+          Welcome back
         </h1>
-        <p className="text-balance text-[#7A7A7A] font-inter">
-          Enter your email below to login to your account
+        <p className="text-balance text-muted-foreground font-inter text-sm md:text-base">
+          Sign in to your AI SEO workspace
         </p>
       </div>
       <form
@@ -132,7 +132,7 @@ export function LoginContent() {
               type="email"
               placeholder="Enter Email"
               required
-              className="bg-white text-black font-inter"
+              className="bg-background text-foreground font-inter"
             />
           )}
         />
@@ -149,7 +149,7 @@ export function LoginContent() {
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 required
-                className="bg-white text-black pr-10 font-inter"
+                className="bg-background text-foreground pr-10 font-inter"
               />
               <Button
                 type="button"
@@ -176,25 +176,25 @@ export function LoginContent() {
         <div className="text-right">
           <Link
             href="/forgot-password"
-            className="text-sm text-[#104127] hover:underline font-inter"
+            className="text-sm text-primary hover:underline font-inter"
           >
             Forgot Password?
           </Link>
         </div>
         <Button
           type="submit"
-          className="w-full bg-[#104127] text-white hover:bg-[#104127] font-poppins"
+          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-poppins"
           disabled={mutation.isPending}
         >
-          {mutation.isPending ? "Logging in..." : "Login"}
+          {mutation.isPending ? "Logging in..." : "Access Workspace"}
         </Button>
       </form>
       <div className="relative my-4">
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-gray-400" />
+          <span className="w-full border-t border-border" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-[#EEE5DC] px-2 text-muted-foreground rounded-sm font-inter">
+          <span className="bg-background px-2 text-muted-foreground rounded-sm font-inter">
             or sign in via
           </span>
         </div>
@@ -206,7 +206,7 @@ export function LoginContent() {
         >
           <Button
             variant="outline"
-            className="bg-white border text-[#0A2918] w-full hover:bg-white"
+            className="bg-card border-border text-foreground w-full hover:bg-muted font-inter"
           >
             <Image
               src="/icons/google.png"
@@ -219,13 +219,13 @@ export function LoginContent() {
           </Button>
         </a>
       </div>
-      <div className="mt-4 text-center text-sm text-[#7A7A7A] font-inter">
+      <div className="mt-4 text-center text-sm text-muted-foreground font-inter">
         Don&apos;t have an account?{" "}
         <Link
           href="/register"
-          className="underline text-[#104127] font-medium font-inter"
+          className="underline text-primary font-medium font-inter"
         >
-          Sign up
+          Register
         </Link>
       </div>
     </div>
@@ -237,7 +237,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 function LoginSkeleton() {
   return (
-    <div className="mx-auto grid w-[450px] gap-6 p-10">
+    <div className="mx-auto grid w-full max-w-sm sm:max-w-md gap-6 p-6 sm:p-10 sm:border sm:border-border sm:bg-card sm:rounded-xl shadow-none">
       <div className="grid gap-2">
         {/* Title skeleton */}
         <Skeleton className="h-9 w-32" />
