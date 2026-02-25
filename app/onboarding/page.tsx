@@ -15,8 +15,8 @@ import { useSearchParams } from "next/navigation";
 function OnboardingLoading() {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center space-y-4 px-8">
-      <Loader2 className="h-14 w-14 animate-spin text-[#104127] opacity-30" />
-      <p className="text-lg text-[#104127] font-poppins">Loading...</p>
+      <Loader2 className="h-14 w-14 animate-spin text-primary opacity-30" />
+      <p className="text-lg text-primary font-poppins">Loading...</p>
     </div>
   );
 }
@@ -138,7 +138,7 @@ function OnboardingContent() {
         {/* Rotating favicon loader */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center justify-center">
-            <Loader2 className="h-14 w-14 animate-spin text-[#104127] opacity-30" />
+            <Loader2 className="h-14 w-14 animate-spin text-primary opacity-30" />
           </div>
           <img
             src={faviconUrl}
@@ -152,7 +152,7 @@ function OnboardingContent() {
 
         {/* Text feedback */}
         <div>
-          <p className="text-lg text-[#104127] font-poppins">
+          <p className="text-lg text-primary font-poppins">
             Processing your data...
           </p>
           <p className="text-sm text-gray-500 font-inter">
@@ -179,13 +179,13 @@ function OnboardingContent() {
   };
 
   return (
-    <div className="mx-auto grid w-[450px] gap-6 p-10 transition-all duration-500">
+    <div className="mx-auto grid w-full max-w-sm sm:max-w-md gap-6 p-6 sm:p-10 sm:border sm:border-border sm:bg-card sm:rounded-xl shadow-none transition-all duration-500">
       <Toaster richColors />
       <div className="grid gap-2">
-        <h1 className="text-3xl font-bold text-[#0A2918] font-poppins">
+        <h1 className="text-3xl font-bold text-foreground font-poppins">
           Onboarding
         </h1>
-        <p className="text-balance text-[#7A7A7A] font-inter">
+        <p className="text-balance text-muted-foreground font-inter">
           {step === 1
             ? "Tell us about your website."
             : "Help us understand your brand and market. We'll analyze your website after this."}
@@ -198,7 +198,7 @@ function OnboardingContent() {
             <div className="space-y-2">
               <Label
                 htmlFor="name"
-                className="font-inter text-[#7A7A7A] font-medium"
+                className="font-inter text-muted-foreground font-medium"
               >
                 Name
               </Label>
@@ -208,13 +208,13 @@ function OnboardingContent() {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Your name or company name"
                 required
-                className="bg-white text-black font-inter px-3"
+                className="bg-background text-foreground font-inter px-3"
               />
             </div>
             <div className="space-y-2">
               <Label
                 htmlFor="websiteUrl"
-                className="font-inter text-[#7A7A7A] font-medium"
+                className="font-inter text-muted-foreground font-medium"
               >
                 Website URL
               </Label>
@@ -225,13 +225,13 @@ function OnboardingContent() {
                 onChange={(e) => setWebsiteUrl(e.target.value)}
                 placeholder="https://example.com"
                 required
-                className="bg-white text-black font-inter px-3"
+                className="bg-background text-foreground font-inter px-3"
               />
             </div>
             <div className="space-y-2">
               <Label
                 htmlFor="sitemapUrl"
-                className="font-inter text-[#7A7A7A] font-medium"
+                className="font-inter text-muted-foreground font-medium"
               >
                 Sitemap URL
               </Label>
@@ -241,13 +241,13 @@ function OnboardingContent() {
                 value={sitemapUrl}
                 onChange={(e) => setSitemapUrl(e.target.value)}
                 placeholder="https://example.com/sitemap.xml"
-                className="bg-white text-black font-inter px-3"
+                className="bg-background text-foreground font-inter px-3"
               />
             </div>
             <div className="space-y-2">
               <Label
                 htmlFor="productDescription"
-                className="font-inter text-[#7A7A7A] font-medium"
+                className="font-inter text-muted-foreground font-medium"
               >
                 Product Description
               </Label>
@@ -256,14 +256,14 @@ function OnboardingContent() {
                 value={productDescription}
                 onChange={(e) => setProductDescription(e.target.value)}
                 placeholder="Describe your product in a few sentences."
-                className="w-full p-3 border rounded-md bg-white text-black font-inter"
+                className="w-full p-3 border rounded-md bg-background text-foreground font-inter min-h-[100px]"
                 rows={4}
                 required
               />
             </div>
             <Button
               onClick={() => setStep(2)}
-              className="w-full bg-[#104127] text-white hover:bg-[#104127] font-poppins"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-poppins"
             >
               Next
             </Button>
@@ -275,7 +275,7 @@ function OnboardingContent() {
             <div className="space-y-2">
               <Label
                 htmlFor="targetAudience"
-                className="font-inter text-[#7A7A7A] font-medium"
+                className="font-inter text-muted-foreground font-medium"
               >
                 Target Audience
               </Label>
@@ -284,7 +284,7 @@ function OnboardingContent() {
                 value={targetAudience}
                 onChange={(e) => setTargetAudience(e.target.value)}
                 placeholder="Who are you trying to reach?"
-                className="w-full p-3 border rounded-md bg-white text-black font-inter"
+                className="w-full p-3 border rounded-md bg-background text-foreground font-inter min-h-[100px]"
                 rows={4}
                 required
               />
@@ -292,7 +292,7 @@ function OnboardingContent() {
             <div className="space-y-2">
               <Label
                 htmlFor="toneOfVoice"
-                className="font-inter text-[#7A7A7A] font-medium"
+                className="font-inter text-muted-foreground font-medium"
               >
                 Tone of Voice
               </Label>
@@ -302,7 +302,7 @@ function OnboardingContent() {
                 onChange={(e) => setToneOfVoice(e.target.value)}
                 placeholder="e.g., Formal, Casual, Humorous"
                 required
-                className="bg-white text-black font-inter px-3"
+                className="bg-background text-foreground font-inter px-3"
               />
             </div>
             {false && (
@@ -372,15 +372,17 @@ function OnboardingContent() {
             )}
             <div className="flex gap-4 justify-between w-full">
               <Button
+                type="button"
+                variant="outline"
                 onClick={() => setStep(1)}
-                className="w-[50%] bg-white text-black hover:bg-white"
+                className="w-[50%] bg-card text-foreground hover:bg-muted font-poppins"
               >
                 Back
               </Button>
               <Button
                 type="submit"
                 disabled={isPending}
-                className="w-[50%] bg-[#104127] text-white hover:bg-[#104127]"
+                className="w-[50%] bg-primary text-primary-foreground hover:bg-primary/90 font-poppins"
               >
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Submit

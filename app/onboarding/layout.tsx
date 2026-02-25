@@ -7,15 +7,15 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative h-screen bg-[#05140C]">
-      <div className="relative z-10 flex items-center justify-center w-full h-full text-white">
-        <div className="flex">
-          <div className="min-h-[700px] max-h-[800px] min-w-[400px] md:rounded-tl-lg md:rounded-bl-lg bg-[#EEDED3] no-scrollbar overflow-y-auto overflow-x-hidden">
-            {children}
-          </div>
-          <div className="w-[600px]  bg-green-950 rounded-tr-md rounded-br-md">
-            <BouncingLogo />
-          </div>
+    <div className="flex min-h-[100dvh] bg-background tx-dot-bg text-foreground">
+      {/* Left side: Form */}
+      <div className="flex flex-1 flex-col justify-center p-4 lg:flex-none lg:w-[50vw]">
+        {children}
+      </div>
+      {/* Right side: Logo/Visuals (hidden on mobile) */}
+      <div className="relative hidden w-0 flex-1 lg:flex flex-col items-center justify-center bg-foreground tx-dot-bg text-background border-l border-border">
+        <div className="w-full max-w-md flex justify-center">
+          <BouncingLogo />
         </div>
       </div>
     </div>
