@@ -21,6 +21,7 @@ import {
   Users,
   Sparkles,
   Lock,
+  Network,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -66,6 +67,11 @@ const SideBarResearch = [
     icon: <Binoculars className="h-4 w-4" />,
     title: "Keyword Research",
     href: "/keyword-research",
+  },
+  {
+    icon: <Network className="h-4 w-4" />,
+    title: "Topical Authority",
+    href: "/topical-authority",
   },
   {
     icon: <Microscope className="h-4 w-4" />,
@@ -127,6 +133,7 @@ const FEATURE_MAP: Record<string, string> = {
   "/keyword-discovery": "keyword_discoveries",
   "/competitor-analysis": "competitors",
   "/team": "team_members",
+  "/topical-authority": "topical_authorities",
 };
 
 interface SidebarItemProps {
