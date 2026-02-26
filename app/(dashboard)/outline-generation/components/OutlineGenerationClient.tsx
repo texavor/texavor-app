@@ -59,7 +59,11 @@ function OutlineGenerationContent() {
   }) => {
     setPrefilledTopic(data.topic);
     generateOutline.mutate(
-      { topic: data.topic, aeo_optimization: data.aeo_optimization },
+      {
+        topic: data.topic,
+        aeo_optimization: data.aeo_optimization || true,
+        deep_research: true,
+      },
       {
         onSuccess: (data) => {
           setCurrentOutline(data);
