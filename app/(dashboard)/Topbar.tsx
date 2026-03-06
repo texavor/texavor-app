@@ -3,22 +3,7 @@ import React from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAppStore } from "@/store/appStore";
 import { Button } from "@/components/ui/button";
-import {
-  FileText,
-  LogOut,
-  PenSquare,
-  Sparkles,
-  ListTree,
-  Home,
-  ChevronRight,
-  Target,
-  Users,
-  Image,
-  Network,
-  Skeleton,
-  MessageCircleQuestion,
-  Binoculars,
-} from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import axios from "axios";
 import { toast } from "sonner";
@@ -42,6 +27,8 @@ import {
   CustomTeamIcon,
   CustomGlobeIcon,
   CustomBookIcon,
+  CustomBinocularsIcon,
+  CustomSupportIcon,
 } from "@/components/icons/CustomIcons";
 import { usePermissions } from "@/hooks/usePermissions";
 
@@ -66,13 +53,13 @@ const PAGE_TITLES: Record<string, string> = {
 const ROUTE_ICONS: Record<string, React.ReactNode> = {
   "/dashboard": <CustomDashboardIcon className="h-4 w-4" />,
   "/article": <CustomArticleIcon className="h-4 w-4" />,
-  "/keyword-research": <Binoculars className="h-4 w-4" />,
+  "/keyword-research": <CustomBinocularsIcon className="h-4 w-4" />,
   "/topic-generation": <CustomContentGenerationIcon className="h-4 w-4" />,
   "/outline-generation": <CustomOutlineIcon className="h-4 w-4" />,
   "/competitor-analysis": <CustomCompetitorIcon className="h-4 w-4" />,
   "/integrations": <CustomIntegrationsIcon className="h-4 w-4" />,
   "/settings": <CustomSettingsIcon className="h-4 w-4" />,
-  "/support": <MessageCircleQuestion className="h-4 w-4" />,
+  "/support": <CustomSupportIcon className="h-4 w-4" />,
   "/team": <CustomTeamIcon className="h-4 w-4" />,
   "/blogs": <CustomGlobeIcon className="h-4 w-4" />,
   "/docs": <CustomBookIcon className="h-4 w-4" />,

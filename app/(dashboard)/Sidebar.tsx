@@ -3,26 +3,24 @@
 import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import {
-  ArrowLeftToLine,
-  Binoculars,
-  Blocks,
-  LayoutDashboardIcon,
-  ListTree,
-  Microscope,
-  Paperclip,
-  Settings,
-  Newspaper,
-  TableOfContents,
-  ExternalLink,
-  LogOutIcon,
-  Target,
-  Bookmark,
-  ImageIcon,
-  Users,
-  Sparkles,
-  Lock,
-  Network,
-} from "lucide-react";
+  CustomDashboardIcon,
+  CustomArticleIcon,
+  CustomSavedIcon,
+  CustomNetworkIcon,
+  CustomContentGenerationIcon,
+  CustomOutlineIcon,
+  CustomCompetitorIcon,
+  CustomIntegrationsIcon,
+  CustomSettingsIcon,
+  CustomTeamIcon,
+  CustomGlobeIcon,
+  CustomBookIcon,
+  CustomArrowLeftToLineIcon,
+  CustomLockIcon,
+  CustomExternalLinkIcon,
+  CustomLogOutIcon,
+  CustomSparklesIcon,
+} from "@/components/icons/CustomIcons";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -38,21 +36,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useGetWallet } from "./settings/hooks/useUsageApi";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
-
-import {
-  CustomDashboardIcon,
-  CustomArticleIcon,
-  CustomSavedIcon,
-  CustomNetworkIcon,
-  CustomContentGenerationIcon,
-  CustomOutlineIcon,
-  CustomCompetitorIcon,
-  CustomIntegrationsIcon,
-  CustomSettingsIcon,
-  CustomTeamIcon,
-  CustomGlobeIcon,
-  CustomBookIcon,
-} from "@/components/icons/CustomIcons";
 
 const SideBarGeneral = [
   {
@@ -163,7 +146,7 @@ const SidebarItem = ({
       } ${isActive ? "bg-[#f9f4f0]" : ""}`}
     >
       <div className={`shrink-0 ${isActive ? "text-[#104127]" : ""}`}>
-        {locked ? <Lock className="h-4 w-4" /> : icon}
+        {locked ? <CustomLockIcon className="h-4 w-4" /> : icon}
       </div>
       {isSideOpen && (
         <div className="flex items-center justify-between w-full">
@@ -171,7 +154,7 @@ const SidebarItem = ({
         </div>
       )}
       {external && isSideOpen && (
-        <ExternalLink className="size-3 stroke-2 text-black ml-auto" />
+        <CustomExternalLinkIcon className="size-3 stroke-2 text-black ml-auto" />
       )}
     </Button>
   );
@@ -352,7 +335,7 @@ const AppSidebar = () => {
               className="cursor-pointer"
               onClick={() => setIsSideOpen(!isSideOpen)}
             >
-              <ArrowLeftToLine className="h-4 w-4 stroke-2 text-gray-600 hover:text-gray-600" />
+              <CustomArrowLeftToLineIcon className="h-4 w-4 stroke-2 text-gray-600 hover:text-gray-600" />
             </div>
           </div>
         ) : (
@@ -479,7 +462,7 @@ const AppSidebar = () => {
             onClick={() => router.push("/settings/usage")}
           >
             <div className="relative z-10 flex gap-3 items-center">
-              <Sparkles
+              <CustomSparklesIcon
                 className={`shrink-0 text-white ${isSideOpen ? "h-4 w-4" : "h-5 w-5"}`}
               />
               {isSideOpen && (
@@ -515,7 +498,7 @@ const AppSidebar = () => {
               }`}
               onClick={handleLogout}
             >
-              <LogOutIcon className="size-4 shrink-0" />
+              <CustomLogOutIcon className="size-4 shrink-0" />
               {isSideOpen && <p className="font-poppins text-normal">Logout</p>}
             </Button>
           </TooltipTrigger>
