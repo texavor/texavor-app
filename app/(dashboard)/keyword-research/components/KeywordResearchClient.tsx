@@ -3,7 +3,14 @@
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Loader2, Zap, Database, BarChart3, Bot } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import {
+  CustomSearchIcon,
+  CustomMagicIcon,
+  CustomDatabaseIcon,
+  CustomSparklesIcon,
+  CustomChartIcon,
+} from "@/components/icons/CustomIcons";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   KeywordResultsTable,
@@ -58,7 +65,7 @@ export default function KeywordResearchClient() {
           toast.success("Keyword saved successfully!");
         },
         onError: () => toast.error("Failed to save keyword."),
-      }
+      },
     );
   };
 
@@ -88,8 +95,8 @@ export default function KeywordResearchClient() {
         `/api/v1/blogs/${
           blogs?.id
         }/keyword_research/search?query=${encodeURIComponent(
-          term
-        )}&mode=${mode}`
+          term,
+        )}&mode=${mode}`,
       );
 
       setSeedData(response?.data.seed);
@@ -122,7 +129,7 @@ export default function KeywordResearchClient() {
 
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
             <div className="relative flex-1 w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <CustomSearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 placeholder="Enter a seed keyword (e.g., 'marketing')"
                 value={query}
@@ -143,17 +150,17 @@ export default function KeywordResearchClient() {
                   {
                     value: "basic",
                     label: "Basic",
-                    icon: <Zap className="h-3.5 w-3.5" />,
+                    icon: <CustomMagicIcon className="h-3.5 w-3.5" />,
                   },
                   {
                     value: "detailed",
                     label: "Detailed",
-                    icon: <Database className="h-3.5 w-3.5" />,
+                    icon: <CustomDatabaseIcon className="h-3.5 w-3.5" />,
                   },
                   {
                     value: "prompt",
                     label: "Prompt Research",
-                    icon: <Bot className="h-3.5 w-3.5" />,
+                    icon: <CustomSparklesIcon className="h-3.5 w-3.5" />,
                   },
                 ]}
               />
@@ -198,7 +205,7 @@ export default function KeywordResearchClient() {
                     onClick={() => setIsAnalysisSheetOpen(true)}
                     className="h-8 px-3 text-xs border-[#104127] text-[#104127] hover:bg-[#EAF9F2] shadow-none gap-2"
                   >
-                    <BarChart3 className="h-3.5 w-3.5" />
+                    <CustomChartIcon className="h-3.5 w-3.5" />
                     View Analysis
                   </Button>
                 )}

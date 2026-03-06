@@ -3,86 +3,74 @@
 import React, { useState } from "react";
 import { useAppStore } from "@/store/appStore";
 import { TopicalAuthorityForm } from "@/components/topical-authority/TopicalAuthorityForm";
-import { useTopicalAuthorityPolling } from "@/hooks/useTopicalAuthorityPolling";
-import { TopicalAuthorityProgress } from "@/components/topical-authority/TopicalAuthorityProgress";
-import { TopicalMapView } from "@/components/topical-authority/TopicalMapView";
+import { SeedSuggester } from "@/components/topical-authority/SeedSuggester";
+import { TopicalAuthorityHistory } from "@/components/topical-authority/TopicalAuthorityHistory";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 export default function TopicalAuthorityContent() {
   const { blogs } = useAppStore();
-  const [jobId, setJobId] = useState<number | null>(null);
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
-  // This state allows passing the suggested topic back to the form if run suggested is clicked
-  const [suggestedTopic, setSuggestedTopic] = useState<string>("");
+  const isNewView = searchParams.get("new") === "true";
+  const suggestedParam = searchParams.get("suggested");
+  const showNewForm = isNewView || !!suggestedParam;
 
-  const { data: pollData } = useTopicalAuthorityPolling(jobId);
+  const [suggestedTopic, setSuggestedTopic] = useState<string>(
+    suggestedParam || "",
+  );
 
-  const handleReset = () => {
-    setJobId(null);
-  };
+  React.useEffect(() => {
+    if (suggestedParam) {
+      setSuggestedTopic(suggestedParam);
+    }
+  }, [suggestedParam]);
 
-  const handleRunSuggested = (topic: string) => {
-    setSuggestedTopic(topic);
-    handleReset();
-  };
+  // Default: show history table
+  if (!showNewForm) {
+    return <TopicalAuthorityHistory />;
+  }
 
-  const status = pollData?.job_status;
-  const mapData = pollData?.data;
-
+  // "Create New" form — two-panel layout
   return (
-    <div className="flex flex-col space-y-6">
-      {!jobId && (
+    <div className="flex flex-col font-inter h-[calc(100vh-100px)] overflow-hidden">
+      {/* Header — above the grid */}
+      <div className="flex items-center gap-3 mb-6">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0 text-gray-400 hover:text-gray-900"
+          onClick={() => router.push("/topical-authority")}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
         <div>
-          <h1 className="text-2xl font-semibold font-poppins">
-            Topical Authority Map
+          <h1 className="text-lg font-semibold text-gray-900 font-poppins">
+            Create Topical Authority Map
           </h1>
-          <p className="text-sm text-gray-500 font-inter mt-1">
-            Generate large-scale topical maps to build absolute authority in
-            your niche.
+          <p className="text-xs text-gray-500 mt-0.5">
+            Generate a 3-tier authority map for your niche
           </p>
         </div>
-      )}
+      </div>
 
-      {/* State 1: No Job ID -> Show Form + Empty State */}
-      {!jobId && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1">
-            <TopicalAuthorityForm onSuccess={(id) => setJobId(id)} />
-          </div>
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl flex flex-col items-center justify-center min-h-[400px] border-none shadow-none font-poppins h-full">
-              <p className="text-sm text-gray-500 font-inter text-center max-w-sm">
-                Enter a broad topic on the left to generate a 3-tier topical
-                authority map.
-              </p>
-            </div>
-          </div>
+      {/* Two-panel grid: 2/3 form + 1/3 suggestions */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
+        {/* Left: Form (2/3) */}
+        <div className="lg:col-span-2 overflow-y-auto no-scrollbar min-h-0">
+          <TopicalAuthorityForm
+            onSuccess={(id) => router.push(`/topical-authority/${id}`)}
+            defaultTopic={suggestedTopic}
+          />
         </div>
-      )}
 
-      {/* State 2: Polling / Processing / Failed */}
-      {jobId && status !== "completed" && (
-        <TopicalAuthorityProgress
-          status={status || "pending"}
-          data={mapData}
-          onReset={handleReset}
-          onRunSuggested={handleRunSuggested}
-        />
-      )}
-
-      {/* State 3: Completed */}
-      {jobId && status === "completed" && mapData && (
-        <div className="space-y-4">
-          <div className="flex justify-start mb-4">
-            <button
-              onClick={handleReset}
-              className="text-[#104127] hover:underline text-sm font-poppins border-none bg-transparent cursor-pointer"
-            >
-              &larr; Generate New Map
-            </button>
-          </div>
-          <TopicalMapView data={mapData} />
+        {/* Right: Seed Suggester (1/3) */}
+        <div className="lg:col-span-1 overflow-hidden min-h-0">
+          <SeedSuggester onSelect={(topic) => setSuggestedTopic(topic)} />
         </div>
-      )}
+      </div>
     </div>
   );
 }

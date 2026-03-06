@@ -4,6 +4,37 @@ This guide explains how to integrate the new Topical Authority Map generation fe
 
 ---
 
+## 0. Discover Seed Topics (Optional Pre-Flight)
+
+**Endpoint:** `GET /api/v1/blogs/:blog_id/topical_authorities/suggest_seeds`
+
+This is a synchronous API that analyzes the existing blog profile (target audience, product description, existing articles) and uses AI to suggest 10 highly relevant Seed Topics. This is very useful for users who don't know what broad topic to build a map around. This request costs **25 credits** to execute.
+
+**Responses:**
+
+- **200 OK (Success)**
+  Returns 10 suggested seed topics with a brand relevance score.
+
+  ```json
+  {
+    "status": 200,
+    "data": {
+      "seeds": [
+        {
+          "topic": "SaaS Content Marketing Automation",
+          "relevance_score": 95,
+          "reasoning": "Directly targets marketing professionals and aligns perfectly with your software product offering."
+        }
+      ]
+    }
+  }
+  ```
+
+- **402 Payment Required**
+  If the user does not have 25 credits.
+
+---
+
 ## 1. Initiate Generation & Credit Hold
 
 **Endpoint:** `POST /api/v1/blogs/:blog_id/topical_authorities`
@@ -16,7 +47,10 @@ This endpoint initiates the generation process. It will synchronous perform a cr
 {
   "topic": "SaaS Marketing",
   "tone": "professional", // Optional: defaults to blog's tone
-  "target_audience": "founders" // Optional: defaults to blog's audience
+  "target_audience": "founders", // Optional: defaults to blog's audience
+  "author_name": "Jane Doe", // Optional: injects human attribution
+  "expertise_context": "We have 10 years experience scaling B2B SaaS MRR", // Optional: informs LLM on specific expertise angles
+  "editorial_guidelines": "Must include data-backed case studies" // Optional: enforces strict editorial logic
 }
 ```
 
@@ -93,20 +127,47 @@ Once you receive a `job_id` (which is the `id` of the ToolResult row) from the P
     "job_status": "completed",
     "data": {
       "seed_topic": "SaaS Marketing",
-      "total_nodes": 54,
+      "total_nodes": 124,
       "pillars": [
         {
+          "type": "pillar",
           "title": "The Ultimate Guide to SaaS Marketing",
           "description": "...",
           "relevance_score": 100,
           "subtopics": [
             {
+              "type": "subtopic",
               "title": "B2B SaaS Content Strategy",
+              "description": "...",
               "relevance_score": 90,
               "supporting_articles": [
                 {
-                  "title": "How to build a SaaS content engine",
-                  "relevance_score": 85
+                  "type": "article",
+                  "title": "How We Used Content Clusters to Triple Organic Traffic",
+                  "slug": "/content-clusters-saas-crm-growth",
+                  "description": "A detailed case study on...",
+                  "primary_keyword": "saas content clusters",
+                  "supporting_keywords": [
+                    "seo content clusters",
+                    "crm organic growth"
+                  ],
+                  "search_intent": "Informational",
+                  "funnel_stage": "MOFU",
+                  "editorial_angle": "Explains how...",
+                  "experience_hook": "Insights from scaling a CRM SaaS blog...",
+                  "format": "Case Study",
+                  "schema_type": ["Article", "HowTo"],
+                  "content_outline": [
+                    "Introduction: Why Content Clusters Matter",
+                    "Step 1: Identifying High-Intent Keywords"
+                  ],
+                  "relevance_score": 80,
+                  "search_volume": 1200,
+                  "keyword_difficulty": 38,
+                  "internal_links": [
+                    "A Data-Backed Guide to Designing SaaS Content Clusters",
+                    "B2B SaaS Content Strategy"
+                  ]
                 }
               ]
             }
@@ -119,7 +180,7 @@ Once you receive a `job_id` (which is the `id` of the ToolResult row) from the P
 
 - **200 OK (Validation Failed - Refund Issued)**
   If the `job_status` is `"failed"` but `data.status` is `"validation_failed"`, it means our rigorous pre-flight checks (Business Relevance, SEO Competition, Topic Breadth, Search Demand) aborted the generation.
-  **Crucial:** A refund of 350 credits has already been applied automatically to the user's wallet. You should display the `error` and strongly encourage the user to use the `suggested_topic`.
+  **Crucial:** A refund of 400 credits has already been applied automatically to the user's wallet. You should display the `error` and strongly encourage the user to use the `suggested_topic`.
 
   ```json
   {
@@ -147,7 +208,68 @@ Once you receive a `job_id` (which is the `id` of the ToolResult row) from the P
 
 ---
 
-## Example Frontend Implementation Flow (React/Zustand)
+## 3. Retrieving Past Maps (Index)
+
+**Endpoint:** `GET /api/v1/blogs/:blog_id/topical_authorities`
+
+This endpoint returns a 50-item list of all previously started (pending, processing, completed, or failed) Topical Authority maps for the blog, ordered from newest to oldest.
+
+**Responses:**
+
+- **200 OK (Success)**
+
+  ```json
+  {
+    "status": 200,
+    "data": [
+      {
+        "id": "1bb8719a-9a91-40f3-941c-fe132e1e0d18",
+        "topic": "SaaS Marketing",
+        "job_status": "completed",
+        "created_at": "2026-02-24T18:40:00.000Z",
+        "total_nodes": 124
+      }
+    ]
+  }
+  ```
+
+---
+
+## 4. Frontend Visualization Strategy (UI/UX Recommendations)
+
+A standard Topical Map generated by this engine contains **120+ nodes**. It is a massive, highly valuable programmatic architecture. Displaying this effectively is critical so the user is "wowed" and understands the value.
+
+### Recommended UI Components (`Shadcn UI`)
+
+1. **The High-Level Overview (Hero Section)**
+   - At the top of the map view, show large Statistic Cards (use Shadcn `Card` + generic semantic icons):
+     - **Pillars:** 4
+     - **Subtopics:** 20
+     - **Articles:** 100
+     - **Total Nodes:** 124
+   - _Why?_ This immediately communicates the immense scale of what the AI just built for them.
+
+2. **The Map Explorer (Nested Accordions or Sidebar Layout)**
+   - Because a tree map is deep, DO NOT render all 120 nodes on screen at once.
+   - **Best Approach:** Use a two-pane layout.
+     - **Left Sidebar:** A nested navigation tree. Show the 4 Pillars as top-level items. Users click a Pillar to expand and see its 5 Subtopics.
+     - **Main Content Area:** When a user clicks a _Subtopic_ in the sidebar, the main area populates with the 5 `supporting_articles` belonging to it.
+   - **Alternative (Simpler):** Use heavily nested Shadcn `Accordion` components, but ensure clear border separation and indentation.
+
+3. **The Article Card (The "Brief" View)**
+   - For each article, render a rich card that exposes the SEO intelligence:
+     - **Badges:** `Primary Keyword`, `MOFU` (Funnel Stage), `Case Study` (Format), `Vol: 1200 / KD: 38`.
+     - **Content Outline:** Render the `content_outline` array as a clean bulleted list, representing the H2 structure.
+     - **E-E-A-T Hook:** Display the `experience_hook` visibly so users know _how_ the article will be uniquely positioned.
+
+4. **Visualizing the Internal Link Graph**
+   - Every article has an `internal_links` array containing exact titles of other nodes.
+   - **In the UI:** Inside the Article Card, render a section called "Links To:" and list the titles as clickable jump-links (or visually distinct tags) that scroll the user to that specific sibling article in the UI.
+   - **Why?** Showing that "Article A" connects directly to "Article B" proves to the user that this isn't just a random list of titles, but a true interconnected SEO cluster.
+
+---
+
+## 5. Example Frontend Implementation Flow (React/Zustand)
 
 ```typescript
 const generateMap = async (topic: string) => {

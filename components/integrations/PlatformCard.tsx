@@ -9,12 +9,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Platform } from "@/app/onboarding/hooks/useOnboardingApi";
 import {
-  Globe,
-  Rss,
-  Link as LinkIcon,
-  CheckCircle2,
-  PlugZap,
-} from "lucide-react";
+  CustomGlobeIcon,
+  CustomRssIcon,
+  CustomLinkIcon,
+  CustomCheckCircleIcon,
+} from "@/components/icons/CustomIcons";
 
 interface PlatformCardProps {
   platform: Platform;
@@ -57,11 +56,11 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({
 
     switch (platform.type) {
       case "rss":
-        return <Rss className="h-8 w-8 text-orange-500" />;
+        return <CustomRssIcon className="h-8 w-8 text-orange-500" />;
       case "api":
-        return <Globe className="h-8 w-8 text-blue-500" />;
+        return <CustomGlobeIcon className="h-8 w-8 text-blue-500" />;
       default:
-        return <LinkIcon className="h-8 w-8 text-gray-500" />;
+        return <CustomLinkIcon className="h-8 w-8 text-gray-500" />;
     }
   };
 
@@ -101,7 +100,7 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({
                 variant="outline"
                 className="bg-emerald-100 text-emerald-700 border-emerald-300 shrink-0 font-inter"
               >
-                <CheckCircle2 className="h-3 w-3 mr-1" />
+                <CustomCheckCircleIcon className="h-3 w-3 mr-1" />
                 Connected
               </Badge>
             )}

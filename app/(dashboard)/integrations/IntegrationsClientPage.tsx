@@ -5,7 +5,7 @@ import { useIntegrationsApi } from "./hooks/useIntegrationsApi";
 import { PlatformCard } from "@/components/integrations/PlatformCard";
 import ConnectIntegrationSheet from "@/components/integrations/ConnectIntegrationSheet";
 import { Platform } from "@/app/onboarding/hooks/useOnboardingApi";
-import { Plus } from "lucide-react";
+import { CustomPlusIcon } from "@/components/icons/CustomIcons";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
@@ -182,7 +182,7 @@ export default function IntegrationsClientPage() {
               }}
             >
               <div className="h-12 w-12 rounded-full bg-gray-50 flex items-center justify-center mb-4 group-hover:bg-[#104127]/10 transition-colors">
-                <Plus className="h-6 w-6 text-gray-500 group-hover:text-[#104127]" />
+                <CustomPlusIcon className="h-6 w-6 text-gray-500 group-hover:text-[#104127]" />
               </div>
               <h3 className="font-semibold text-lg text-gray-900 group-hover:text-[#104127] font-poppins">
                 Add Custom Webhook

@@ -39,19 +39,34 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useGetWallet } from "./settings/hooks/useUsageApi";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 
+import {
+  CustomDashboardIcon,
+  CustomArticleIcon,
+  CustomSavedIcon,
+  CustomNetworkIcon,
+  CustomContentGenerationIcon,
+  CustomOutlineIcon,
+  CustomCompetitorIcon,
+  CustomIntegrationsIcon,
+  CustomSettingsIcon,
+  CustomTeamIcon,
+  CustomGlobeIcon,
+  CustomBookIcon,
+} from "@/components/icons/CustomIcons";
+
 const SideBarGeneral = [
   {
-    icon: <LayoutDashboardIcon className="h-4 w-4" />,
+    icon: <CustomDashboardIcon className="h-4 w-4" />,
     title: "Dashboard",
     href: "/dashboard",
   },
   {
-    icon: <Paperclip className="h-4 w-4" />,
+    icon: <CustomArticleIcon className="h-4 w-4" />,
     title: "Article",
     href: "/article",
   },
   {
-    icon: <Bookmark className="h-4 w-4" />,
+    icon: <CustomSavedIcon className="h-4 w-4" />,
     title: "Saved",
     href: "/saved",
   },
@@ -59,32 +74,22 @@ const SideBarGeneral = [
 
 const SideBarResearch = [
   {
-    icon: <Sparkles className="h-4 w-4" />,
-    title: "Keyword Discovery",
-    href: "/keyword-discovery",
-  },
-  {
-    icon: <Binoculars className="h-4 w-4" />,
-    title: "Keyword Research",
-    href: "/keyword-research",
-  },
-  {
-    icon: <Network className="h-4 w-4" />,
+    icon: <CustomNetworkIcon className="h-4 w-4" />,
     title: "Topical Authority",
     href: "/topical-authority",
   },
   {
-    icon: <Microscope className="h-4 w-4" />,
+    icon: <CustomContentGenerationIcon className="h-4 w-4" />,
     title: "Topic Generation",
     href: "/topic-generation",
   },
   {
-    icon: <ListTree className="h-4 w-4" />,
+    icon: <CustomOutlineIcon className="h-4 w-4" />,
     title: "Outline Generator",
     href: "/outline-generation",
   },
   {
-    icon: <Target className="h-4 w-4" />,
+    icon: <CustomCompetitorIcon className="h-4 w-4" />,
     title: "Competitor Analysis",
     href: "/competitor-analysis",
   },
@@ -92,22 +97,17 @@ const SideBarResearch = [
 
 const SideBarOptionSettings = [
   {
-    icon: <Blocks className="h-4 w-4" />,
+    icon: <CustomIntegrationsIcon className="h-4 w-4" />,
     title: "Integrations",
     href: "/integrations",
   },
-  // {
-  //   icon: <ImageIcon className="h-4 w-4" />,
-  //   title: "Thumbnail Styles",
-  //   href: "/thumbnail-styles",
-  // },
   {
-    icon: <Settings className="h-4 w-4" />,
+    icon: <CustomSettingsIcon className="h-4 w-4" />,
     title: "Settings",
     href: "/settings",
   },
   {
-    icon: <Users className="h-4 w-4" />,
+    icon: <CustomTeamIcon className="h-4 w-4" />,
     title: "Team",
     href: "/team",
   },
@@ -115,13 +115,13 @@ const SideBarOptionSettings = [
 
 const SideBarOptionExternal = [
   {
-    icon: <Newspaper className="h-4 w-4" />,
+    icon: <CustomGlobeIcon className="h-4 w-4" />,
     title: "Blogs",
     href: "http://texavor.com/blog",
     external: true,
   },
   {
-    icon: <TableOfContents className="h-4 w-4" />,
+    icon: <CustomBookIcon className="h-4 w-4" />,
     title: "Docs",
     href: "http://texavor.com/docs",
     external: true,
