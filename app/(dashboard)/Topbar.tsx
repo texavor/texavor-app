@@ -14,11 +14,36 @@ import {
   Target,
   Users,
   Image,
+  Network,
+  Skeleton,
+  MessageCircleQuestion,
+  Binoculars,
 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import axios from "axios";
 import { toast } from "sonner";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import {
+  CustomDashboardIcon,
+  CustomArticleIcon,
+  CustomNetworkIcon,
+  CustomContentGenerationIcon,
+  CustomOutlineIcon,
+  CustomCompetitorIcon,
+  CustomIntegrationsIcon,
+  CustomSettingsIcon,
+  CustomTeamIcon,
+  CustomGlobeIcon,
+  CustomBookIcon,
+} from "@/components/icons/CustomIcons";
+import { usePermissions } from "@/hooks/usePermissions";
 
 // Page title mapping based on routes
 const PAGE_TITLES: Record<string, string> = {
@@ -34,45 +59,25 @@ const PAGE_TITLES: Record<string, string> = {
   "/support": "Support",
   "/blogs": "Blogs",
   "/docs": "Docs",
+  "/topical-authority": "Topical Authority",
 };
-
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import {
-  LayoutDashboardIcon,
-  Paperclip,
-  Binoculars,
-  Microscope,
-  Blocks,
-  Settings,
-  MessageCircleQuestion,
-  Newspaper,
-  TableOfContents,
-} from "lucide-react";
 
 // Icon mapping based on routes
 const ROUTE_ICONS: Record<string, React.ReactNode> = {
-  "/dashboard": <LayoutDashboardIcon className="h-4 w-4" />,
-  "/article": <Paperclip className="h-4 w-4" />,
+  "/dashboard": <CustomDashboardIcon className="h-4 w-4" />,
+  "/article": <CustomArticleIcon className="h-4 w-4" />,
   "/keyword-research": <Binoculars className="h-4 w-4" />,
-  "/topic-generation": <Microscope className="h-4 w-4" />,
-  "/outline-generation": <ListTree className="h-4 w-4" />,
-  "/competitor-analysis": <Target className="h-4 w-4" />,
-  "/integrations": <Blocks className="h-4 w-4" />,
-  "/settings": <Settings className="h-4 w-4" />,
+  "/topic-generation": <CustomContentGenerationIcon className="h-4 w-4" />,
+  "/outline-generation": <CustomOutlineIcon className="h-4 w-4" />,
+  "/competitor-analysis": <CustomCompetitorIcon className="h-4 w-4" />,
+  "/integrations": <CustomIntegrationsIcon className="h-4 w-4" />,
+  "/settings": <CustomSettingsIcon className="h-4 w-4" />,
   "/support": <MessageCircleQuestion className="h-4 w-4" />,
-  "/team": <Users className="h-4 w-4" />,
-  "/blogs": <Newspaper className="h-4 w-4" />,
-  "/docs": <TableOfContents className="h-4 w-4" />,
+  "/team": <CustomTeamIcon className="h-4 w-4" />,
+  "/blogs": <CustomGlobeIcon className="h-4 w-4" />,
+  "/docs": <CustomBookIcon className="h-4 w-4" />,
+  "/topical-authority": <CustomNetworkIcon className="h-4 w-4" />,
 };
-
-import { usePermissions } from "@/hooks/usePermissions";
 
 const Topbar = () => {
   const router = useRouter();

@@ -4,7 +4,12 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axiosInstace";
 import { useAppStore } from "@/store/appStore";
-import { FileText, CheckCircle2, FileEdit, Lightbulb } from "lucide-react";
+import {
+  CustomArticleIcon,
+  CustomCheckCircleIcon,
+  CustomDraftIcon,
+  CustomIdeaIcon,
+} from "@/components/icons/CustomIcons";
 import { StatsCard } from "./components/StatsCard";
 import { ActivityChart } from "./components/ActivityChart";
 import { StatusDonutChart } from "./components/StatusDonutChart";
@@ -83,7 +88,7 @@ const DashboardClientPage = () => {
             title="Total Articles"
             count={highlights?.total_articles?.value || 0}
             trend={highlights?.total_articles?.trend || 0}
-            icon={<FileText className="w-full h-full" />}
+            icon={<CustomArticleIcon className="w-full h-full" />}
             iconBgColor="bg-blue-100"
             iconColor="text-blue-600"
           />
@@ -91,7 +96,7 @@ const DashboardClientPage = () => {
             title="Published"
             count={highlights?.published?.value || 0}
             trend={highlights?.published?.trend || 0}
-            icon={<CheckCircle2 className="w-full h-full" />}
+            icon={<CustomCheckCircleIcon className="w-full h-full" />}
             iconBgColor="bg-green-100"
             iconColor="text-green-600"
             subTitle="Live on blog"
@@ -100,7 +105,7 @@ const DashboardClientPage = () => {
             title="Drafts"
             count={highlights?.drafts?.value || 0}
             trend={highlights?.drafts?.trend || 0}
-            icon={<FileEdit className="w-full h-full" />}
+            icon={<CustomDraftIcon className="w-full h-full" />}
             iconBgColor="bg-purple-100"
             iconColor="text-purple-600"
             subTitle="Work in progress"
@@ -109,7 +114,7 @@ const DashboardClientPage = () => {
             title="Topic Ideas"
             count={highlights?.topic_ideas?.value || 0}
             trend={highlights?.topic_ideas?.trend || 0}
-            icon={<Lightbulb className="w-full h-full" />}
+            icon={<CustomIdeaIcon className="w-full h-full" />}
             iconBgColor="bg-orange-100"
             iconColor="text-orange-600"
             subTitle="Generated topics"

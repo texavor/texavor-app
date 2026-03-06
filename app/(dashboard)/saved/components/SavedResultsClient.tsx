@@ -25,9 +25,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  CustomOutlineIcon,
+  CustomContentGenerationIcon,
+} from "@/components/icons/CustomIcons";
 import CustomDropdown from "@/components/ui/CustomDropdown";
 import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
+import { useAppStore } from "@/store/appStore";
+import CustomPagination from "@/components/ui/CustomPagination";
+import { CustomAlertDialog } from "@/components/ui/CustomAlertDialog";
 
 const TYPE_OPTIONS = [
   { id: "all", name: "All Items" },
@@ -52,13 +59,6 @@ const useDebounce = <T,>(value: T, delay: number): T => {
   return debouncedValue;
 };
 
-import { useAppStore } from "@/store/appStore";
-import CustomPagination from "@/components/ui/CustomPagination";
-
-// ... existing imports
-
-import { CustomAlertDialog } from "@/components/ui/CustomAlertDialog";
-
 export default function SavedResultsClient() {
   const router = useRouter();
   const { blogs } = useAppStore(); // Get blogs for ID check
@@ -73,7 +73,7 @@ export default function SavedResultsClient() {
   const [perPage, setPerPage] = useState(50);
 
   const [selectedResult, setSelectedResult] = useState<SavedResult | null>(
-    null
+    null,
   );
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -100,17 +100,16 @@ export default function SavedResultsClient() {
     setIsSheetOpen(true);
   };
 
-  // ... (keep helper functions like getIconForType, same columns)
-
-  // ... (keep getIconForType, getLabelForType definitions)
   const getIconForType = (type: string) => {
     switch (type) {
       case "keyword_research":
         return <Binoculars className="h-4 w-4 text-blue-500" />;
       case "outline_generation":
-        return <ListTree className="h-4 w-4 text-green-500" />;
+        return <CustomOutlineIcon className="h-4 w-4 text-green-500" />;
       case "topic_generation":
-        return <Microscope className="h-4 w-4 text-purple-500" />;
+        return (
+          <CustomContentGenerationIcon className="h-4 w-4 text-purple-500" />
+        );
       default:
         return <FileText className="h-4 w-4" />;
     }

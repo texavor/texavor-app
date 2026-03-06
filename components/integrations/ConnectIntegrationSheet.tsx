@@ -15,7 +15,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Lock, ExternalLink, Info, RefreshCw } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import {
+  CustomLockIcon,
+  CustomExternalLinkIcon,
+  CustomInfoIcon,
+  CustomRefreshIcon,
+} from "@/components/icons/CustomIcons";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -783,7 +789,7 @@ export default function ConnectIntegrationSheet({
               )}
 
             <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 flex gap-2 items-start">
-              <ExternalLink className="w-4 h-4 text-blue-700 mt-0.5 shrink-0" />
+              <CustomExternalLinkIcon className="w-4 h-4 text-blue-700 mt-0.5 shrink-0" />
               <div>
                 <p className="text-xs text-blue-800 font-inter font-semibold mb-1">
                   Redirects to Shopify
@@ -901,7 +907,7 @@ export default function ConnectIntegrationSheet({
                     {isDiscovering ? (
                       <Loader2 className="w-3 h-3 animate-spin mr-1" />
                     ) : (
-                      <RefreshCw className="w-3 h-3 mr-1" />
+                      <CustomRefreshIcon className="w-3 h-3 mr-1" />
                     )}
                     Refresh Options
                   </Button>
@@ -963,10 +969,10 @@ export default function ConnectIntegrationSheet({
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Info className="h-4 w-4 text-gray-500 cursor-pointer" />
+                        <CustomInfoIcon className="h-4 w-4 text-gray-500 cursor-pointer" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>
+                        <p className="text-xs font-inter">
                           This will be used to fetch URL and passed to other
                           platform as canonical URL
                         </p>
@@ -1018,7 +1024,7 @@ export default function ConnectIntegrationSheet({
 
                 {platform?.id !== "shopify" && (
                   <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 flex gap-2 items-start">
-                    <Lock className="w-4 h-4 text-blue-700 mt-0.5 shrink-0" />
+                    <CustomLockIcon className="w-4 h-4 text-blue-700 mt-0.5 shrink-0" />
                     <div>
                       <p className="text-xs text-blue-800 font-inter font-semibold mb-1">
                         Security Assurance

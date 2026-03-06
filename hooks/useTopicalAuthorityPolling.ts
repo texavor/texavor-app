@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axiosInstace";
 import { useAppStore } from "@/store/appStore";
 
-export const useTopicalAuthorityPolling = (jobId: number | null) => {
+export const useTopicalAuthorityPolling = (jobId: string | number | null) => {
   const { blogs } = useAppStore();
 
   return useQuery({

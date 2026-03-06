@@ -84,6 +84,9 @@ export function TopicalAuthorityProgress({
   }
 
   // Pending/Processing state
+  const progressPct = data?.progress_pct || 0;
+  const progressMessage = data?.progress_message || "";
+
   return (
     <div className="bg-white border-none shadow-none rounded-xl p-10 flex flex-col items-center justify-center min-h-[400px] text-center font-poppins">
       <div className="relative mb-6">
@@ -93,10 +96,36 @@ export function TopicalAuthorityProgress({
       <h3 className="text-xl font-semibold text-gray-800 mb-2">
         Gathering SEO Data & Structuring Map
       </h3>
-      <p className="text-gray-500 font-inter max-w-sm">
+      <p className="text-gray-500 font-inter max-w-sm mb-6">
         This process involves deep SERP analysis, competitor evaluation, and AI
         reasoning. It can take 30-60 seconds. Please do not navigate away.
       </p>
+
+      {/* Progress bar */}
+      <div className="w-full max-w-md">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-medium text-gray-500 font-inter">
+            Progress
+          </span>
+          <span className="text-xs font-semibold text-[#104127] font-inter">
+            {progressPct}%
+          </span>
+        </div>
+        <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-[#104127] rounded-full transition-all duration-700 ease-out"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+        {progressMessage && (
+          <p
+            className="text-xs text-gray-400 font-inter mt-3 truncate"
+            title={progressMessage}
+          >
+            {progressMessage}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
