@@ -49,7 +49,7 @@ const CustomDropdown = ({
         {trigger}
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="border-[1px] p-0 py-1 border-[#E4E4E7] z-[1400] w-[var(--radix-dropdown-menu-trigger-width)] max-h-72 overflow-y-auto"
+        className="border-[1px] p-0 py-1 border-[#E4E4E7] z-[1400] min-w-[var(--radix-dropdown-menu-trigger-width)] w-fit max-h-72 overflow-y-auto"
         onWheel={stopWheelEventPropagation}
         onTouchMove={stopTouchMoveEventPropagation}
       >
@@ -78,7 +78,7 @@ const CustomDropdown = ({
                     ) : (
                       option.icon
                     ))}
-                  <span className="font-poppins text-xs font-normal text-[#09090B]">
+                  <span className="font-poppins text-xs font-normal text-[#09090B] whitespace-nowrap">
                     {option?.name}
                   </span>
                 </span>
