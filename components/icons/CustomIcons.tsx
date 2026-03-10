@@ -663,3 +663,49 @@ export const CustomArrowLeftToLineIcon = (props: IconProps) => (
     <path d="M7 12h14" />
   </svg>
 );
+
+export const CustomAiDraftIcon = (props: IconProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    {/* Main Document Body */}
+    <path
+      d="M15.5 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V6.5L15.5 2Z"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M15 2V7H20"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+
+    {/* Centered AI 'Spark' / Brain */}
+    <path
+      d="M12 12L9 15M12 12L15 15M12 12L12 8M12 12L16 10"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      className="ai-draft-internal-spark"
+    />
+
+    {/* Twinkling Stars */}
+    <path
+      d="M19 12L19.5 13.5L21 14L19.5 14.5L19 16L18.5 14.5L17 14L18.5 13.5L19 12Z"
+      fill="currentColor"
+      className="ai-draft-sparkle-1"
+    />
+    <path
+      d="M7 8L7.3 9L8.3 9.3L7.3 9.6L7 10.6L6.7 9.6L5.7 9.3L6.7 9L7 8Z"
+      fill="currentColor"
+      className="ai-draft-sparkle-2"
+    />
+  </svg>
+);

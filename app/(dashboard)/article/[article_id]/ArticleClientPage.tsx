@@ -88,6 +88,11 @@ export default function ArticleClientPage() {
   const [isDetailsSheetOpen, setIsDetailsSheetOpen] = useState(false);
   // State for text highlighting
   const [highlightedText, setHighlightedText] = useState<string>("");
+  // State for AI Draft Generation
+  const [isGeneratingDraft, setIsGeneratingDraft] = useState(false);
+  const [generationJobId, setGenerationJobId] = useState<string | null>(null);
+  const [generationStatus, setGenerationStatus] = useState<string | null>(null);
+  const [generationPercentage, setGenerationPercentage] = useState<number>(0);
 
   // Refs must also be called before early returns
   const isInitialLoadDone = useRef(false);
@@ -333,6 +338,79 @@ export default function ArticleClientPage() {
       queryClient.invalidateQueries({ queryKey: ["article", existingId] });
     },
   });
+
+  // --- AI Draft Generation ---
+  const generateDraftMutation = useMutation({
+    mutationFn: async () => {
+      const res = await axiosInstance.post(
+        `/api/v1/blogs/${blogs?.id}/articles/${existingId}/generate_draft`,
+      );
+      return res.data;
+    },
+    onSuccess: (data) => {
+      setGenerationJobId(data.job_id);
+      setIsGeneratingDraft(true);
+      setGenerationStatus("Researching and Writing...");
+      setGenerationPercentage(0);
+    },
+    onError: (error: any) => {
+      console.error("Draft generation failed to trigger:", error);
+      setIsGeneratingDraft(false);
+      // axiosInstance already has global toast
+    },
+  });
+
+  // Polling for job status
+  const { data: jobStatus } = useQuery({
+    queryKey: ["jobStatus", generationJobId],
+    queryFn: async () => {
+      const res = await axiosInstance.get(
+        `/api/v1/blogs/${blogs?.id}/job_statuses/${generationJobId}`,
+      );
+      return res.data;
+    },
+    enabled: !!generationJobId && isGeneratingDraft,
+    refetchInterval: (query) => {
+      const data = query.state.data as any;
+      if (data?.status === "completed" || data?.status === "failed") {
+        return false;
+      }
+      return 3000; // Poll every 3 seconds
+    },
+  });
+
+  // Handle job status changes
+  useEffect(() => {
+    if (jobStatus) {
+      if (jobStatus.result?.current_step) {
+        setGenerationStatus(jobStatus.result.current_step);
+      }
+      if (jobStatus.result?.percentage !== undefined) {
+        setGenerationPercentage(jobStatus.result.percentage);
+      }
+
+      if (jobStatus.status === "completed") {
+        setIsGeneratingDraft(false);
+        setGenerationJobId(null);
+        setGenerationStatus(null);
+        setGenerationPercentage(0);
+        toast.success("Draft generated successfully!");
+        // Refresh article content
+        queryClient.invalidateQueries({
+          queryKey: ["article", existingId, blogs?.id],
+        });
+      } else if (jobStatus.status === "failed") {
+        setIsGeneratingDraft(false);
+        setGenerationJobId(null);
+        setGenerationStatus(null);
+        setGenerationPercentage(0);
+        // Error message handling might be needed if not in global toast
+        if (jobStatus.error_message) {
+          toast.error(`Generation failed: ${jobStatus.error_message}`);
+        }
+      }
+    }
+  }, [jobStatus, queryClient, existingId, blogs?.id]);
 
   useEffect(() => {
     // Only block if we are expecting a specific existing article to load and it hasn't loaded yet
@@ -731,6 +809,10 @@ export default function ArticleClientPage() {
             isLoading={isLoading}
             readOnly={isViewer}
             highlightText={highlightedText}
+            onGenerateDraft={() => generateDraftMutation.mutate()}
+            isGeneratingDraft={isGeneratingDraft}
+            generationStatus={generationStatus}
+            generationPercentage={generationPercentage}
           />
         </div>
 

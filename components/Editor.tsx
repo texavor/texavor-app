@@ -15,6 +15,7 @@ import { useAppStore } from "@/store/appStore";
 import Link from "@tiptap/extension-link";
 import { CustomToolbar } from "./CustomToolbar";
 import { TableBubbleMenu } from "./TableBubbleMenu";
+import { CustomAiDraftIcon } from "./icons/CustomIcons";
 import { CustomHardBreak } from "./editor/extensions/CustomHardBreak";
 import { CustomImage } from "./editor/extensions/CustomImage";
 import { SearchHighlight } from "./editor/extensions/SearchHighlight";
@@ -81,6 +82,10 @@ type EditorProps = {
   isLoading?: boolean;
   readOnly?: boolean;
   highlightText?: string;
+  onGenerateDraft?: () => void;
+  isGeneratingDraft?: boolean;
+  generationStatus?: string | null;
+  generationPercentage?: number;
 };
 
 const Editor = ({
@@ -99,6 +104,10 @@ const Editor = ({
   isLoading,
   readOnly = false,
   highlightText,
+  onGenerateDraft,
+  isGeneratingDraft,
+  generationStatus,
+  generationPercentage,
 }: EditorProps) => {
   const { zenMode, toggleZenMode } = useAppStore();
   const [isExportOpen, setIsExportOpen] = React.useState(false);
@@ -674,7 +683,7 @@ const Editor = ({
       >
         {/* Left Side: Add/Change Cover - Hide if readOnly */}
         {!readOnly && (
-          <div>
+          <div className="flex gap-2">
             <Button
               onClick={onAddCover}
               variant="ghost"
@@ -685,6 +694,23 @@ const Editor = ({
               <span className="hidden sm:inline">
                 {thumbnailUrl ? "Change Cover" : "Add Cover"}
               </span>
+            </Button>
+
+            {/* AI Draft Button */}
+            <Button
+              onClick={onGenerateDraft}
+              disabled={isGeneratingDraft}
+              variant="ghost"
+              size="sm"
+              className="bg-[#104127] text-white hover:bg-[#104127]/90 hover:text-white shadow-md border-none gap-2 px-4 transition-all active:scale-95 group relative overflow-hidden"
+            >
+              <CustomAiDraftIcon className="h-4 w-4 transition-transform duration-300 group-hover:scale-125" />
+              <span className="font-poppins font-medium">
+                Generate AI Draft
+              </span>
+
+              {/* Subtle shine effect on hover */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shine" />
             </Button>
           </div>
         )}
@@ -769,6 +795,46 @@ const Editor = ({
           )}
         </div>
       </div>
+
+      {/* Loading Overlay for AI Generation */}
+      {isGeneratingDraft && (
+        <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-white/80 backdrop-blur-md rounded-xl transition-all duration-500 animate-in fade-in">
+          <div className="relative mb-8">
+            <div className="absolute inset-0 bg-[#EAF9F2] rounded-full animate-ping scale-150 opacity-20"></div>
+            <div className="relative bg-white p-6 rounded-full shadow-2xl border border-[#EAF9F2]">
+              <CustomAiDraftIcon className="h-12 w-12 text-[#104127] animate-pulse" />
+            </div>
+          </div>
+
+          <div className="text-center space-y-4 max-w-md px-6">
+            <h3 className="text-2xl font-poppins font-semibold text-[#104127]">
+              {generationStatus || "AI is Researching & Writing..."}
+            </h3>
+            <p className="text-gray-500 font-inter animate-pulse">
+              This process usually takes about 60-90 seconds. We're analyzing
+              the top results to build a deep research base for your article.
+            </p>
+
+            <div className="w-64 h-1.5 bg-[#EAF9F2] rounded-full mx-auto overflow-hidden">
+              {generationPercentage !== undefined &&
+              generationPercentage > 0 ? (
+                <div
+                  className="h-full bg-[#104127] rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${generationPercentage}%` }}
+                ></div>
+              ) : (
+                <div className="h-full bg-[#104127] rounded-full animate-progress-indeterminate"></div>
+              )}
+            </div>
+
+            {generationPercentage !== undefined && generationPercentage > 0 && (
+              <p className="text-sm font-poppins font-semibold text-[#104127]/80">
+                {Math.round(generationPercentage)}% Complete
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Progress Dialog for PDF Generation */}
       {isGeneratingPDF && (
